@@ -85,7 +85,7 @@ note.AnchorPoint=Vector2.new(.5,1)
 note.Position=UDim2.new(.5,0,1,-4)
 note.Size=UDim2.new(1,-32,0,18)
 note.TextXAlignment=Enum.TextXAlignment.Center
-note.Text="Prototype: parts, robots and cash last for this server session only."
+note.Text="Session-only progress: parts, robots, cash and upgrades."
 local function place(label,y,height,size)
     label.Position=UDim2.fromOffset(14,y)
     label.Size=UDim2.new(1,-28,0,height)
@@ -127,7 +127,7 @@ local function defaultMessage()
     if (player:GetAttribute("BaseIndex") or 0)==0 then return "All workshops are occupied. Try another server." end
     if (player:GetAttribute("CarriedName") or "")~="" then return "Return to your workshop. Hold E at the orange deposit machine." end
     if (player:GetAttribute("UsedPlatforms") or 0)>=Config.Robot.Slots then return "Platforms reserved. Finish existing robots with matching parts." end
-    return "Follow yellow arrows into the yard. Collect matching parts to build robots."
+    return "Collect matching parts to build robots. Visit Milo for Speed and Strength upgrades."
 end
 local function render()
     local index=player:GetAttribute("BaseIndex") or 0
@@ -141,11 +141,12 @@ local function render()
     end
     local name=player:GetAttribute("CarriedName") or ""
     carrying.Text=if name=="" then "Hands free. Ready to collect." else name.." | "..(player:GetAttribute("CarriedRarity") or "")
-    stats.Text=string.format("Weight: %d  |  Speed: %.1f  |  Delivered: %d",player:GetAttribute("CarriedWeight") or 0,player:GetAttribute("CarrySpeed") or Config.BaseSpeed,player:GetAttribute("DeliveredCount") or 0)
+    stats.Text=string.format("Weight: %d  |  Speed: %.1f  |  Strength: %d",player:GetAttribute("CarriedWeight") or 0,player:GetAttribute("CarrySpeed") or Config.BaseSpeed,player:GetAttribute("CarryStrength") or Config.Strength)
     drop.Visible=name~=""
     if feedbackVersion==0 then message.Text=defaultMessage() end
 end
 local function requestDrop()
+    if not gui.Enabled then return end
     if (player:GetAttribute("CarriedName") or "")~="" then actionRemote:FireServer("Drop") end
 end
 drop.Activated:Connect(requestDrop)
@@ -162,8 +163,9 @@ feedbackRemote.OnClientEvent:Connect(function(value)
         if feedbackVersion==version then feedbackVersion=0;message.Text=defaultMessage() end
     end)
 end)
-for _,attribute in {"BaseIndex","DeliveredCount","CarriedName","CarriedRarity","CarriedWeight","CarrySpeed","Cash","IncomePerSecond","RobotCount","UsedPlatforms","CommonParts","UncommonParts","RareParts"} do
+for _,attribute in {"BaseIndex","DeliveredCount","CarriedName","CarriedRarity","CarriedWeight","CarrySpeed","CarryStrength","Cash","IncomePerSecond","RobotCount","UsedPlatforms","CommonParts","UncommonParts","RareParts"} do
     player:GetAttributeChangedSignal(attribute):Connect(render)
 end
 remotes:GetAttributeChangedSignal("Ready"):Connect(render)
 render()
+require(script.Parent:WaitForChild("MechanicShop")).start(player,actionRemote,gui)

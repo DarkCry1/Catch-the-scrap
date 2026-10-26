@@ -1,10 +1,10 @@
-# Testa v0.3 på Windows
+# Testa v0.4 på Windows
 
 Alla spelets egna texter är nu på **engelska**. Vi använder svenska för instruktioner och samtal.
 
 ## Öppna rätt platsfil
 
-1. Hämta **Catch-the-scrap-v0.3.rbxl** från `downloads` på GitHub-grenen `codex/scrapyard-rarities`. Klicka **Download raw file**, nedåtpilen vid filen.
+1. Hämta **Catch-the-scrap-v0.4.rbxl** från `downloads` på GitHub-grenen `codex/mechanic-upgrades`. Klicka **Download raw file**, nedåtpilen vid filen.
 2. Stoppa pågående Play i Roblox Studio. Öppna den **nya** filen via **File → Open from File… / Ctrl+O**.
 3. Tryck **Play / F5**. Världen skapas vid spelstart; en tom editor före Play är normalt.
 4. Öppna **Output** via View/Window om du behöver se felmeddelanden.
@@ -33,6 +33,33 @@ Första inlämningen av en rarity startar ett projekt på en ledig robotplattfor
 
 Robotmodellen har fem visuella monteringsgrupper: ben/fötter, kropp, armar, huvud samt reaktor/slutdetaljer. Common visar en ny grupp per del. Rare behöver två delar per grupp. Bara färdiga robotar ger pengar. HUD:ens rarity-räknare återgår till noll efter färdig robot och kan starta ett nytt projekt om det finns plats.
 
+## Köp uppgraderingar av mekanikern
+
+1. Bygg först en Common-robot av fem Common-delar. Den tjänar $5/sek.
+2. Gå till **Milo the Mechanic** vid den högra sidan av skrotgårdens ingång. Det är en liten robot med skyddsglasögon och skiftnyckel bakom en verktygsdisk.
+3. Gå nära och håll **E / Browse upgrades**. Köpmenyn visar saldo, nivå, nuvarande värde, nästa värde och pris.
+4. Första **Speed** kostar **$75** och höjer grundfarten **24 → 26**. Den ökar också farten när du bär något.
+5. Första **Strength** kostar **$100** och höjer bärstyrkan **30 → 40**. Den minskar viktens fartstraff och ändrar inte din obelastade grundfart.
+6. Priserna ökar per nivå. Nästa Speed kostar $120 och nästa Strength $165. Båda har maxnivå 10.
+7. Knappen är inaktiv om du saknar pengar eller redan nått maxnivån. Inkomsterna fortsätter medan du tittar på menyn.
+8. Stäng med **X** eller genom att gå bort från Milo. Du måste stå vid honom för att köpa.
+
+Första Speed kan betalas efter cirka 15 sekunders produktion från en Common-robot. Inkomsten fortsätter ticka under köp. Uppgraderingarna påverkar karaktären direkt, även om du bär en del. De finns kvar efter Reset Character men försvinner om du lämnar servern.
+
+### Testlista för köp
+
+- [ ] Milo står vid en egen disk, utanför huvudvägen och utan att krocka med någon bas.
+- [ ] E öppnar menyn först när du är nära; båda erbjudandena har tydliga priser och statförändringar.
+- [ ] För lite pengar ger inget köp eller negativt saldo.
+- [ ] Ett Speed-köp drar det visade priset och ändrar fart och nivå direkt.
+- [ ] Strength gör det lättare att bära en Rare-del; vanlig grundfart ändras inte av Strength.
+- [ ] Upprepade snabba klick köper inte två nivåer till samma gamla pris.
+- [ ] Att gå bort stänger menyn. Köp från långt håll nekas.
+- [ ] X, bakgrundsklick och köpknappar fungerar utan att menyn stängs när du klickar på ett kort.
+- [ ] Reset Character behåller de köpta nivåerna i samma serverbesök.
+- [ ] Två spelare har separata saldon och nivåer och kan handla samtidigt.
+- [ ] Menyn och köpknapparna går att använda i telefonläge, stående och liggande.
+
 ## Testlista för detta bygge
 
 - [ ] Inga stora svarta skyltpaneler svävar över banan. Världstexten har genomskinlig bakgrund.
@@ -57,7 +84,7 @@ Stoppa Play och använd Studios lokala **Server & Clients / Local Server** med t
 
 ## Begränsningar och felsökning
 
-Delar, robotar och pengar gäller bara **aktuellt serverbesök**. Sparning, offlineinkomst, uppgraderingar, fiender och prestige kommer senare. Ett komplett system mot rörelse-/teleportfusk ingår inte.
+Delar, robotar och pengar gäller bara **aktuellt serverbesök**. Sparning, offlineinkomst, fler uppgraderingstyper, fiender och prestige kommer senare. Ett komplett system mot rörelse-/teleportfusk ingår inte.
 
 Om något går fel: skicka **första röda feltexten i Output**, gärna med en bild och vad du gjorde precis före felet. Normal serverstart skriver en engelsk rad som börjar med `[Catch the Scrap] Scrapyard ready`.
 

@@ -6,7 +6,15 @@ local recipes: {[string]: { Parts: number, Income: number, Name: string, Color: 
             Rare = { Parts = 10, Income = 20, Name = "Rare Scrap Bot", Color = { 90, 160, 255 } },
         }
 
+local upgrades: {[string]: { Label: string, Description: string, BaseCost: number, CostMultiplier: number, PerLevel: number, MaxLevel: number }} = {
+    Speed = { Label = "Speed", Description = "Run faster, even while carrying.", BaseCost = 75, CostMultiplier = 1.6, PerLevel = 2, MaxLevel = 10 },
+    Strength = { Label = "Strength", Description = "Carry heavy parts faster.", BaseCost = 100, CostMultiplier = 1.65, PerLevel = 10, MaxLevel = 10 },
+}
+
 return table.freeze({
+    Upgrades = upgrades,
+    UpgradeDistance = 12,
+    UpgradeCooldown = 0.35,
     BaseSpeed = 24,
     Strength = 30,
     MinimumSpeed = 7,

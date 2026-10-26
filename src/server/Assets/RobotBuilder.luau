@@ -5,7 +5,8 @@ local Config = require(ReplicatedStorage.CatchTheScrapShared.Config)
 local Blueprint = require(ReplicatedStorage.CatchTheScrapShared.RobotBlueprint)
 local RobotBuilder = {}
 
-function RobotBuilder.build(parent, origin, stage, complete, rarity)
+function RobotBuilder.build(parent, origin, stage, complete, rarity, scale)
+    scale = scale or 1
     local recipe = Config.Robot.Recipes[rarity]
     local model = Instance.new("Model")
     model.Name = if complete then recipe.Name else rarity.."RobotUnderConstruction"
@@ -17,8 +18,8 @@ function RobotBuilder.build(parent, origin, stage, complete, rarity)
         local object = Instance.new("Part")
         object.Name = definition.name
         object.Shape = Enum.PartType[definition.shape]
-        object.Size = Vector3.new(unpack(definition.size))
-        object.CFrame = origin * CFrame.new(unpack(definition.position))
+        object.Size = Vector3.new(unpack(definition.size)) * scale
+        object.CFrame = origin * CFrame.new(Vector3.new(unpack(definition.position)) * scale)
         object.Anchored = true
         object.CanCollide = false
         object.CanTouch = false

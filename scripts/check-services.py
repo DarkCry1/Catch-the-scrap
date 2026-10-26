@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Execute real deposit/income service code with a small mocked engine boundary.
+"""Execute real deposit/income/mechanic service code with a small mocked engine boundary.
 This complements, and does not replace, actual Roblox Studio tests.
 """
 from pathlib import Path
@@ -14,6 +14,7 @@ header=r'''
 local nativeRequire=require
 local modules={
     Config=nativeRequire("../src/shared/Config"),
+    UpgradeRules=nativeRequire("../src/shared/UpgradeRules"),
     Economy=nativeRequire("../src/shared/Economy"),
     Inventory=nativeRequire("../src/shared/Inventory"),
     Movement=nativeRequire("../src/shared/Movement"),
@@ -22,7 +23,7 @@ local clock=0
 local os={clock=function() return clock end}
 local heartbeat
 local services={
-    ReplicatedStorage={CatchTheScrapShared={Config="Config",Economy="Economy",Inventory="Inventory",Movement="Movement"}},
+    ReplicatedStorage={CatchTheScrapShared={Config="Config",Economy="Economy",Inventory="Inventory",Movement="Movement",UpgradeRules="UpgradeRules"}},
     RunService={Heartbeat={Connect=function(_,fn) heartbeat=fn;return{} end}},
     Players={},
 }
@@ -36,7 +37,7 @@ local Enum={Font={GothamBold="GothamBold"}}
 local require=function(name) assert(modules[name],name);return modules[name] end
 '''
 body=''
-for name in ('EconomyService','CarryService','FloatingText'):
+for name in ('EconomyService','CarryService','FloatingText','MechanicService'):
     source=(ROOT/f"src/server/{'Assets' if name=='FloatingText' else 'Services'}/{name}.luau").read_text()
     body+=f'local {name}=(function()\n{source}\nend)()\n'
 checks=r'''
@@ -113,12 +114,74 @@ check(consumed==oldConsumed and inventory.delivered[11]==oldDelivered,"full reje
 check(messages[#messages]:find("reserved")~=nil,"rejection is explained in English")
 modules.Inventory.drop(inventory,11)
 check(consumed==25,"every accepted delivery consumed once")
+-- Exercise real mechanic purchases against the same account and inventory services.
+clock+=20;heartbeat()
+local packets={}
+world.mechanic={prompt={Triggered={Connect=function() return{} end}},interaction={Position=0}}
+local remote={FireClient=function(_,_,channel,data) assert(channel=="MechanicShop");table.insert(packets,data) end}
+local shop=MechanicService.new(world,economy,carry,remote)
+local context={alive=true,hasBase=true,distance=1}
+function shop:context() return context end
+local humanoid={Health=100,WalkSpeed=24}
+local root={IsA=function(_,class) return class=="BasePart" end}
+player.Character={FindFirstChildOfClass=function() return humanoid end,FindFirstChild=function(_,name) return if name=="HumanoidRootPart" then root else nil end}
+local initial=economy.players[player].account.cash
+shop:buy(player,"Speed",0)
+check(economy.players[player].account.cash==initial and #packets==0,"purchase requires an authorized mechanic visit")
+shop:open(player)
+check(packets[#packets].mode=="open" and packets[#packets].offers[1].cost==75,"opening returns server-priced offers")
+local carried=hold("Rare")
+carry:writeState(player)
+local oldLoadedSpeed=humanoid.WalkSpeed
+local priceBefore=economy.players[player].account.cash
+shop:buy(player,"Speed",0)
+check(economy.players[player].account.cash==priceBefore-75,"real mechanic charges the authoritative price once")
+check(attrs.SpeedLevel==1 and attrs.BaseSpeed==26,"server publishes purchased Speed level")
+check(humanoid.WalkSpeed>oldLoadedSpeed,"purchased Speed immediately affects a live loaded humanoid")
+local afterFirst=economy.players[player].account.cash
+shop:buy(player,"Speed",1)
+check(economy.players[player].account.cash==afterFirst and attrs.SpeedLevel==1,"cooldown prevents same-frame double buying")
+clock+=1
+shop:buy(player,"Speed",0)
+check(economy.players[player].account.cash==afterFirst+35 and attrs.SpeedLevel==1,"stale offer earns normal income but cannot buy another level")
+check(packets[#packets].message:find("changed")~=nil,"stale offer refreshes the menu")
+local oldStrengthSpeed=humanoid.WalkSpeed
+local beforeStrength=economy.players[player].account.cash
+clock+=1;shop:buy(player,"Strength",0)
+check(economy.players[player].account.cash==beforeStrength+35-100,"Strength debit includes correct accrued income")
+check(attrs.CarryStrength==40 and attrs.StrengthLevel==1,"Strength level is server-owned")
+check(humanoid.WalkSpeed>oldStrengthSpeed,"Strength immediately reduces the held Rare part penalty")
+local safeBalance=economy.players[player].account.cash
+context.distance=200
+shop:buy(player,"Speed",1)
+check(economy.players[player].account.cash==safeBalance and attrs.SpeedLevel==1,"remote purchase from far away cannot charge or upgrade")
+check(not packets[#packets].open and not shop.active[player],"walking away closes authorization")
+context.distance=1;shop:open(player);context.alive=false
+local deadBalance=economy.players[player].account.cash
+shop:buy(player,"Speed",1)
+check(economy.players[player].account.cash==deadBalance and attrs.SpeedLevel==1,"dead characters cannot purchase")
+context.alive=true;shop:open(player);clock+=1
+local badBefore=economy.players[player].account.cash
+shop:buy(player,"Cash",0)
+check(economy.players[player].account.cash==badBefore+35 and attrs.SpeedLevel==1,"unknown upgrade only settles legitimate income")
+local malformedBalance=economy.players[player].account.cash
+clock+=1;shop:buy(player,"Speed","1")
+check(economy.players[player].account.cash==malformedBalance and attrs.SpeedLevel==1,"string levels never reach the debit transaction")
+clock+=1;shop:buy(player,{},1)
+check(economy.players[player].account.cash==malformedBalance,"non-string upgrade identifiers are rejected without spending")
+modules.Inventory.drop(inventory,11)
+humanoid={Health=100,WalkSpeed=16}
+carry:writeState(player)
+check(humanoid.WalkSpeed==26 and attrs.CarryStrength==40,"character replacement reapplies purchased session stats")
+shop:removePlayer(player)
+check(shop.active[player]==nil and shop.lastBuy[player]==nil,"disconnect clears mechanic state")
+
 -- Removing the income account stops all future production for that player.
 economy:removePlayer(player)
 local final=attrs.Cash
 clock+=100;heartbeat()
 check(attrs.Cash==final,"disconnected accounts stop producing")
-print(string.format("Actual deposit/income services passed %d simulated-boundary checks; Studio remains required",checks))
+print(string.format("Actual deposit/income/mechanic services passed %d simulated-boundary checks; Studio remains required",checks))
 '''
 fixture=BUILD/'service-integration.spec.luau'
 fixture.write_text(header+body+checks)

@@ -31,3 +31,7 @@ Bilden är en Blender-rendering av skrotgårdens grundgeometri från samma bluep
 ## Uppdatering v0.3
 
 Spelets egna texter är på engelska. Common kräver 5 Common-delar, Uncommon 7 och Rare 10. Robotarnas fem monteringsgrupper är ben/fötter, kropp, armar, huvud och reaktor/slutdetaljer. Skrotgården är 160 × 1 440 studs och har containrar, vrak, däck- och rörhögar, skrotrobotar och traverskranar. Skylttexterna har inga synliga bakgrundspaneler. Inga ytterligare externa spelbilder har granskats som del av denna ändring.
+
+## Uppdatering v0.4
+
+Milo är en egen mekanikerrobot med skyddsglasögon och skiftnyckel bakom en liten uppgraderingsdisk. Standens geometri är egen och delar robotens befintliga grundmodell i mindre skala. Inga externa modeller eller nya spelreferenser användes. Spelets köpmeny, priser, erbjudanden och meddelanden är på engelska.

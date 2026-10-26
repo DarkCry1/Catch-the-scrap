@@ -5,6 +5,7 @@ local BaseBuilder = require(script.Parent.Parent.Assets.BaseBuilder)
 local FloatingText = require(script.Parent.Parent.Assets.FloatingText)
 local NavigationRenderer = require(script.Parent.Parent.Assets.NavigationRenderer)
 local ScrapyardBuilder = require(script.Parent.Parent.Assets.ScrapyardBuilder)
+local MechanicBuilder = require(script.Parent.Parent.Assets.MechanicBuilder)
 local WorldService = {}
 WorldService.__index = WorldService
 
@@ -41,6 +42,7 @@ function WorldService.new()
     end
     FloatingText.create(root,"YardEntrance",CFrame.new(0,16,0),"CATCH THE SCRAP\nSCRAPYARD AHEAD",Color3.fromRGB(255,198,80),48,7,120)
     ScrapyardBuilder.build(self)
+    self.mechanic = MechanicBuilder.create(root)
 
     for index = 1, Config.BaseCount do
         local left = index % 2 == 1

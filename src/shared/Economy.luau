@@ -3,11 +3,11 @@
 export type Recipe = { Parts: number, Income: number, Name: string, Color: {number} }
 export type Settings = { Slots: number, Recipes: {[string]: Recipe} }
 export type Project = { rarity: string, parts: number, complete: boolean }
-export type Account = { projects: {Project}, cash: number, fraction: number }
+export type Account = { projects: {Project}, cash: number, fraction: number, upgrades: {[string]: number} }
 local Economy = {}
 
 function Economy.new(): Account
-    return { projects = {}, cash = 0, fraction = 0 }
+    return { projects = {}, cash = 0, fraction = 0, upgrades = { Speed = 0, Strength = 0 } }
 end
 
 function Economy.activeProject(account: Account, rarity: string): (Project?, number?)

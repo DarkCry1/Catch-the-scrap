@@ -4,6 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage.CatchTheScrapShared
 local Config = require(Shared.Config)
 local Economy = require(Shared.Economy)
+local UpgradeRules = require(Shared.UpgradeRules)
 local EconomyService = {}
 EconomyService.__index = EconomyService
 
@@ -30,6 +31,10 @@ function EconomyService:publish(player, entry)
     attribute(player, "RobotCount", Economy.robotCount(account))
     attribute(player, "Cash", account.cash)
     attribute(player, "IncomePerSecond", Economy.incomePerSecond(account, Config.Robot))
+    attribute(player, "SpeedLevel", account.upgrades.Speed)
+    attribute(player, "StrengthLevel", account.upgrades.Strength)
+    attribute(player, "BaseSpeed", UpgradeRules.value("Speed", account.upgrades.Speed, Config))
+    attribute(player, "CarryStrength", UpgradeRules.value("Strength", account.upgrades.Strength, Config))
     entry.cashCounter.Value = account.cash
 end
 
@@ -68,6 +73,12 @@ end
 
 function EconomyService:removePlayer(player)
     self.players[player] = nil
+end
+
+function EconomyService:movementStats(player)
+    local entry = self.players[player]
+    if not entry then return Config.BaseSpeed, Config.Strength end
+    return UpgradeRules.value("Speed",entry.account.upgrades.Speed,Config), UpgradeRules.value("Strength",entry.account.upgrades.Strength,Config)
 end
 
 return EconomyService

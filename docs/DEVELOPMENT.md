@@ -1,4 +1,4 @@
-# Development: scrapyard and rarity recipes
+# Development: mechanic upgrades, scrapyard and rarity recipes
 
 All custom game UI, prompts, signs, feedback and leaderboard columns are English.
 Beginner-facing instructions in chat and STUDIO_START_SV.md remain Swedish.
@@ -16,7 +16,7 @@ Beginner-facing instructions in chat and STUDIO_START_SV.md remain Swedish.
 - Money is server-controlled and credited only for completed robots. Account
   time is settled at the old rate before a new robot begins production.
 - Progress survives character resets but clears when leaving. No persistence,
-  offline income, spending, upgrades, enemies or prestige yet.
+  offline income, enemies or prestige yet. Speed/Strength spending is implemented below.
 
 ## World
 
@@ -43,10 +43,39 @@ Gate lintels are physical workshop structure; floating yard labels have no board
 - `src/server/Services`: map, pickups, player lifecycle, deposit and economy.
 - `src/client`: English responsive HUD and reactor effects.
 
-Clients can request only Drop, without item IDs, positions, money or rarity.
-Prompt callbacks recheck live character, distance, ownership, base and capacity.
-There is no full movement/teleport anti-cheat. Eight workshop allocations exist;
-extra players must join a server with room.
+## Mechanic purchases
+
+Milo's shared stand is on the front plaza at (55, 0, 7), facing the street. Its
+geometry is in `MechanicBlueprint.luau`; its robot is scaled from the existing
+original robot blueprint. The booth does not overlap the road or workshops.
+
+`UpgradeRules.luau` owns offers and synchronous purchases. Speed starts at $75,
+adds 2 base speed per level and uses a 1.6 price multiplier. Strength starts at
+$100, adds 10 carrying strength and uses a 1.65 price multiplier. Prices round
+up and both upgrades cap at level 10. Levels live in the same server-owned
+account as cash and reset when leaving. Character resets retain levels.
+`EconomyService` supplies authoritative movement stats; `CarryService` applies
+them to a live humanoid on purchase and character changes.
+
+Client request protocol on `Action`:
+
+- `FireServer("Drop")`: no additional arguments.
+- `FireServer("BuyUpgrade", kind, expectedLevel)`: exactly two arguments, with
+  a whitelisted kind and a numeric expected current level. The client sends
+  neither a price nor a requested stat value.
+
+Server-to-client `Action` packets use the `MechanicShop` channel for offers,
+receipts and closure. Opening requires a live nearby character with a workshop.
+Every purchase rechecks distance/liveness, uses a per-player cooldown, settles
+income, computes server prices, checks cash/cap/current level, debits and raises
+one level without yielding. A stale expected level cannot purchase an unseen
+next level. Leaving clears shop state. Character removal or walking away closes
+the client dialog. A manually closed dialog does not reopen for a delayed receipt.
+
+The only other remote is `Feedback`. Pickup/deposit prompts independently
+validate character, distance, ownership, base and capacity. There is no complete
+movement/teleport anti-cheat. Eight workshop allocations exist; extra players
+must join a server with room.
 
 ## Checks and export
 
@@ -60,7 +89,7 @@ python3 scripts/check.py
 
 Checks cover portable rules, actual service code with mocked engine boundaries,
 arrow direction, five assembly groups, rarity isolation, slot reservation,
-walkable lanes, pickup clearance, part budget and legacy Swedish text detection.
+walkable lanes, pickup clearance, part budget and legacy Swedish text detection. Upgrade checks cover prices, atomic debits, caps, replay rejection, proximity and actual humanoid stat updates across a mocked engine boundary.
 All application Luau is compiled and all sources are checked in the exported
 place. Shared modules/tests are typechecked. Roblox-facing code is not claimed
 as engine-typechecked, and simulated service tests do not replace Studio.
@@ -75,6 +104,7 @@ Optional geometry previews (not runtime screenshots):
 luau scripts/export-blueprints.luau > build/blueprints.json
 blender -b -t 4 --python scripts/render-yard.py
 blender -b -t 4 --python scripts/render-preview.py
+blender -b -t 4 --python scripts/render-mechanic.py
 ```
 
 Blueprints are shared with the game, but renderer lighting, text, materials and

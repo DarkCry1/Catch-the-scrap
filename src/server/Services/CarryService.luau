@@ -51,7 +51,8 @@ function CarryService:writeState(player)
     local record = if id then self.items.records[id] else nil
     local definition = if record then record.definition else nil
     local weight = if definition then definition.weight else 0
-    local speed = Movement.effectiveSpeed(Config.BaseSpeed, Config.Strength, weight, Config.MinimumSpeed)
+    local baseSpeed, strength = self.economy:movementStats(player)
+    local speed = Movement.effectiveSpeed(baseSpeed, strength, weight, Config.MinimumSpeed)
     player:SetAttribute("CarriedName", if definition then definition.name else "")
     player:SetAttribute("CarriedRarity", if definition then definition.rarity else "")
     player:SetAttribute("CarriedWeight", weight)

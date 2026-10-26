@@ -14,6 +14,7 @@ local function json(value)
 end
 local Config = require("../src/shared/Config")
 print(json({
+    mechanic = require("../src/shared/MechanicBlueprint"),
     base = require("../src/shared/BaseBlueprint"),
     robot = require("../src/shared/RobotBlueprint"),
     palette = Config.Palette,
