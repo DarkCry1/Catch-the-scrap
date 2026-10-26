@@ -1,4 +1,11 @@
 # Catch-the-scrap
+
+Första prototypen finns nu som Luau-källkod: plocka upp, bära, släppa och lämna in.
+Se [Kom igång i Roblox Studio på Windows](docs/STUDIO_START_SV.md) för första testet
+och [utvecklarguiden](docs/DEVELOPMENT.md) för bygge och automatiska kontroller.
+Platsfiler skapas i `build/` med `python3 scripts/check.py`.
+Själva Roblox Studio-testet återstår; dokumentet nedan är spelets ursprungliga designbrief.
+
 CATCH THE SCRAP — Project Brief / Game Design Document
 
 Version: 0.1 planning draft | Date: 2026-10-26

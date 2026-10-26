@@ -1,0 +1,28 @@
+{
+  "name": "Catch the Scrap",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "CatchTheScrapShared": { "$path": "src/shared" },
+      "CatchTheScrapRemotes": {
+        "$className": "Folder",
+        "Action": { "$className": "RemoteEvent" },
+        "Feedback": { "$className": "RemoteEvent" }
+      }
+    },
+    "ServerScriptService": { "CatchTheScrap": { "$path": "src/server" } },
+    "StarterPlayer": {
+      "StarterPlayerScripts": { "CatchTheScrap": { "$path": "src/client" } }
+    },
+    "Workspace": { "$properties": { "FilteringEnabled": true } },
+    "Lighting": {
+      "$properties": {
+        "Ambient": [0.35, 0.4, 0.5],
+        "Brightness": 2,
+        "ClockTime": 14,
+        "GlobalShadows": true
+      }
+    },
+    "SoundService": { "$properties": { "RespectFilteringEnabled": true } }
+  }
+}
