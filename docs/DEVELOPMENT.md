@@ -1,4 +1,4 @@
-# Development: seven-stage scrapyard, bounded camera and animated salvage
+# Development: carrying, scrap processing and recovered robot boxes
 
 All custom game UI, prompts, signs, feedback and leaderboard columns are English.
 Beginner-facing instructions in chat and STUDIO_START_SV.md remain Swedish.
@@ -12,6 +12,7 @@ Beginner-facing instructions in chat and STUDIO_START_SV.md remain Swedish.
 - Legendary: **15 Legendary parts**, $100/sec.
 - Mythic: **18 Mythic parts**, $225/sec.
 - Celestial: **20 Celestial parts**, $500/sec. New values are provisional balance.
+- Recovered robot boxes contain one whole robot and need one free platform. They reserve the slot immediately and complete after 3.8 seconds; partial scrap projects are not merged or consumed.
 - Four platforms per player. The first part reserves a platform for its rarity.
   Matching parts continue the unfinished project. Capacity is checked before
   inventory consumption, and reserved projects can still finish when no slots
@@ -110,6 +111,7 @@ blender -b -t 4 --python scripts/render-yard.py
 blender -b -t 4 --python scripts/render-preview.py
 blender -b -t 4 --python scripts/render-mechanic.py
 blender -b -t 4 --python scripts/render-pickups.py
+blender -b -t 4 --python scripts/render-delivery.py
 ```
 
 Blueprints are shared with the game, but renderer lighting, text, materials and
@@ -148,3 +150,55 @@ carry/drop, distance gating and stream cleanup. Shared tests sweep camera
 corners/entrance seams and ground clearance across motion phases; service tests
 complete and publish all new recipes. These cannot verify engine joint physics,
 camera feel, GUI clipping or GPU performance; test those in Windows Studio.
+
+## Carrying, shredder and recovery (v0.7)
+
+CarryPose applies local R6/R15 shoulder/elbow/wrist Motor6D transforms for all
+nearby player characters. It restores the previous override before PreAnimation,
+then blends over Animator's current transform during PreSimulation. Character
+changes, dropping and player removal release the pose. ItemService positions the
+server carrier root above the head using actual head height and item clearance.
+All carry visuals remain noncolliding and massless.
+
+CrusherBlueprint/CrusherBuilder replace the previous closed deposit surface
+with an open twin-shaft shredder and a press. Accepted scrap invokes the server
+onCrush hook before destroying the item; it broadcasts an authoritative Crusher
+packet on Action and sets CrusherActiveUntil on the owning workshop. WorkshopEffects
+handles local intake, scale/fade, offcuts, press travel, rotor speed, sparks and
+light, bounded by distance. One intake model per workshop replaces older visual
+intakes; all accepted deposits still count. Cosmetics never determine rewards.
+
+CrateRules draws a result once on the server at spawn. Public crate attributes,
+label and geometry contain only Mystery/Sealed Robot Box; rewardRarity stays in
+the server record. Dropping/resetting does not reroll. Two boxes per district are
+placed in tested free spaces outside the haul road. Their respawn is 35 seconds.
+Stage-relative rolls: current tier 70%, previous tier 20%, next tier 9%, two tiers
+higher 1%, clamped to the available tier range. These are free found items.
+
+Inventory accepts a box only at its owner's workshop. Economy.reserveRobot
+creates an opening project that counts toward platform capacity, earns nothing
+and cannot receive scrap parts. The server delay verifies the same account,
+project and workshop owner before settling OLD income and completing the robot.
+Disconnects invalidate pending callbacks; character resets retain the account.
+finishRecovery is idempotent. No client request names a robot reward or amount.
+
+CrateBuilder displays the neutral box on its reserved platform. UnboxingEffects
+animates its real flaps/tape and a local light/burst; server completion replaces
+the box with the actual robot. Its short reveal uses the server RevealAt time.
+WorldPivot is not replicated: rotor pivots and RevealOrigin are sent as explicit
+attributes and applied locally before animation/scaling. Robot models stream
+atomically. Effects clean up on stream-out and skip stale reveals.
+
+Action now also carries a server-to-client Crusher packet (serial, time,
+baseIndex, origin, start, rarity). Client-to-server requests remain only Drop and
+BuyUpgrade, with their existing argument validation. No new remotes or uploaded
+animation/audio/texture assets are required.
+
+Additional checks execute actual item attach/drop/respawn code with mocked
+geometry; verify sealed contents, replay safety, pickup callback identity and
+head-relative carry height. Carry-pose mocks test R6/R15 joint discovery, blends,
+pre-animation restoration and cleanup. Recovery service tests cover proximity,
+liveness, foreign bases, capacity, delayed income, duplicate callbacks and
+owner/disconnect changes. Shared geometry tests cover all crate positions and
+motion bounds. Engine physics, avatar fitting, visual feel and FPS still need
+Windows Studio playtests.

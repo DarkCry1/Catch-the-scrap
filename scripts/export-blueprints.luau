@@ -19,6 +19,8 @@ for _,item in Config.Items do
     pickupVisuals[item.rarity]={parts=PickupBlueprint.build(item.rarity,item.color),clearance=PickupBlueprint.clearance(item.rarity,item.color)}
 end
 print(json({
+    crate=require("../src/shared/CrateBlueprint").build(),
+    crusher=require("../src/shared/CrusherBlueprint").build(),
     stages=Config.Stages,
     wallHeight=Config.WallHeight,
     zoneLength=Config.ZoneLength,

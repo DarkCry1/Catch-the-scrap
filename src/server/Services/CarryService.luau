@@ -55,6 +55,7 @@ function CarryService:writeState(player)
     local baseSpeed, strength = self.economy:movementStats(player)
     local speed = Movement.effectiveSpeed(baseSpeed, strength, weight, Config.MinimumSpeed)
     player:SetAttribute("CarriedName", if definition then definition.name else "")
+    player:SetAttribute("CarriedKind", if definition then definition.kind or "Scrap" else "")
     player:SetAttribute("CarriedRarity", if definition then definition.rarity else "")
     player:SetAttribute("CarriedWeight", weight)
     player:SetAttribute("CarrySpeed", speed)
@@ -167,15 +168,25 @@ function CarryService:deposit(player, base)
     local carried = if carriedId then self.items.records[carriedId] else nil
     if not carried then self:notify(player, "Collect a part from the scrapyard first."); return end
     local rarity = carried.definition.rarity
-    if not self.economy:canDeposit(player, rarity) then
-        self:notify(player, "All platforms are reserved. Finish an existing robot with matching parts. Your carried part is safe.")
+    local isBox=carried.definition.kind=="RobotCrate"
+    local hasRoom=if isBox then self.economy:canRecoverRobot(player) else self.economy:canDeposit(player,rarity)
+    if not hasRoom then
+        self:notify(player, if isBox then "A sealed robot needs a free platform. Your box is safe; drop it or return later." else "All platforms are reserved. Finish an existing robot with matching parts. Your carried part is safe.")
         return
     end
     local id, reason = Inventory.deposit(self.inventory, player.UserId, base.owner, self:context(player, base.deposit.Position))
     if not id then self:notify(player, reason); return end
     local record = self.items.records[id]
     local name = record.definition.name
+    if isBox then
+        self.economy:recoverRobot(player,record.rewardRarity)
+        self.items:consume(record)
+        self:writeState(player)
+        self:notify(player,"Delivery secured! Your mystery robot is unboxing on its platform...")
+        return
+    end
     local built, scrap = self.economy:addPart(player, rarity)
+    if self.onCrush then self.onCrush(base,record) end
     self.items:consume(record)
     self:writeState(player)
     if built then

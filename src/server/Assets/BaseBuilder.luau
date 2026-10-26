@@ -6,6 +6,8 @@ local Blueprint = require(Shared.BaseBlueprint)
 local RobotBuilder = require(script.Parent.RobotBuilder)
 local Economy = require(Shared.Economy)
 local FloatingText = require(script.Parent.FloatingText)
+local CrusherBuilder=require(script.Parent.CrusherBuilder)
+local CrateBuilder=require(script.Parent.CrateBuilder)
 local BaseBuilder = {}
 
 local function color(name, accent)
@@ -63,6 +65,7 @@ function BaseBuilder.create(parent, index, origin)
             origin * CFrame.new(unpack(definition.position)) * CFrame.Angles(0, math.rad(definition.yaw), 0),
             color(definition.palette, accent), Enum.Material[definition.material], definition.collidable)
     end
+    CrusherBuilder.create(folder,origin)
     -- A short hazard-marked approach gives the hopper a clear visual target.
     for n = -3, 3 do
         part(folder, "HazardStripe", Vector3.new(0.65, 0.03, 3), origin * CFrame.new(n * 1.25, 0.51, -5.5) * CFrame.Angles(0, math.rad(25), 0), color("amber", accent), Enum.Material.SmoothPlastic, false)
@@ -74,7 +77,7 @@ function BaseBuilder.create(parent, index, origin)
     local deposit = part(folder, "Deposit", Vector3.new(8, 3, 1), origin * CFrame.new(0, 2.8, -7.5), accent, Enum.Material.SmoothPlastic, false)
     deposit.Transparency = 1
     local prompt = Instance.new("ProximityPrompt")
-    prompt.ActionText = "Deposit part"
+    prompt.ActionText = "Deliver scrap or box"
     prompt.AutoLocalize = false
     prompt.ObjectText = "Unclaimed workshop"
     prompt.KeyboardKeyCode = Enum.KeyCode.E
@@ -125,19 +128,30 @@ function BaseBuilder.update(base, displayName, account)
     base.label.Text = string.format("%s  /  WORKSHOP %02d\n%d ROBOTS  |  $%d / SEC",displayName,base.index,Economy.robotCount(account),Economy.incomePerSecond(account,Config.Robot))
     local active={}
     for _,project in account.projects do
-        if not project.complete then table.insert(active,string.format("%s %d/%d",project.rarity:upper(),project.parts,Config.Robot.Recipes[project.rarity].Parts)) end
+        if not project.complete and not project.opening then table.insert(active,string.format("%s %d/%d",project.rarity:upper(),project.parts,Config.Robot.Recipes[project.rarity].Parts)) end
     end
     base.progressLabel.Text = if #active>0 then "ASSEMBLY / "..table.concat(active," | ") else "DEPOSIT MATCHING PARTS\n7 RARITIES / 4 ROBOT PLATFORMS"
     for slot, pad in base.pads do
         local project = account.projects[slot]
-        local key = if project then project.rarity..":"..project.parts else "empty"
+        local key = if project then project.rarity..":"..project.parts..(if project.opening then ":opening" else ":ready") else "empty"
         if key == pad.key then continue end
         pad.key=key
         if pad.model then pad.model:Destroy(); pad.model=nil end
         if project then
             local recipe=Config.Robot.Recipes[project.rarity]
+            if project.opening then
+                pad.model=CrateBuilder.display(base.robots,pad.origin*CFrame.new(0,2.35,0),project.startedAt)
+                pad.label.Text="MYSTERY ROBOT / UNBOXING...";pad.label.TextColor3=Color3.fromRGB(235,194,121)
+                continue
+            end
             local stage=if project.complete then 5 else math.floor(project.parts/recipe.Parts*5)
             pad.model=RobotBuilder.build(base.robots,pad.origin,stage,project.complete,project.rarity)
+            if project.recovered then
+                pad.model.WorldPivot=pad.origin
+                pad.model:SetAttribute("RevealAt",project.startedAt+Config.Crates.OpenSeconds)
+                pad.model:SetAttribute("RevealOrigin",pad.origin)
+                game:GetService("CollectionService"):AddTag(pad.model,"RecoveredRobotReveal")
+            end
             pad.label.Text=if project.complete then project.rarity:upper().." / $"..recipe.Income.." PER SEC" else string.format("%s / %d OF %d",project.rarity:upper(),project.parts,recipe.Parts)
             pad.label.TextColor3=Color3.fromRGB(unpack(recipe.Color))
         else

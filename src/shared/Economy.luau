@@ -2,7 +2,7 @@
 -- Each unfinished rarity project reserves one platform. Part types never mix.
 export type Recipe = { Parts: number, Income: number, Name: string, Color: {number} }
 export type Settings = { Slots: number, Recipes: {[string]: Recipe} }
-export type Project = { rarity: string, parts: number, complete: boolean }
+export type Project = { rarity: string, parts: number, complete: boolean, opening: boolean?, startedAt: number?, recovered: boolean? }
 export type Account = { projects: {Project}, cash: number, fraction: number, upgrades: {[string]: number} }
 local Economy = {}
 
@@ -12,7 +12,7 @@ end
 
 function Economy.activeProject(account: Account, rarity: string): (Project?, number?)
     for index, project in account.projects do
-        if project.rarity == rarity and not project.complete then return project, index end
+        if project.rarity == rarity and not project.complete and not project.opening then return project, index end
     end
     return nil, nil
 end
@@ -27,7 +27,7 @@ function Economy.addPart(account: Account, rarity: string, settings: Settings): 
     if not Economy.canAddPart(account, rarity, settings) then return false, false, 0 end
     local project, index = Economy.activeProject(account, rarity)
     if not project then
-        project = { rarity = rarity, parts = 0, complete = false }
+        project = { rarity = rarity, parts = 0, complete = false } :: Project
         table.insert(account.projects, project)
         index = #account.projects
     end
@@ -35,6 +35,23 @@ function Economy.addPart(account: Account, rarity: string, settings: Settings): 
     project.parts += 1
     project.complete = project.parts == settings.Recipes[rarity].Parts
     return true, project.complete, index
+end
+
+function Economy.canRecoverRobot(account: Account, settings: Settings): boolean
+    return #account.projects < settings.Slots
+end
+
+function Economy.reserveRobot(account: Account, rarity: string, settings: Settings, startedAt: number): number?
+    if not settings.Recipes[rarity] or not Economy.canRecoverRobot(account,settings) then return nil end
+    table.insert(account.projects,{rarity=rarity,parts=0,complete=false,opening=true,startedAt=startedAt,recovered=true})
+    return #account.projects
+end
+
+function Economy.finishRecovery(account: Account,index: number,settings: Settings): boolean
+    local project=account.projects[index]
+    if not project or not project.opening then return false end
+    project.opening=nil;project.complete=true;project.parts=settings.Recipes[project.rarity].Parts
+    return true
 end
 
 function Economy.robotCount(account: Account): number

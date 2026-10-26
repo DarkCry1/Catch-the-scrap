@@ -6,6 +6,8 @@ local Blueprint = require(Shared.ScrapyardBlueprint)
 local FloatingText = require(script.Parent.FloatingText)
 local NavigationRenderer = require(script.Parent.NavigationRenderer)
 local PickupBlueprint=require(Shared.PickupBlueprint)
+local CrateRules=require(Shared.CrateRules)
+local CrateBlueprint=require(Shared.CrateBlueprint)
 local EnvironmentBuilder=require(script.Parent.EnvironmentBuilder)
 local ScrapyardBuilder = {}
 function ScrapyardBuilder.build(world)
@@ -42,6 +44,9 @@ function ScrapyardBuilder.build(world)
     end
     local definitions = {}
     for _, item in Config.Items do definitions[item.rarity]=item end
+    for _,crate in layout.crates do
+        table.insert(world.spawns,{position=Vector3.new(unpack(crate.position)),definition=CrateRules.definition(crate.stage),clearance=CrateBlueprint.clearance(),crateStage=crate.stage})
+    end
     for _, spawn in layout.spawns do
         local definition=definitions[spawn.rarity]
         local height=PickupBlueprint.clearance(definition.rarity,definition.color)

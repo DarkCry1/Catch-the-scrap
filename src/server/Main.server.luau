@@ -17,6 +17,17 @@ local items = ItemService.new(world, inventory)
 local economy = EconomyService.new(world)
 local carry = CarryService.new(world, items, inventory, Remotes.Feedback, economy)
 local mechanic = MechanicService.new(world, economy, carry, Remotes.Action)
+local effectSerial=0
+carry.onCrush=function(base,record)
+    effectSerial+=1
+    local now=workspace:GetServerTimeNow()
+    base.folder:SetAttribute("CrusherActiveUntil",now+Config.Presentation.CrushSeconds)
+    Remotes.Action:FireAllClients("Crusher",{serial=effectSerial,time=now,baseIndex=base.index,origin=base.origin,start=record.root.CFrame,rarity=record.definition.rarity})
+end
+economy.onRecovered=function(player,rarity)
+    local recipe=Config.Robot.Recipes[rarity]
+    Remotes.Feedback:FireClient(player,string.format("UNBOXED: %s! +$%d per second.",recipe.Name,recipe.Income))
+end
 items.onPickup = function(player, record) carry:pickup(player, record) end
 world.onDeposit = function(player, base) carry:deposit(player, base) end
 items:start()
@@ -38,4 +49,4 @@ Players.PlayerRemoving:Connect(function(player)
 end)
 for _, player in Players:GetPlayers() do carry:addPlayer(player) end
 Remotes:SetAttribute("Ready", true)
-print("[Catch the Scrap] Scrapyard ready. Milo's mechanic stand is open for Speed and Strength upgrades. Session-only progress.")
+print("[Catch the Scrap] Scrapyard ready. Recover sealed robot boxes, shred scrap and visit Milo for upgrades. Session-only progress.")

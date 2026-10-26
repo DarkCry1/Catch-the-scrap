@@ -6,13 +6,13 @@ export type Spawn = { position: {number}, rarity: string }
 export type Sign = { position: {number}, text: string, color: {number} }
 export type Bounds = { x: number, z: number, width: number, depth: number }
 export type Effect = {kind: string, position: {number}, color: {number}}
-export type Layout = { parts: {Part}, spawns: {Spawn}, signs: {Sign}, bounds: {Bounds}, effects: {Effect} }
+export type Layout = { parts: {Part}, spawns: {Spawn}, signs: {Sign}, bounds: {Bounds}, effects: {Effect}, crates: {{position: {number},stage: number}} }
 local Config = require("./Config")
 local Blueprint = {}
 
 function Blueprint.build(width: number, zoneLength: number, start: number): Layout
     assert(width >= 120 and zoneLength >= 240, "Yard must fit its paths and props")
-    local layout: Layout = { parts = {}, spawns = {}, signs = {}, bounds = {}, effects = {} }
+    local layout: Layout = { parts = {}, spawns = {}, signs = {}, bounds = {}, effects = {}, crates = {} }
     local steel, rust, dark = {100, 117, 120}, {142, 77, 45}, {35, 44, 48}
     local amber, black = {232, 168, 54}, {20, 26, 28}
     local function part(name: string, size: {number}, position: {number}, color: {number}, material: string?, shape: string?, yaw: number?, roll: number?, solid: boolean?, transparency: number?, reflectance: number?)
@@ -160,6 +160,9 @@ function Blueprint.build(width: number, zoneLength: number, start: number): Layo
             for _, x in {-55, -22, 22, 55} do
                 table.insert(layout.spawns,{ position={x, 2.2, first + (row + .5) * zoneLength / 8}, rarity=stage.Rarity })
             end
+        end
+        for index=1,Config.Crates.PerStage do
+            table.insert(layout.crates,{position={if index%2==1 then -22 else 22,2.3,first+zoneLength*(index-.5)/Config.Crates.PerStage},stage=zone})
         end
         local kinds = if zone == 1 then {"Container", "CarWreck", "Tires", "Pile"} elseif zone == 2 then {"Pipes", "CarWreck", "Container", "RobotWreck"} elseif zone==3 then {"Reactor", "RobotWreck", "Pipes", "Reactor"} elseif zone==4 then {"Turbine", "Pipes", "Turbine", "RobotWreck"} elseif zone==5 then {"Furnace", "Container", "Furnace", "Reactor"} elseif zone==6 then {"VoidEngine", "RobotWreck", "VoidEngine", "Reactor"} else {"StarEngine", "Reactor", "StarEngine", "RobotWreck"}
         for row = 0, 3 do

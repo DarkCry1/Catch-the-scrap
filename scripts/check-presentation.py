@@ -7,7 +7,7 @@ header=r'''
 --!nonstrict
 local task={spawn=function(fn) fn() end}
 local nativeRequire=require
-local modules={Config=nativeRequire("../src/shared/Config"),CameraBounds=nativeRequire("../src/shared/CameraBounds"),PickupMotion=nativeRequire("../src/shared/PickupMotion")}
+local modules={Config=nativeRequire("../src/shared/Config"),WorkshopMotion=nativeRequire("../src/shared/WorkshopMotion"),CameraBounds=nativeRequire("../src/shared/CameraBounds"),PickupMotion=nativeRequire("../src/shared/PickupMotion")}
 local function signal()
  local listeners={}
  return {Connect=function(_,fn) listeners[fn]=true;return{Disconnect=function() listeners[fn]=nil end} end,Fire=function(_,...) for fn in listeners do fn(...) end end}
@@ -23,19 +23,22 @@ function CFrame.new(x,y,z)
  return setmetatable({Position=p,Rotation={}},cfMeta)
 end
 function CFrame.Angles(x,y,z) return {tilt=x,yaw=y,roll=z} end
-cfMeta.__mul=function(a,b) a.rotation=b;return a end
+cfMeta.__mul=function(a,b) local result=CFrame.new(a.Position);result.rotation=b;return result end
+cfMeta.__index={Lerp=function(self,target,alpha) local result=CFrame.new(self.Position);result.poseAlpha=alpha;return result end}
+
 CFrame.identity=CFrame.new(0,0,0)
 local render=signal()
+local preAnimation,preSimulation=signal(),signal()
 local bound,priority
 local added,removed={},{}
-local services={RunService={RenderStepped=render,BindToRenderStep=function(_,name,p,fn) bound=fn;priority=p end}}
+local services={Players={},RunService={PreAnimation=preAnimation,PreSimulation=preSimulation,RenderStepped=render,BindToRenderStep=function(_,name,p,fn) bound=fn;priority=p end}}
 services.CollectionService={
  GetInstanceAddedSignal=function(_,tag) added[tag]=signal();return added[tag] end,
  GetInstanceRemovedSignal=function(_,tag) removed[tag]=signal();return removed[tag] end,
  GetTagged=function() return{} end,
 }
 local shared={Config="Config",CameraBounds="CameraBounds",WaitForChild=function(_,name) return name end}
-services.ReplicatedStorage={CatchTheScrapShared={Config="Config",PickupMotion="PickupMotion"},WaitForChild=function() return shared end}
+services.ReplicatedStorage={CatchTheScrapShared={Config="Config",PickupMotion="PickupMotion",WorkshopMotion="WorkshopMotion"},WaitForChild=function() return shared end}
 local game={GetService=function(_,name) return services[name] end}
 local Enum={RenderPriority={Camera={Value=200}},CameraType={Scriptable="Scriptable"}}
 local require=function(name) return assert(modules[name]) end
@@ -47,7 +50,7 @@ local checks=0
 local function check(ok,message) checks+=1;assert(ok,message) end
 '''
 body=''
-for name in ('CameraGuard','PickupAnimator'):
+for name in ('CameraGuard','PickupAnimator','CarryPose'):
     body+=f'local {name}=(function()\n'+(ROOT/f'src/client/{name}.luau').read_text()+'\nend)()\n'
 checks=r'''
 CameraGuard.start(player)
@@ -91,7 +94,37 @@ added.AnimatedScrap:Fire(model);render:Fire(.3)
 check(joint.C0.Position.Y>=.35,"stream-in reattaches cleanly")
 player.Character=nil;render:Fire(.3)
 check(joint.C0==CFrame.identity,"character removal suspends animations safely")
-print(string.format("Actual camera/pickup adapters passed %d simulated-boundary checks; Studio remains required",checks))
+-- Drive the real R6 and R15 pose controller across animation/simulation boundaries.
+local playersAdded,playersRemoved=signal(),signal()
+local function rig(names,id)
+ local list={}
+ for _,name in names do
+  local baseline=CFrame.new(0,0,0)
+  local joint={Name=name,Parent=true,Transform=baseline,C0={Rotation={Inverse=function() return CFrame.new(0,0,0) end}},baseline=baseline,IsA=function(_,class) return class=="Motor6D" end}
+  table.insert(list,joint)
+ end
+ local actor={UserId=id,carrying="Scrap"}
+ function actor:GetAttribute() return self.carrying end
+ actor.Character={FindFirstChild=function() return characterRoot end,FindFirstChildOfClass=function() return{Health=100} end,GetDescendants=function() return list end}
+ return actor,list
+end
+local r6,r6Joints=rig({"Left Shoulder","Right Shoulder"},1)
+local r15,r15Joints=rig({"LeftShoulder","RightShoulder","LeftElbow","RightElbow","LeftWrist","RightWrist"},2)
+services.Players.GetPlayers=function() return{r6,r15} end
+services.Players.PlayerAdded=playersAdded;services.Players.PlayerRemoving=playersRemoved
+player.Character=r6.Character
+CarryPose.start(player)
+preSimulation:Fire(.3)
+check(r6Joints[1].Transform.poseAlpha>.9 and r15Joints[1].Transform.poseAlpha>.9,"both native rig name sets lift their shoulders")
+for _,joint in r15Joints do check(joint.Transform.poseAlpha>.9,"R15 elbows/wrists blend into the carry pose") end
+preAnimation:Fire()
+check(r6Joints[1].Transform==r6Joints[1].baseline and r15Joints[1].Transform==r15Joints[1].baseline,"overrides restore before Animator evaluates the next frame")
+preSimulation:Fire(.016);playersRemoved:Fire(r6)
+check(r6Joints[1].Transform==r6Joints[1].baseline,"player removal releases any active joint override")
+r15.carrying=""
+for _=1,20 do preAnimation:Fire();preSimulation:Fire(.1) end
+check(r15Joints[1].Transform==r15Joints[1].baseline,"dropping fades back to normal animation without frozen arms")
+print(string.format("Actual camera/pickup/carry-pose adapters passed %d simulated-boundary checks; Studio remains required",checks))
 '''
 fixture=ROOT/'build/presentation-integration.spec.luau'
 fixture.parent.mkdir(exist_ok=True)

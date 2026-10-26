@@ -9,6 +9,7 @@ function RobotBuilder.build(parent, origin, stage, complete, rarity, scale)
     scale = scale or 1
     local recipe = Config.Robot.Recipes[rarity]
     local model = Instance.new("Model")
+    model.ModelStreamingMode=Enum.ModelStreamingMode.Atomic
     model.Name = if complete then recipe.Name else rarity.."RobotUnderConstruction"
     model:SetAttribute("Rarity",rarity)
     model:SetAttribute("BuildStage", stage)

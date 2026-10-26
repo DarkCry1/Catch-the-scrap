@@ -12,6 +12,9 @@ require(script.Parent:WaitForChild("PickupAnimator")).start(player)
 local remotes=ReplicatedStorage:WaitForChild("CatchTheScrapRemotes")
 local actionRemote=remotes:WaitForChild("Action")
 local feedbackRemote=remotes:WaitForChild("Feedback")
+require(script.Parent:WaitForChild("CarryPose")).start(player)
+require(script.Parent:WaitForChild("WorkshopEffects")).start(player,actionRemote)
+require(script.Parent:WaitForChild("UnboxingEffects")).start(player)
 local gui=Instance.new("ScreenGui")
 gui.Name="CatchTheScrapHUD"
 gui.ResetOnSpawn=false
@@ -140,7 +143,7 @@ local feedbackVersion=0
 local function defaultMessage()
     if not remotes:GetAttribute("Ready") then return "Waiting for the scrapyard..." end
     if (player:GetAttribute("BaseIndex") or 0)==0 then return "All workshops are occupied. Try another server." end
-    if (player:GetAttribute("CarriedName") or "")~="" then return "Return to your workshop. Hold E at the orange deposit machine." end
+    if (player:GetAttribute("CarriedName") or "")~="" then return if player:GetAttribute("CarriedKind")=="RobotCrate" then "Sealed robot inside! Deliver the box at your workshop to unbox it." else "Return to your workshop. Hold E at the orange deposit machine." end
     if (player:GetAttribute("UsedPlatforms") or 0)>=Config.Robot.Slots then return "Platforms reserved. Finish existing robots with matching parts." end
     return "Collect matching parts to build robots. Visit Milo for Speed and Strength upgrades."
 end
@@ -158,6 +161,7 @@ local function render()
     carrying.Text=if name=="" then "Hands free. Ready to collect." else name.." | "..(player:GetAttribute("CarriedRarity") or "")
     stats.Text=string.format("Weight: %d  |  Speed: %.1f  |  Strength: %d",player:GetAttribute("CarriedWeight") or 0,player:GetAttribute("CarrySpeed") or Config.BaseSpeed,player:GetAttribute("CarryStrength") or Config.Strength)
     drop.Visible=name~=""
+    drop.Text=if UserInputService.KeyboardEnabled then "Drop [Q]" elseif player:GetAttribute("CarriedKind")=="RobotCrate" then "Drop box" else "Drop part"
     if feedbackVersion==0 then message.Text=defaultMessage() end
 end
 local function requestDrop()
@@ -178,7 +182,7 @@ feedbackRemote.OnClientEvent:Connect(function(value)
         if feedbackVersion==version then feedbackVersion=0;message.Text=defaultMessage() end
     end)
 end)
-for _,attribute in {"BaseIndex","DeliveredCount","CarriedName","CarriedRarity","CarriedWeight","CarrySpeed","CarryStrength","Cash","IncomePerSecond","RobotCount","UsedPlatforms","CommonParts","UncommonParts","RareParts","EpicParts","LegendaryParts","MythicParts","CelestialParts"} do
+for _,attribute in {"BaseIndex","DeliveredCount","CarriedName","CarriedKind","CarriedRarity","CarriedWeight","CarrySpeed","CarryStrength","Cash","IncomePerSecond","RobotCount","UsedPlatforms","CommonParts","UncommonParts","RareParts","EpicParts","LegendaryParts","MythicParts","CelestialParts"} do
     player:GetAttributeChangedSignal(attribute):Connect(render)
 end
 remotes:GetAttributeChangedSignal("Ready"):Connect(render)

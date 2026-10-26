@@ -1,20 +1,20 @@
 # Catch-the-scrap
 
-Current build **v0.6** expands the scrapyard to **seven stages / 160 × 3360 studs**.
-Epic, Legendary, Mythic and Celestial add original industrial districts, detailed
-salvage models and matching-part robots. All pickups hover, turn and pulse with a
-ground halo while resting. Carrying stops the idle animation.
+Current build **v0.7** adds overhead carrying poses, an animated scrap shredder
+and sealed cardboard boxes containing ready-made robots. Deliver scrap to watch
+it pulled into counter-rotating blades with a moving press, sparks and offcuts.
+Recover a box from the yard and carry it home: its flaps open on a reserved robot
+platform, followed by a mystery reveal and a complete income-producing robot.
 
-Scrap-clad walls are **64 studs tall**. A camera guard keeps ordinary orbit and
-zoom inside the connected plaza/yard, independently of streamed wall geometry.
-All custom game text remains English. Milo's upgrades and passive income remain
-available. Four robot platforms per player; progress is session-only.
+The seven-stage **160 × 3360-stud** yard, detailed hovering salvage, 64-stud walls,
+bounded orbit camera and Milo's upgrades are available. All custom game text is
+English. Four platforms per workshop; progress is session-only.
 
-[Download v0.6](downloads/Catch-the-scrap-v0.6.rbxl) · [New stages and previews](docs/STAGES_V06.md) · [Windows test guide (Swedish)](docs/STUDIO_START_SV.md) · [Development](docs/DEVELOPMENT.md)
+[Download v0.7](downloads/Catch-the-scrap-v0.7.rbxl) · [Carry, crusher and unboxing details](docs/DELIVERY_V07.md) · [Windows test guide (Swedish)](docs/STUDIO_START_SV.md) · [Development](docs/DEVELOPMENT.md)
 
-Build with `python3 scripts/check.py`. Automated checks and asset renders cannot
-replace real Studio interaction, camera, graphics and device-performance tests.
-The original design brief follows below; current rules are documented above.
+Build with `python3 scripts/check.py`. Automated tests and asset renders cannot
+replace real Roblox Studio animation, camera and device-performance tests.
+The original design brief follows; current rules are documented above.
 
 CATCH THE SCRAP — Project Brief / Game Design Document
 

@@ -2,6 +2,7 @@
 local CollectionService=game:GetService("CollectionService")
 local Shared=game:GetService("ReplicatedStorage").CatchTheScrapShared
 local Blueprint=require(Shared.PickupBlueprint)
+local CrateBlueprint=require(Shared.CrateBlueprint)
 local PickupBuilder={}
 function PickupBuilder.build(model,root,definition)
     local pivot=Instance.new("Part")
@@ -9,7 +10,9 @@ function PickupBuilder.build(model,root,definition)
     pivot.CFrame=root.CFrame;pivot.Massless=true;pivot.CanCollide=false;pivot.CanTouch=false;pivot.CanQuery=false;pivot.Parent=model
     local joint=Instance.new("Motor6D")
     joint.Name="IdleJoint";joint.Part0=root;joint.Part1=pivot;joint.Parent=root
-    for _,detail in Blueprint.build(definition.rarity,definition.color) do
+    local isBox=definition.kind=="RobotCrate"
+    local details=if isBox then CrateBlueprint.build() else Blueprint.build(definition.rarity,definition.color)
+    for _,detail in details do
         local part=Instance.new("Part")
         part.Name=detail.name;part.Size=Vector3.new(unpack(detail.size))
         part.CFrame=root.CFrame*CFrame.new(unpack(detail.position))*CFrame.Angles(0,math.rad(detail.yaw),math.rad(detail.roll))
@@ -21,7 +24,7 @@ function PickupBuilder.build(model,root,definition)
         local weld=Instance.new("WeldConstraint");weld.Part0=pivot;weld.Part1=part;weld.Parent=part
     end
     local halo=Instance.new("Folder");halo.Name="GroundHalo";halo.Parent=model
-    local height=-Blueprint.clearance(definition.rarity,definition.color)+.08
+    local height=-(if isBox then CrateBlueprint.clearance() else Blueprint.clearance(definition.rarity,definition.color))+.08
     for i=0,11 do
         local a=i*math.pi/6
         local marker=Instance.new("Part")

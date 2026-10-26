@@ -23,6 +23,9 @@ local modules={
 local clock=0
 local os={clock=function() return clock end}
 local heartbeat
+local deferred={}
+local task={delay=function(seconds,fn) table.insert(deferred,{seconds=seconds,fn=fn}) end}
+local workspace={GetServerTimeNow=function() return clock end}
 local services={
     ReplicatedStorage={CatchTheScrapShared={Config="Config",Economy="Economy",Inventory="Inventory",Movement="Movement",PlacementRules="PlacementRules",UpgradeRules="UpgradeRules"}},
     RunService={Heartbeat={Connect=function(_,fn) heartbeat=fn;return{} end}},
@@ -80,6 +83,8 @@ local messages={}
 local feedback={FireClient=function(_,_,text) table.insert(messages,text) end}
 local carry=CarryService.new(world,items,inventory,feedback,economy)
 carry.players[player]={base=base,counter={Value=0},lastAction=-math.huge}
+local crushes=0
+carry.onCrush=function(b,record) check(b==base and items.records[record.id]==record,"accepted scrap produces an effect while its server record is still valid");crushes+=1 end
 function carry:context() return{alive=true,hasBase=true,distance=1} end
 local nextId=0
 local function hold(rarity)
@@ -127,6 +132,7 @@ check(consumed==oldConsumed and inventory.delivered[11]==oldDelivered,"full reje
 check(messages[#messages]:find("reserved")~=nil,"rejection is explained in English")
 modules.Inventory.drop(inventory,11)
 check(consumed==25,"every accepted delivery consumed once")
+check(crushes==25,"accepted scrap invokes one crusher effect per deposit; rejected deliveries never emit")
 -- Exercise real mechanic purchases against the same account and inventory services.
 clock+=20;heartbeat()
 local packets={}
@@ -209,6 +215,65 @@ for _,stage in modules.Config.Stages do
     check(attrs2.RobotCount==1 and attrs2.IncomePerSecond==recipe.Income,"new tier robot earns its configured rate")
     economy:removePlayer(advanced)
 end
+-- Exercise actual box delivery, reservation and delayed reveal with the same inventory.
+local attrs3={}
+local owner={UserId=21,leaderstats={},SetAttribute=function(_,name,value) attrs3[name]=value end,GetAttribute=function(_,name) return attrs3[name] end}
+local boxBase={owner=21,deposit={Position=0}}
+economy:addPlayer(owner,boxBase)
+carry.players[owner]={base=boxBase,counter={Value=0},lastAction=-math.huge}
+local recovered=0
+economy.onRecovered=function(p,rarity) check(p==owner and rarity=="Epic","server reveals its fixed contents");recovered+=1 end
+local function holdBox(id)
+ items.records[id]={id=id,definition={kind="RobotCrate",rarity="Mystery",name="Sealed Robot Box",weight=32},rewardRarity="Epic"}
+ modules.Inventory.registerItem(inventory,id)
+ assert(modules.Inventory.pickup(inventory,21,id,{alive=true,hasBase=true,distance=1}))
+end
+holdBox("box-A")
+local validContext=carry.context
+function carry:context() return{alive=true,hasBase=true,distance=999} end
+clock+=.3;carry:deposit(owner,boxBase)
+check(inventory.carrying[21]=="box-A" and attrs3.UsedPlatforms==0,"remote box delivery is rejected without consuming or reserving")
+function carry:context() return{alive=false,hasBase=true,distance=1} end
+clock+=.3;carry:deposit(owner,boxBase)
+check(inventory.carrying[21]=="box-A" and attrs3.UsedPlatforms==0,"dead characters cannot unbox a robot")
+carry.context=validContext
+local deliveryBefore=consumed
+local crushesBefore=crushes
+clock+=.3;carry:deposit(owner,boxBase)
+check(consumed==deliveryBefore+1 and inventory.carrying[21]==nil,"delivering a box consumes it once")
+check(crushes==crushesBefore,"robot boxes bypass the shredder")
+check(attrs3.UsedPlatforms==1 and attrs3.RobotCount==0 and attrs3.IncomePerSecond==0,"whole robot platform reserved, not prematurely paid")
+check(#deferred==1 and deferred[1].seconds==modules.Config.Crates.OpenSeconds,"unboxing completion waits for the presentation window")
+clock+=modules.Config.Crates.OpenSeconds
+local finish=deferred[1].fn;finish()
+check(attrs3.RobotCount==1 and attrs3.IncomePerSecond==45 and attrs3.Cash==0,"Epic robot starts producing only at reveal")
+finish();check(recovered==1 and attrs3.RobotCount==1,"duplicate callback cannot award twice")
+clock+=1;heartbeat();check(attrs3.Cash==45,"recovered robot produces normal passive income")
+-- Reserve three more slots; the fifth box is preserved, including the case of an active partial build.
+for n=1,3 do holdBox("box-"..n);clock+=.3;carry:deposit(owner,boxBase) end
+holdBox("box-full");clock+=.3
+local fullConsumed=consumed
+carry:deposit(owner,boxBase)
+check(consumed==fullConsumed and inventory.carrying[21]=="box-full","full capacity keeps box and its sealed contents")
+modules.Inventory.drop(inventory,21)
+-- A different workshop is rejected before any slot/reward/consumption mutation.
+local attrs4={}
+local outsider={UserId=22,leaderstats={},SetAttribute=function(_,name,value) attrs4[name]=value end,GetAttribute=function(_,name) return attrs4[name] end}
+economy:addPlayer(outsider,boxBase)
+carry.players[outsider]={base=boxBase,counter={Value=0},lastAction=-math.huge}
+items.records.foreign={id="foreign",definition={kind="RobotCrate",rarity="Mystery",name="Box"},rewardRarity="Rare"}
+modules.Inventory.registerItem(inventory,"foreign");modules.Inventory.pickup(inventory,22,"foreign",{alive=true,hasBase=true,distance=1})
+clock+=.3;carry:deposit(outsider,boxBase)
+check(attrs4.UsedPlatforms==0 and inventory.carrying[22]=="foreign","another player's base cannot receive a recovered robot")
+-- Disconnects and base reassignment cannot complete pending unboxings for a replacement owner.
+boxBase.owner=333;deferred[2].fn()
+check(attrs3.RobotCount==1,"a replaced workshop owner cannot inherit the old opening job")
+boxBase.owner=21
+economy:removePlayer(owner)
+local beforeDisconnect=recovered
+for _,pending in deferred do pending.fn() end
+check(recovered==beforeDisconnect,"disconnect invalidates every delayed box completion")
+economy:removePlayer(outsider)
 -- Exercise actual client streaming cleanup and distance activation, not GPU output.
 RobotAnimator.start()
 local reactor={Transparency=.3,IsA=function(_,kind) return kind=="BasePart" end,Destroying={Connect=function() return{Disconnect=function() end} end}}

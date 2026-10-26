@@ -72,6 +72,31 @@ function EconomyService:addPart(player, rarity)
     return built, entry.account.projects[index].parts
 end
 
+function EconomyService:canRecoverRobot(player)
+    local entry=self.players[player]
+    return entry~=nil and entry.base~=nil and Economy.canRecoverRobot(entry.account,Config.Robot)
+end
+
+function EconomyService:recoverRobot(player,rarity)
+    local entry=self.players[player]
+    self:settle(player,entry,os.clock())
+    local index=Economy.reserveRobot(entry.account,rarity,Config.Robot,workspace:GetServerTimeNow())
+    assert(index,"Recovered robot capacity must be checked before consuming a box")
+    local project=entry.account.projects[index]
+    self:publish(player,entry)
+    self.world:updateEconomy(entry.base,player,entry.account)
+    task.delay(Config.Crates.OpenSeconds,function()
+        -- A delayed reveal cannot award a departed account or a new workshop owner.
+        if self.players[player]~=entry or entry.base.owner~=player.UserId or entry.account.projects[index]~=project then return end
+        self:settle(player,entry,os.clock())
+        if not Economy.finishRecovery(entry.account,index,Config.Robot) then return end
+        self:publish(player,entry)
+        self.world:updateEconomy(entry.base,player,entry.account)
+        if self.onRecovered then self.onRecovered(player,rarity) end
+    end)
+    return index
+end
+
 function EconomyService:removePlayer(player)
     self.players[player] = nil
 end

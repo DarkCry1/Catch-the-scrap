@@ -1,10 +1,10 @@
-# Testa v0.6 på Windows
+# Testa v0.7 på Windows
 
 Alla spelets egna texter är nu på **engelska**. Vi använder svenska för instruktioner och samtal.
 
 ## Öppna rätt platsfil
 
-1. Hämta **Catch-the-scrap-v0.6.rbxl** från `downloads` på GitHub-grenen `codex/epic-salvage-stages`. Klicka **Download raw file**, nedåtpilen vid filen.
+1. Hämta **Catch-the-scrap-v0.7.rbxl** från `downloads` på GitHub-grenen `codex/carry-crusher-unboxing`. Klicka **Download raw file**, nedåtpilen vid filen.
 2. Stoppa pågående Play i Roblox Studio. Öppna den **nya** filen via **File → Open from File… / Ctrl+O**.
 3. Tryck **Play / F5**. Världen skapas vid spelstart; en tom editor före Play är normalt.
 4. Öppna **Output** via View/Window om du behöver se felmeddelanden.
@@ -15,9 +15,41 @@ Alla spelets egna texter är nu på **engelska**. Vi använder svenska för inst
 - Följ **gula pilar** mot skrotgården. **Turkosa pilar** inne i gården leder tillbaka.
 - Gå nära en del och håll **E / Pick up**. Mobil använder upphämtningsknappen på skärmen.
 - **Q / Drop [Q]** släpper delen och återställer farten.
-- Gå in i din egen verkstad och håll **E / Deposit part** vid maskinen med orange kant.
+- Gå in i din egen verkstad och håll **E / Deliver scrap or box** vid maskinen med orange kant.
 
 Skrotgården är **160 studs bred och 3 360 studs lång**, med sju områden och 32 upphämtningsplatser i varje. Områdena heter **Sorting Yard**, **Machine Graveyard**, **Reactor Wrecks**, **Turbine Foundry**, **Golden Furnace**, **Void Salvage** och **Starforge Ruins**. Föremål återkommer åtta sekunder efter inlämning. Släppta delar dupliceras inte.
+
+## Nytt i v0.7: bära över huvudet, kvarn och robotlådor
+
+När du plockar upp skrot eller en låda lyfter karaktären armarna och bär fyndet ovanför huvudet. Posen tonas mjukt in och ut och är gjord för både R6 och R15. Alla spelare i närheten ska se bärposen.
+
+### Skrotkvarnen
+
+Lämna in vanligt skrot med **E / Deliver scrap or box**. Delen dras från bärpositionen in i kvarnen, krymper/krossas mellan motroterande blad och försvinner med gnistor och små metallbitar. Pressen rör sig medan kvarnen arbetar. Dekorationen kan inte skada eller knuffa spelare.
+
+### Hitta en färdig robot i en kartong
+
+1. Leta efter **Sealed Robot Box**. Det finns två lådor i varje område, totalt 14. De första ligger bredvid vägen i Common-området.
+2. Håll **E / Recover box** och spring hem. Lådan är ett separat fynd, inte en bunt skrotdelar. Innehållet är hemligt under transporten och ändras inte om lådan släpps.
+3. Du behöver **en ledig robotplattform**. Lämna in vid samma maskin med **E / Deliver scrap or box**.
+4. Lådan flyttas till den reserverade plattformen, skakar, tappar tejpen och öppnar luckorna med ljus och partiklar. Efter **3,8 sekunder** avslöjas den färdiga roboten, som gör en kort entré på sin plats.
+5. Roboten börjar då ge sin vanliga rarity-inkomst. Ingen delinsamling behövs för just denna robot. Påbörjade skrotprojekt påverkas inte.
+
+Robotlådor mals aldrig i kvarnen. Full bas eller nekad inlämning behåller lådan i händerna. Två spelare kan inte ta samma låda. Efter godkänd leverans kommer en ny låda efter 35 sekunder; den får ett nytt serverbestämt innehåll.
+
+### Testa den nya uppdateringen
+
+- [ ] Prova först i en ny Play-session med lediga plattformar.
+- [ ] Plocka upp både en liten skrotdel och en kartong. Kontrollera händer och huvud med din avatar; testa R15 och R6 separat.
+- [ ] Spring, hoppa, släpp och plocka upp igen. Händerna ska återgå till normal animation efter släpp/inlämning och efter död/reset.
+- [ ] Lämna in alla typer av skrot och se att bladen roterar, pressen rör sig, delen försvinner i kvarnen och gnistor syns utan att kvarnen blockerar spelaren.
+- [ ] Bär hem en kartong och kontrollera hela öppningen och rätt inkomst efter avslöjandet.
+- [ ] Reservera sista plattformen med ett skrotprojekt och försök sedan lämna in en låda. Lådan ska behållas och det gamla projektet ska gå att slutföra.
+- [ ] Testa två spelare: båda ser bärposer och kvarneffekter, men bara ägaren får roboten. Annans bas nekar leveransen.
+- [ ] Lämna servern under en öppning. En ny ägare ska inte få den gamla spelarens robot.
+- [ ] Gå bort och tillbaka medan effekter körs; kontrollera streaming, mobilvy och låg grafiknivå.
+
+[Förhandsbilder av kvarnen och kartongerna](DELIVERY_V07.md) är modellrenderingar, inte Studio-skärmbilder. Riktig avatarpassning, animationstiming och FPS behöver bekräftas i Studio/enhet.
 
 ## Matchande delar och robotar
 

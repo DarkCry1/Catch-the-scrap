@@ -25,6 +25,8 @@ return table.freeze({
         { Rarity = "Mythic", Name = "Void Salvage", Color = recipes.Mythic.Color },
         { Rarity = "Celestial", Name = "Starforge Ruins", Color = recipes.Celestial.Color },
     },
+    Crates = { OpenSeconds = 3.8, RespawnSeconds = 35, PerStage = 2 },
+    Presentation = { Distance = 140, CrushSeconds = 1.6, MaxDebris = 18 },
     WallHeight = 64,
     Camera = { MaxZoom = 32, EdgeInset = 2, NearPlanePadding = 1.5 },
     Upgrades = upgrades,

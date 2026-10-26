@@ -34,9 +34,9 @@ end
 function Inventory.pickup(state: State, playerId: number, itemId: string, context: Context): (boolean, string)
     local allowed, reason = canInteract(state, context)
     if not allowed then return false, reason end
-    if state.carrying[playerId] then return false, "You are already carrying a part. Drop or deposit it first." end
+    if state.carrying[playerId] then return false, "You are already carrying something. Drop or deposit it first." end
     local item = state.items[itemId]
-    if not item or item.owner ~= nil then return false, "That part is no longer available." end
+    if not item or item.owner ~= nil then return false, "That item is no longer available." end
     item.owner = playerId
     state.carrying[playerId] = itemId
     return true, ""

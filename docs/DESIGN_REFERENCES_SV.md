@@ -44,3 +44,8 @@ Skrotgården har fått en egen sammanhängande industrimiljö med skrotklädda y
 ## Uppdatering v0.6
 
 Epic, Legendary, Mythic och Celestial följer etablerat rarity-språk från loot-/simulatorspel. De nya områdesnamnen Turbine Foundry, Golden Furnace, Void Salvage och Starforge Ruins är egna och anpassade till skrotgårdens tema. Geometri, modeller och animationer är byggda i projektet. Inga nya externa spel har speltestats eller visuellt granskats i molnet för denna uppdatering.
+
+
+## Uppdatering v0.7
+
+Bärposen är procedurbyggd för R6/R15. Kvarn, sågblad och kartonger är egen geometri; tejp, fraktetikett och robotstämpel består av vanliga delar. Unboxing sker efter hemleverans på en ledig robotplattform. Inga Toolbox-modeller eller uppladdade animationer används. Gnistor använder Roblox medföljande partikeltextur. Modellbilderna är från Blender, inte från Roblox Studio.

@@ -53,4 +53,6 @@ end
 for x=-24,24,8 do
     table.insert(parts,{name="RoofPatch",size={6,.12,12},position={x,13.26,-17},palette=if x%16==0 then "rust" else "steel",material="CorrodedMetal",collidable=false,yaw=0})
 end
+local hidden={DepositHousing=true,HopperRim=true,HopperInside=true,HopperScanner=true}
+for index=#parts,1,-1 do if hidden[parts[index].name] then table.remove(parts,index) end end
 return parts
