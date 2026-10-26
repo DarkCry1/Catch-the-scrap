@@ -18,6 +18,8 @@ return table.freeze({
     BaseSpeed = 24,
     Strength = 30,
     MinimumSpeed = 7,
+    PickupClearance = 2.2,
+    Visuals = { EffectDistance = 160, EffectInterval = 0.4, YardPartBudget = 1700 },
     InteractionDistance = 12,
     ActionCooldown = 0.2,
     RespawnSeconds = 8,
@@ -32,7 +34,7 @@ return table.freeze({
     Palette = {
         dark = { 27, 38, 51 }, floor = { 62, 75, 84 }, wall = { 72, 91, 104 },
         steel = { 118, 140, 151 }, amber = { 255, 181, 61 }, energy = { 90, 240, 217 },
-        copper = { 181, 108, 67 }, black = { 12, 20, 29 },
+        copper = { 173, 105, 61 }, black = { 12, 20, 29 }, rust = { 138, 77, 49 }, rubber = { 29, 33, 34 },
     },
     BaseAccents = { { 78, 222, 205 }, { 110, 169, 255 }, { 241, 157, 82 }, { 185, 150, 255 } },
     Items = {

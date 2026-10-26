@@ -5,6 +5,7 @@ local Shared = ReplicatedStorage.CatchTheScrapShared
 local Config = require(Shared.Config)
 local Inventory = require(Shared.Inventory)
 local Movement = require(Shared.Movement)
+local PlacementRules = require(Shared.PlacementRules)
 local CarryService = {}
 CarryService.__index = CarryService
 
@@ -150,8 +151,8 @@ function CarryService:drop(player)
     local ground = workspace:Raycast(origin, Vector3.new(0, -60, 0), params)
     local record = self.items.records[id]
     Inventory.drop(self.inventory, player.UserId)
-    if ground and ground.Normal.Y >= 0.7 then
-        self.items:place(record, ground.Position + Vector3.new(0, 1.6, 0))
+    if ground and ground.Normal.Y >= 0.7 and PlacementRules.safeGround(ground.Position.X,ground.Position.Z,Config.TrackWidth,Config.ZoneLength,Config.TrackStart) then
+        self.items:place(record, ground.Position + Vector3.new(0, record.clearance or Config.PickupClearance, 0))
         self:notify(player, "Part dropped. Your movement speed is restored.")
     else
         self.items:resetToSpawn(record)

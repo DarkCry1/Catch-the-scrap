@@ -30,12 +30,13 @@ function WorldService.new()
     root.Name = "CatchTheScrapWorld"
     root.Parent = workspace
     self.root = root
+    local clouds=Instance.new("Clouds")
+    clouds.Name="SalvageClouds";clouds.Cover=.45;clouds.Density=.32;clouds.Color=Color3.fromRGB(198,192,177);clouds.Parent=workspace.Terrain
     local items = Instance.new("Folder")
     items.Name = "Items"
     items.Parent = root
     self.items = items
 
-    part(root, "HomeGround", Vector3.new(200, 2, 320), Vector3.new(0, -1, -140), Color3.fromRGB(53, 65, 72), Enum.Material.Concrete)
     part(root, "WorkshopStreet", Vector3.new(43, 0.08, 302), Vector3.new(0, 0.05, -131), Color3.fromRGB(37, 47, 56), Enum.Material.Asphalt)
     for z = -260, -15, 25 do
         NavigationRenderer.draw(root,0,z,1,Color3.fromRGB(235,178,65))
@@ -70,6 +71,8 @@ function WorldService:assignBase(player)
     for _, base in self.bases do
         if base.owner == nil then
             base.owner = player.UserId
+            base.ownerPlayer = player
+            base.folder:AddPersistentPlayer(player)
             base.prompt.Enabled = true
             base.prompt.ObjectText = player.DisplayName .. " · Workshop " .. base.index
             base.folder:SetAttribute("OwnerUserId", player.UserId)
@@ -85,6 +88,8 @@ function WorldService:updateEconomy(base, player, account)
 end
 
 function WorldService:releaseBase(base)
+    if base.ownerPlayer then base.folder:RemovePersistentPlayer(base.ownerPlayer) end
+    base.ownerPlayer = nil
     base.owner = nil
     base.folder:SetAttribute("OwnerUserId", nil)
     base.prompt.Enabled = false

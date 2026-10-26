@@ -1,35 +1,36 @@
-# Catch the Scrap v0.4 – Milo the Mechanic
+# Catch the Scrap v0.5 – industrial scrapyard visual pass
 
-1. Open [Catch-the-scrap-v0.4.rbxl](Catch-the-scrap-v0.4.rbxl) on GitHub.
+1. Open [Catch-the-scrap-v0.5.rbxl](Catch-the-scrap-v0.5.rbxl) on GitHub.
 2. Click **Download raw file** (the down-arrow button).
-3. Stop the old Studio test, open the new file with **File → Open from File / Ctrl+O**, and press **Play / F5**.
+3. Stop the old Studio test. Open this new file using **File → Open from File / Ctrl+O**.
+4. Press **Play / F5**. The world is constructed at startup.
 
-Visit **Milo the Mechanic**, the small robot service stand beside the scrapyard
-entrance. Hold **E / Browse upgrades** to see your cash, current levels, next
-stat values and prices. Buy with cash earned by your production robots.
+## The new visual pass
 
-| Upgrade | Effect per level | First price | Cap |
-|---|---:|---:|---:|
-| Speed | +2 base speed | $75 | 10 levels |
-| Strength | +10 carrying strength | $100 | 10 levels |
+Scrap-clad perimeter walls, reinforced entrances, silos, layered weathered panels,
+vehicle and machine details, stained ground, drains and warm work lights make
+the 160 × 1440-stud yard feel like an industrial salvage site. Workshops, robots
+and Milo's stand have extra mechanical details. Collectibles now look like gears,
+motors and clamped reactor cores. Lighting uses a late-afternoon atmosphere,
+clouds and restrained bloom, with nearby-only ambient lights, smoke and sparks.
 
-Prices increase after each purchase. Speed affects both unloaded and loaded
-movement. Strength reduces the weight penalty. Purchases apply immediately,
-including while carrying, and survive character reset during the same server
-visit. All progress, including upgrades, resets when leaving the server.
-
-Stand near Milo to buy. Walking away closes the menu. The server checks prices,
-cash, distance, liveness, caps, stale offers and purchase cooldowns.
+The world streams in sections. Your own workshop remains loaded for you. Test
+returning from the far end and resetting your character in the new place file.
 
 **WASD** move · **Hold E** pick up/deposit/browse · **Q** drop · **X** close shop.
-The three-zone scrapyard and robot recipes remain: Common 5 matching parts,
-Uncommon 7, Rare 10. Four production platforms per player.
+All custom in-game text is English. Milo sells Speed and Strength upgrades with
+earned cash. Common robots need 5 matching parts, Uncommon 7, Rare 10. Upgrades,
+robots and money are session-only; permanent saving is not implemented.
 
-[Windows guide in Swedish](../docs/STUDIO_START_SV.md) · [Editable source ZIP](Catch-the-scrap-v0.4-source.zip)
+[Windows test guide (Swedish)](../docs/STUDIO_START_SV.md) · [Editable source ZIP](Catch-the-scrap-v0.5-source.zip) · [Visual review](../docs/VISUAL_PASS_V05.md)
 
-![Mechanic stand geometry preview](mechanic-preview.png)
+![Ground-level model render](scrapyard-ground-preview.png)
 
-This is a Blender asset render using the shared geometry, not a Roblox Studio
-screenshot. Automated logic/service checks and place builds passed. Actual
-Studio interaction, menu layout, mobile input and multiplayer still need testing.
-Older versioned downloads are archived builds; use v0.4 for the mechanic shop.
+![Overview model render](scrapyard-preview.png)
+
+![Collectible model render](pickup-preview.png)
+
+These are Blender asset renders using shared geometry, **not Roblox Studio
+screenshots**. Native lighting, materials, text and particles differ. Automated
+checks and builds passed; actual Studio interaction, streaming, lighting and
+device performance still need testing. Older versioned downloads are archives.

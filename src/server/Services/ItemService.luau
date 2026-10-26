@@ -3,29 +3,12 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage.CatchTheScrapShared
 local Config = require(Shared.Config)
 local Inventory = require(Shared.Inventory)
+local PickupBuilder=require(script.Parent.Parent.Assets.PickupBuilder)
 local ItemService = {}
 ItemService.__index = ItemService
 
 function ItemService.new(world, inventory)
     return setmetatable({ world = world, inventory = inventory, records = {}, serial = 0 }, ItemService)
-end
-
-local function decoration(model, root, name, size, offset, color)
-    local detail = Instance.new("Part")
-    detail.Name = name
-    detail.Size = size
-    detail.CFrame = root.CFrame * CFrame.new(offset)
-    detail.Color = color
-    detail.Material = Enum.Material.Neon
-    detail.CanCollide = false
-    detail.CanTouch = false
-    detail.CanQuery = false
-    detail.Massless = true
-    detail.Parent = model
-    local weld = Instance.new("WeldConstraint")
-    weld.Part0 = root
-    weld.Part1 = detail
-    weld.Parent = detail
 end
 
 function ItemService:spawn(slot)
@@ -35,12 +18,13 @@ function ItemService:spawn(slot)
     local definition = slot.definition
     local model = Instance.new("Model")
     model.Name = definition.name
+    model.ModelStreamingMode = Enum.ModelStreamingMode.Atomic
     model:SetAttribute("ItemId", id)
     model:SetAttribute("Weight", definition.weight)
     model:SetAttribute("Rarity", definition.rarity)
     local root = Instance.new("Part")
-    root.Name = "Body"
-    root.Shape = Enum.PartType[definition.shape]
+    root.Name = "CarryRoot"
+    root.Transparency = 1
     root.Size = Vector3.new(2.5, 2.5, 2.5)
     root.CFrame = CFrame.new(slot.position)
     root.Color = Color3.fromRGB(unpack(definition.color))
@@ -52,8 +36,7 @@ function ItemService:spawn(slot)
     root.Massless = true
     root.Parent = model
     model.PrimaryPart = root
-    decoration(model, root, "LeftLight", Vector3.new(0.4, 0.45, 0.2), Vector3.new(-0.6, 0.4, -1.2), Color3.fromRGB(255, 225, 120))
-    decoration(model, root, "RightLight", Vector3.new(0.4, 0.45, 0.2), Vector3.new(0.6, 0.4, -1.2), Color3.fromRGB(255, 225, 120))
+    PickupBuilder.build(model,root,definition)
     local prompt = Instance.new("ProximityPrompt")
     prompt.ActionText = "Pick up"
     prompt.AutoLocalize = false
@@ -83,7 +66,7 @@ function ItemService:spawn(slot)
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 8)
     corner.Parent = label
-    local record = { id = id, model = model, root = root, prompt = prompt, billboard = billboard, definition = definition, slot = slot, weld = nil }
+    local record = { id = id, model = model, root = root, prompt = prompt, billboard = billboard, definition = definition, slot = slot, clearance = slot.clearance, weld = nil }
     self.records[id] = record
     slot.current = record
     Inventory.registerItem(self.inventory, id)

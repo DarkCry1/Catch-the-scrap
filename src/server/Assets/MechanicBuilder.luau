@@ -10,6 +10,7 @@ local MechanicBuilder={}
 function MechanicBuilder.create(parent)
     local stand=Instance.new("Model")
     stand.Name="MechanicStand"
+    stand.ModelStreamingMode=Enum.ModelStreamingMode.Atomic
     stand.Parent=parent
     local origin=CFrame.new(55,0,7)*CFrame.Angles(0,-math.pi/2,0)
     local function part(name,size,position,palette,material)

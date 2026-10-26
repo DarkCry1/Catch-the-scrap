@@ -54,6 +54,7 @@ end
 function BaseBuilder.create(parent, index, origin)
     local folder = Instance.new("Model")
     folder.Name = "Workshop" .. index
+    folder.ModelStreamingMode = Enum.ModelStreamingMode.PersistentPerPlayer
     folder.Parent = parent
     local accent = Color3.fromRGB(unpack(Config.BaseAccents[(index - 1) % #Config.BaseAccents + 1]))
     local pieces = {}

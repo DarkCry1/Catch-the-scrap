@@ -19,7 +19,7 @@ function RobotBuilder.build(parent, origin, stage, complete, rarity, scale)
         object.Name = definition.name
         object.Shape = Enum.PartType[definition.shape]
         object.Size = Vector3.new(unpack(definition.size)) * scale
-        object.CFrame = origin * CFrame.new(Vector3.new(unpack(definition.position)) * scale)
+        object.CFrame = origin * CFrame.new(Vector3.new(unpack(definition.position)) * scale) * CFrame.Angles(0,math.rad(definition.yaw or 0),0)
         object.Anchored = true
         object.CanCollide = false
         object.CanTouch = false
@@ -31,6 +31,7 @@ function RobotBuilder.build(parent, origin, stage, complete, rarity, scale)
             object.Color = Color3.fromRGB(unpack(recipe.Color))
         end
         object.Material = if not assembled or definition.palette == "energy" then Enum.Material.Neon else Enum.Material.Metal
+        object.Reflectance = if assembled and definition.palette=="steel" then .06 else 0
         object.Transparency = if assembled then 0 else 0.9
         object.CastShadow = assembled
         object.Parent = model

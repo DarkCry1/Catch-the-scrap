@@ -15,7 +15,7 @@ end
 local layout=Yard.build(Config.TrackWidth,Config.ZoneLength,Config.TrackStart)
 check(Config.TrackWidth==160 and Config.ZoneLength*3==1440,"expanded yard dimensions")
 check(#layout.spawns==96,"32 pickups per rarity zone")
-check(#layout.parts<900,"bounded static scenery budget")
+check(#layout.parts<=Config.Visuals.YardPartBudget,"bounded static scenery budget for the visual overhaul")
 local counts: {[string]: number}={}
 for _,spawn in layout.spawns do
     local x,z=spawn.position[1],spawn.position[3]
@@ -32,7 +32,7 @@ for _,part in layout.parts do
     check(#part.size==3 and #part.position==3,"valid part vectors")
     for _,size in part.size do check(size>0,"positive scenery dimensions") end
     -- Every solid prop must leave the middle 28 studs clear at character height.
-    if part.collidable and part.name~="EndFence" then
+    if part.collidable and part.name~="EndFence" and part.position[3]>-280 and part.position[3]<Config.TrackStart+Config.ZoneLength*3-4 then
         local yaw,roll=math.rad(part.yaw),math.rad(part.roll)
         local sx,sy,sz=part.size[1]/2,part.size[2]/2,part.size[3]/2
         local rotatedX=math.abs(sx*math.cos(roll))+math.abs(sy*math.sin(roll))

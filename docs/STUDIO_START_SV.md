@@ -1,10 +1,10 @@
-# Testa v0.4 på Windows
+# Testa v0.5 på Windows
 
 Alla spelets egna texter är nu på **engelska**. Vi använder svenska för instruktioner och samtal.
 
 ## Öppna rätt platsfil
 
-1. Hämta **Catch-the-scrap-v0.4.rbxl** från `downloads` på GitHub-grenen `codex/mechanic-upgrades`. Klicka **Download raw file**, nedåtpilen vid filen.
+1. Hämta **Catch-the-scrap-v0.5.rbxl** från `downloads` på GitHub-grenen `codex/scrapyard-visual-overhaul`. Klicka **Download raw file**, nedåtpilen vid filen.
 2. Stoppa pågående Play i Roblox Studio. Öppna den **nya** filen via **File → Open from File… / Ctrl+O**.
 3. Tryck **Play / F5**. Världen skapas vid spelstart; en tom editor före Play är normalt.
 4. Öppna **Output** via View/Window om du behöver se felmeddelanden.
@@ -59,6 +59,23 @@ Första Speed kan betalas efter cirka 15 sekunders produktion från en Common-ro
 - [ ] Reset Character behåller de köpta nivåerna i samma serverbesök.
 - [ ] Två spelare har separata saldon och nivåer och kan handla samtidigt.
 - [ ] Menyn och köpknapparna går att använda i telefonläge, stående och liggande.
+
+## Visuell genomgång av v0.5
+
+Det nya bygget har höga skrotklädda väggar, lagad plåt, silor, markslitage, olje-/våtfläckar, avrinningsgaller, verkstadsljus och mer detaljerade fynd, baser, robotar och mekaniker. Ljuset ligger i sen eftermiddag. Rök och gnistor är sparsamma och aktiveras i närheten av spelaren.
+
+- [ ] Öppna den **nya platsfilen**. Streaming- och ljusinställningar ingår i den; använd den som utgångspunkt även om du tidigare synkat koden till en äldre plats.
+- [ ] Gå genom alla tre områden och bedöm ljus, material, väggarnas skrotklädsel och att text och upphämtningsdelar är tydliga.
+- [ ] Kontrollera att mittvägen och alla upphämtningsplatser är fria från nya hinder.
+- [ ] Plocka upp, bär, släpp och lämna in Common Gear, Uncommon Motor och Rare Core. Modellerna ska följa spelaren utan kollision, och släppta modeller ska ligga över markytan.
+- [ ] Släpp en del nära ytterväggen: den ska hamna säkert eller återställas till sin ursprungsplats, inte bli oåtkomlig bakom väggen.
+- [ ] Gå längst bort i banan och tillbaka. Den egna basen, robotarna och inlämningen ska fortfarande fungera.
+- [ ] Reset Character från Rare-området ska ge en säker återkomst till den egna basen.
+- [ ] Milo och köpmenyn ska fortfarande fungera efter en lång tur och återkomst.
+- [ ] Ljus och partiklar ska dyka upp nära spelaren utan att blinka eller påverka kontrollerna. Reaktorpulser ska fungera efter att du lämnat ett område och kommit tillbaka.
+- [ ] Testa både hög och låg grafiknivå och telefonläget. Mät faktisk prestanda i Studio/enhet; bilderna från modellrenderaren visar inte FPS.
+
+Förhandsbilderna är Blender-renderingar av modellernas geometri. Roblox Studio använder andra ljus-, material- och texteffekter. De är inte skärmbilder från ett genomfört Studio-test.
 
 ## Testlista för detta bygge
 

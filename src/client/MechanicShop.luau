@@ -22,6 +22,9 @@ function MechanicShop.start(player,remote,hud)
         local corner=Instance.new("UICorner");corner.CornerRadius=UDim.new(0,radius);corner.Parent=object
     end
     round(panel,14)
+    panel.BackgroundColor3=Color3.new(1,1,1)
+    local gradient=Instance.new("UIGradient")
+    gradient.Color=ColorSequence.new(Color3.fromRGB(34,48,58),Color3.fromRGB(17,26,35));gradient.Rotation=90;gradient.Parent=panel
     local outline=Instance.new("UIStroke");outline.Color=Color3.fromRGB(101,125,140);outline.Parent=panel
     local function label(parent,text,color,size)
         local obj=Instance.new("TextLabel")
@@ -76,6 +79,7 @@ function MechanicShop.start(player,remote,hud)
         local frame=Instance.new("Frame")
         frame.Position=UDim2.new(0,0,(index-1)*.5,(index-1)*5);frame.Size=UDim2.new(1,0,.5,-5)
         frame.BackgroundColor3=Color3.fromRGB(30,44,58);frame.Parent=body;round(frame,10)
+        local edge=Instance.new("UIStroke");edge.Color=color;edge.Transparency=.7;edge.Parent=frame
         local name=label(frame,kind,color,12);name.Font=Enum.Font.GothamBold
         local value=label(frame,"",Color3.fromRGB(235,241,246),19);value.Font=Enum.Font.GothamBold
         local description=label(frame,"",Color3.fromRGB(176,197,211),11)

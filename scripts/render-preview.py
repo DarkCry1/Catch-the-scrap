@@ -8,7 +8,7 @@ from pathlib import Path
 import json
 import math
 import bpy
-from mathutils import Vector
+from mathutils import Vector, Matrix
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = json.loads((ROOT / 'build/blueprints.json').read_text())
@@ -54,7 +54,12 @@ def xyz(point):
 
 
 def geometry(name, size, position, mat, shape='Block', yaw=0):
-    if shape == 'Ball':
+    if shape == 'RawCylinder':
+        bpy.ops.mesh.primitive_cylinder_add(vertices=16, radius=.5, depth=1)
+        obj=bpy.context.object
+        A=Matrix(((1,0,0,0),(0,0,1,0),(0,1,0,0),(0,0,0,1)))
+        obj.matrix_world=Matrix.Translation(Vector(xyz(position)))@A@Matrix.Rotation(math.radians(yaw),4,'Y')@Matrix.Diagonal((*size,1))@Matrix.Rotation(math.pi/2,4,'Y')
+    elif shape == 'Ball':
         bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=8, location=xyz(position))
         obj = bpy.context.object
         obj.scale = (size[0] / 2, size[2] / 2, size[1] / 2)
@@ -109,7 +114,7 @@ for index, (x, z) in enumerate([(-16, -12), (16, -12), (-16, 8), (16, 8)]):
     for piece in DATA['robot']:
         assembled = index == 0 or piece['step'] <= 2
         pos = [piece['position'][0] + x, piece['position'][1] + 1.05, piece['position'][2] + z]
-        geometry(piece['name'], piece['size'], pos, palette[piece['palette']] if assembled else ghost, piece['shape'])
+        geometry(piece['name'], piece['size'], pos, palette[piece['palette']] if assembled else ghost, 'RawCylinder' if piece['shape']=='Cylinder' else piece['shape'],piece.get('yaw',0))
 for n in range(-3, 4):
     geometry('hazard', [.65, .03, 3], [n * 1.25, .51, -5.5], palette['amber'], yaw=25)
 label('WORKSHOP / 01', [0, 13.8, 24.55], 1.6, palette['accent'])

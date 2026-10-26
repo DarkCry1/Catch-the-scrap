@@ -13,7 +13,13 @@ local function json(value)
     else return tostring(value) end
 end
 local Config = require("../src/shared/Config")
+local PickupBlueprint=require("../src/shared/PickupBlueprint")
+local pickupVisuals={}
+for _,item in Config.Items do
+    pickupVisuals[item.rarity]={parts=PickupBlueprint.build(item.rarity,item.color),clearance=PickupBlueprint.clearance(item.rarity,item.color)}
+end
 print(json({
+    pickupVisuals=pickupVisuals,
     mechanic = require("../src/shared/MechanicBlueprint"),
     base = require("../src/shared/BaseBlueprint"),
     robot = require("../src/shared/RobotBlueprint"),

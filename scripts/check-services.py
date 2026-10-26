@@ -18,27 +18,40 @@ local modules={
     Economy=nativeRequire("../src/shared/Economy"),
     Inventory=nativeRequire("../src/shared/Inventory"),
     Movement=nativeRequire("../src/shared/Movement"),
+    PlacementRules=nativeRequire("../src/shared/PlacementRules"),
 }
 local clock=0
 local os={clock=function() return clock end}
 local heartbeat
 local services={
-    ReplicatedStorage={CatchTheScrapShared={Config="Config",Economy="Economy",Inventory="Inventory",Movement="Movement",UpgradeRules="UpgradeRules"}},
+    ReplicatedStorage={CatchTheScrapShared={Config="Config",Economy="Economy",Inventory="Inventory",Movement="Movement",PlacementRules="PlacementRules",UpgradeRules="UpgradeRules"}},
     RunService={Heartbeat={Connect=function(_,fn) heartbeat=fn;return{} end}},
     Players={},
 }
+local added,removed={},{}
+services.CollectionService={
+ GetInstanceAddedSignal=function(_,tag) return{Connect=function(_,fn) added[tag]=fn end} end,
+ GetInstanceRemovedSignal=function(_,tag) return{Connect=function(_,fn) removed[tag]=fn end} end,
+ GetTagged=function() return{} end,
+}
+local tweenCalls={}
+services.TweenService={Create=function(_,part)
+ local tween={cancelled=false,startedAt=part.Transparency,Play=function() end,Cancel=function(self) self.cancelled=true end}
+ table.insert(tweenCalls,tween);return tween
+end}
+local TweenInfo={new=function() return{} end}
 local game={GetService=function(_,name) return services[name] end}
 local made={}
 local Instance={new=function(class) local obj={ClassName=class};table.insert(made,obj);return obj end}
 local Color3={fromRGB=function(r,g,b) return{r,g,b} end}
 local Vector3={new=function(x,y,z) return{x,y,z} end}
 local UDim2={fromScale=function(x,y) return{x,y} end}
-local Enum={Font={GothamBold="GothamBold"}}
+local Enum={Font={GothamBold="GothamBold"},EasingStyle={Sine="Sine"},EasingDirection={InOut="InOut"}}
 local require=function(name) assert(modules[name],name);return modules[name] end
 '''
 body=''
-for name in ('EconomyService','CarryService','FloatingText','MechanicService'):
-    source=(ROOT/f"src/server/{'Assets' if name=='FloatingText' else 'Services'}/{name}.luau").read_text()
+for name in ('EconomyService','CarryService','FloatingText','MechanicService','RobotAnimator','EnvironmentEffects'):
+    source=(ROOT/(f'src/client/{name}.luau' if name in ('RobotAnimator','EnvironmentEffects') else f"src/server/{'Assets' if name=='FloatingText' else 'Services'}/{name}.luau")).read_text()
     body+=f'local {name}=(function()\n{source}\nend)()\n'
 checks=r'''
 local checks=0
@@ -181,6 +194,25 @@ economy:removePlayer(player)
 local final=attrs.Cash
 clock+=100;heartbeat()
 check(attrs.Cash==final,"disconnected accounts stop producing")
+-- Exercise actual client streaming cleanup and distance activation, not GPU output.
+RobotAnimator.start()
+local reactor={Transparency=.3,IsA=function(_,kind) return kind=="BasePart" end,Destroying={Connect=function() return{Disconnect=function() end} end}}
+added.WorkingRobotReactor(reactor)
+check(tweenCalls[#tweenCalls].startedAt==0,"reactor pulse initializes from its intended material opacity")
+removed.WorkingRobotReactor(reactor)
+check(tweenCalls[#tweenCalls].cancelled,"streamed-out reactors release their tween")
+reactor.Transparency=.45;added.WorkingRobotReactor(reactor)
+check(tweenCalls[#tweenCalls].startedAt==0,"reactor effect restarts after streaming back in")
+local effectDistance=30
+root.Position=setmetatable({},{__sub=function() return{Magnitude=effectDistance} end})
+local lamp={Enabled=false,IsA=function(_,kind) return kind=="Light" end,Parent={IsA=function(_,kind) return kind=="BasePart" end,Position={}}}
+EnvironmentEffects.start(player)
+added.YardAmbientEffect(lamp);heartbeat(.5)
+check(lamp.Enabled,"nearby ambient light becomes enabled")
+effectDistance=500;heartbeat(.5)
+check(not lamp.Enabled,"distant ambient light is disabled")
+removed.YardAmbientEffect(lamp);effectDistance=30;heartbeat(.5)
+check(not lamp.Enabled,"removed ambient instances are not reactivated")
 print(string.format("Actual deposit/income/mechanic services passed %d simulated-boundary checks; Studio remains required",checks))
 '''
 fixture=BUILD/'service-integration.spec.luau'

@@ -6,6 +6,7 @@ local UserInputService=game:GetService("UserInputService")
 local player=Players.LocalPlayer
 local Config=require(ReplicatedStorage:WaitForChild("CatchTheScrapShared"):WaitForChild("Config"))
 require(script.Parent:WaitForChild("RobotAnimator")).start()
+require(script.Parent:WaitForChild("EnvironmentEffects")).start(player)
 local remotes=ReplicatedStorage:WaitForChild("CatchTheScrapRemotes")
 local actionRemote=remotes:WaitForChild("Action")
 local feedbackRemote=remotes:WaitForChild("Feedback")
@@ -24,6 +25,9 @@ panel.BackgroundColor3=Color3.fromRGB(18,26,35)
 panel.BackgroundTransparency=.06
 panel.Parent=gui
 round(panel,12)
+panel.BackgroundColor3=Color3.new(1,1,1)
+local gradient=Instance.new("UIGradient")
+gradient.Color=ColorSequence.new(Color3.fromRGB(34,48,57),Color3.fromRGB(16,25,34));gradient.Rotation=90;gradient.Parent=panel
 local constraint=Instance.new("UISizeConstraint")
 constraint.Parent=panel
 local stroke=Instance.new("UIStroke")

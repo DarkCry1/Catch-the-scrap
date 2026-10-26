@@ -41,4 +41,16 @@ local parts: {Part} = {
     { name = "PowerIndicator2", size = { 2.4, 0.45, 0.18 }, position = { 22, 3, -18.9 }, palette = "energy", material = "Neon", collidable = false, yaw = 0 },
 }
 
+for _,side in {-1,1} do
+    for bay=0,3 do
+        table.insert(parts,{name="SalvagedWallPanel",size={.22,3.8,9},position={side*26.9,2.6,-17+bay*11},palette=if bay%2==0 then "rust" else "steel",material="CorrodedMetal",collidable=false,yaw=0})
+    end
+    for y=1.8,4.2,1.2 do
+        table.insert(parts,{name="CabinetVent",size={2.7,.12,.12},position={side*22,y,-18.7},palette="black",material="Metal",collidable=false,yaw=0})
+    end
+    table.insert(parts,{name="ServiceConduit",size={.3,7,.3},position={side*24.8,4.5,-22.5},palette="copper",material="Metal",collidable=false,yaw=0})
+end
+for x=-24,24,8 do
+    table.insert(parts,{name="RoofPatch",size={6,.12,12},position={x,13.26,-17},palette=if x%16==0 then "rust" else "steel",material="CorrodedMetal",collidable=false,yaw=0})
+end
 return parts

@@ -22,4 +22,11 @@ local parts: {Part}={
     {name="WrenchBridge",size={1.25,.3,.5},position={-2.2,4.95,-.4},palette="steel",material="Metal",collidable=false},
     {name="WorkGoggles",size={1.65,.35,.2},position={0,5.62,-.12},palette="energy",material="Neon",collidable=false},
 }
+for drawer=0,2 do
+    table.insert(parts,{name="ToolDrawer"..drawer,size={4.4,.7,.14},position={-7,1.5+drawer*1.1,-3.65},palette="dark",material="Metal",collidable=false})
+    table.insert(parts,{name="DrawerHandle"..drawer,size={1.4,.15,.2},position={-7,1.5+drawer*1.1,-3.5},palette="steel",material="Metal",collidable=false})
+end
+for rib=-9,9,3 do
+    table.insert(parts,{name="CounterReinforcement"..rib,size={.15,2.4,.2},position={rib,1.9,5.6},palette="dark",material="Metal",collidable=false})
+end
 return parts

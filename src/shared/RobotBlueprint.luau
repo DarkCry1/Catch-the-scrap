@@ -1,7 +1,7 @@
 --!strict
 -- Original Scrap Bot MK-I. All dimensions are in studs; front is local +Z.
 -- Each part is [name, assembly group (1–5), size, position, palette, shape].
-export type Part = { name: string, step: number, size: {number}, position: {number}, palette: string, shape: string }
+export type Part = { name: string, step: number, size: {number}, position: {number}, palette: string, shape: string, yaw: number? }
 local parts: {Part} = {
     { name = "LeftBoot", step = 1, size = { 1.6, 0.8, 2.1 }, position = { -1, 0.45, 0.3 }, palette = "dark", shape = "Block" },
     { name = "RightBoot", step = 1, size = { 1.6, 0.8, 2.1 }, position = { 1, 0.45, 0.3 }, palette = "dark", shape = "Block" },
@@ -40,4 +40,13 @@ local parts: {Part} = {
     { name = "Exhaust", step = 5, size = { 0.65, 1.6, 0.65 }, position = { -0.6, 5.45, -1.3 }, palette = "copper", shape = "Block" },
 }
 
+for _,side in {-1,1} do
+    for _,y in {4.0,5.15} do
+        table.insert(parts,{name="ChestRivet"..side..y,step=5,size={.16,.23,.23},position={side*1.0,y,1.24},palette="dark",shape="Cylinder",yaw=90})
+    end
+    table.insert(parts,{name="ShoulderInset"..side,step=3,size={.5,.3,.15},position={side*2.25,5.15,1.03},palette="dark",shape="Block"})
+end
+for _,y in {3.9,4.2} do
+    table.insert(parts,{name="BackVent"..y,step=5,size={1.2,.13,.1},position={0,y,-1.5},palette="black",shape="Block"})
+end
 return parts

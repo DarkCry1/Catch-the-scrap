@@ -8,7 +8,7 @@ from pathlib import Path
 import json
 import math
 import bpy
-from mathutils import Vector
+from mathutils import Vector, Matrix
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = json.loads((ROOT / 'build/blueprints.json').read_text())
@@ -54,7 +54,12 @@ def xyz(point):
 
 
 def geometry(name, size, position, mat, shape='Block', yaw=0):
-    if shape == 'Ball':
+    if shape == 'RawCylinder':
+        bpy.ops.mesh.primitive_cylinder_add(vertices=16, radius=.5, depth=1)
+        obj=bpy.context.object
+        A=Matrix(((1,0,0,0),(0,0,1,0),(0,1,0,0),(0,0,0,1)))
+        obj.matrix_world=Matrix.Translation(Vector(xyz(position)))@A@Matrix.Rotation(math.radians(yaw),4,'Y')@Matrix.Diagonal((*size,1))@Matrix.Rotation(math.pi/2,4,'Y')
+    elif shape == 'Ball':
         bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=8, location=xyz(position))
         obj = bpy.context.object
         obj.scale = (size[0] / 2, size[2] / 2, size[1] / 2)
@@ -100,7 +105,7 @@ for piece in DATA['mechanic']:
     geometry(piece['name'],piece['size'],piece['position'],palette[piece['palette']])
 for piece in DATA['robot']:
     position=[piece['position'][0]*.72,piece['position'][1]*.72+.6,piece['position'][2]*.72-1]
-    geometry(piece['name'],[n*.72 for n in piece['size']],position,palette[piece['palette']],piece['shape'])
+    geometry(piece['name'],[n*.72 for n in piece['size']],position,palette[piece['palette']],'RawCylinder' if piece['shape']=='Cylinder' else piece['shape'],piece.get('yaw',0))
 label('MILO THE MECHANIC', [0,12,1],1.2,palette['amber'])
 label('SPEED + STRENGTH', [0,10.9,1],.65,palette['accent'])
 geometry('surrounding concrete', [180, 1, 160], [0, -1.1, 0], material('concrete', [73, 86, 92]))

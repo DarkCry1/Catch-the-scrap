@@ -35,3 +35,7 @@ Spelets egna texter är på engelska. Common kräver 5 Common-delar, Uncommon 7 
 ## Uppdatering v0.4
 
 Milo är en egen mekanikerrobot med skyddsglasögon och skiftnyckel bakom en liten uppgraderingsdisk. Standens geometri är egen och delar robotens befintliga grundmodell i mindre skala. Inga externa modeller eller nya spelreferenser användes. Spelets köpmeny, priser, erbjudanden och meddelanden är på engelska.
+
+## Uppdatering v0.5
+
+Skrotgården har fått en egen sammanhängande industrimiljö med skrotklädda ytterväggar och infart, plåtlager och förstärkningar, silor, lagade verkstäder och detaljerade kugghjul, motorer och kärnor. All geometri är fortsatt egen. Spelet använder Roblox inbyggda material och paketerade partikeltexturer. [Den visuella genomgången](VISUAL_PASS_V05.md) visar modellrenderingar och beskriver vilka verkliga Studio-tester som återstår. Inga nya externa spelbilder eller modeller importerades.

@@ -1,19 +1,18 @@
 # Catch-the-scrap
 
-Current build **v0.4** adds **Milo the Mechanic**, a robot upgrade stand beside
-the scrapyard entrance. Spend earned cash on Speed (+2 per level, starting at
-$75) and Strength (+10 per level, starting at $100). Prices rise per level;
-both upgrades cap at level 10. Upgrades and other progress are session-only.
+Current build **v0.5** gives the scrapyard a complete industrial visual pass:
+scrap-clad perimeter walls, a reinforced entrance, weathered workshops, detailed
+gears/motors/cores, mechanical robot details, late-afternoon lighting and bounded
+ambient effects. Streaming limits distant geometry; owners retain their workshop.
+All custom game text is English.
 
-The English-only game retains the 160 × 1440-stud scrapyard and rarity recipes:
-Common 5 parts ($5/sec), Uncommon 7 ($10/sec), Rare 10 ($20/sec), with four robot
-platforms per player.
+The 160 × 1440-stud yard, rarity recipes, passive robot income and Milo's Speed/
+Strength upgrades remain available. Progress is session-only.
 
-[Download v0.4](downloads/Catch-the-scrap-v0.4.rbxl) · [Mechanic geometry preview](downloads/mechanic-preview.png) · [Windows test guide (Swedish)](docs/STUDIO_START_SV.md) · [Development](docs/DEVELOPMENT.md)
+[Download v0.5](downloads/Catch-the-scrap-v0.5.rbxl) · [Visual review and previews](docs/VISUAL_PASS_V05.md) · [Windows test guide (Swedish)](docs/STUDIO_START_SV.md) · [Development](docs/DEVELOPMENT.md)
 
-Build with `python3 scripts/check.py`. Actual Studio testing remains required.
-The brief below records the original design plan; current rules are described
-in the development guide.
+Build with `python3 scripts/check.py`. Real Studio play, graphics and performance
+tests are still required. The original design brief follows below.
 
 CATCH THE SCRAP — Project Brief / Game Design Document
 

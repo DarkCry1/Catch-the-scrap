@@ -1,4 +1,4 @@
-# Development: mechanic upgrades, scrapyard and rarity recipes
+# Development: visual scrapyard, mechanic upgrades and rarity recipes
 
 All custom game UI, prompts, signs, feedback and leaderboard columns are English.
 Beginner-facing instructions in chat and STUDIO_START_SV.md remain Swedish.
@@ -23,7 +23,7 @@ Beginner-facing instructions in chat and STUDIO_START_SV.md remain Swedish.
 The yard is **160 × 1440 studs** (formerly 44 × 360), divided into three 480-stud
 zones. Each has 32 pickups. Original deterministic scenery includes containers,
 car wrecks, tire bays, pipes, heaps, dismantled robots, reactors and overhead
-cranes. The central 28 studs remain clear for walking. Pickup footprints are
+cranes. The central 28 studs remain clear for walking. Version 0.5 adds solid scrap-clad perimeter walls, plaza boundaries, weathered surfaces and detailed collectible models; see VISUAL_PASS_V05.md for budgets and preview limitations. Pickup footprints are
 checked against junk bounds. Fence-line piles fill the perimeter without
 blocking pickups. Hidden tire details are omitted to limit part count.
 
@@ -105,7 +105,14 @@ luau scripts/export-blueprints.luau > build/blueprints.json
 blender -b -t 4 --python scripts/render-yard.py
 blender -b -t 4 --python scripts/render-preview.py
 blender -b -t 4 --python scripts/render-mechanic.py
+blender -b -t 4 --python scripts/render-pickups.py
 ```
 
 Blueprints are shared with the game, but renderer lighting, text, materials and
 camera differ from Roblox. There are no imported Toolbox models or asset IDs.
+
+## Streaming and ambient graphics
+
+Workspace streams at min/target radii 128/256. The yard is Nonatomic; small pickups and the mechanic stand are Atomic. Workshop models use PersistentPerPlayer and are pinned/unpinned by WorldService on assignment/release. Client ambient tags activate lights/particles within Config.Visuals.EffectDistance and clean up on stream-out. Reactor tweens restart safely when instances return. These behaviors need actual Studio and device testing.
+
+PickupBlueprint supplies both welded visual geometry and ground clearance. Item roots are invisible, anchored when resting, and welded to the character when carried. PlacementRules rejects ground outside the new perimeter before placing a dropped item. Gameplay recipe, account and upgrade values were not rebalanced in this pass.
