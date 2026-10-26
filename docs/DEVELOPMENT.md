@@ -1,29 +1,48 @@
 # Development
 
-This first slice implements pickup, one carried item, weight-based speed, drop,
-and deposit into the player's assigned base. No persistence, economy, crafting,
-NPCs, or prestige is implemented. The design brief remains in README.md.
+The current slice implements pickup/carry/drop/deposit, player-owned salvage
+workshops, incremental robot assembly and server-authoritative passive income.
+The original design brief remains below the quick start in README.md.
 
-## Layout
+## Rules
 
-- `default.project.json`: Rojo DataModel mapping and remotes.
-- `src/shared/Config.luau`: adjustable prototype values and three test items.
+Each successfully deposited item supplies **one scrap**, regardless of rarity or
+weight. **10 scrap** automatically finish a Scrap Bot MK-I and consume that
+recipe. Each completed robot earns **$5 per second**, up to **four robot slots**
+per player. These values are prototype balance in `Config.Robot`. A full workshop
+rejects further deposits before consuming inventory; the player keeps the item.
+Money is credited directly. Spending, upgrades, offline rewards and DataStore
+persistence are not part of this slice. Session progress survives character
+reset/death and clears when leaving the server.
+
+## Code
+
+- `src/shared/Inventory.luau`: synchronous loot ownership and deposit rules.
 - `src/shared/Movement.luau`: pure movement formula.
-- `src/shared/Inventory.luau`: synchronous ownership/deposit state machine.
-- `src/server/Main.server.luau`: bootstrap, player lifecycle and remote boundary.
-- `src/server/Services/WorldService.luau`: runtime map and eight owned bases.
-- `src/server/Services/ItemService.luau`: visuals, prompts, carry weld, respawns.
-- `src/server/Services/CarryService.luau`: server-side context and state changes.
-- `src/client/Main.client.luau`: Swedish HUD, keyboard/touch drop request.
-- `tests/core.spec.luau`: portable state and movement checks.
-- `docs/STUDIO_START_SV.md`: Windows instructions and engine test checklist.
+- `src/shared/Economy.luau`: recipe, capacity, fractional time and cash accounting.
+- `src/shared/BaseBlueprint.luau`, `RobotBlueprint.luau`: original geometry.
+- `src/server/Assets`: workshop/robot builders and incremental display.
+- `src/server/Services/WorldService.luau`: map, eight assigned workshops.
+- `src/server/Services/ItemService.luau`: pickups, carry welds and replacement spawns.
+- `src/server/Services/CarryService.luau`: character context and validated deposits.
+- `src/server/Services/EconomyService.luau`: per-player accounts and Heartbeat timing.
+- `src/client`: Swedish responsive HUD, drop input and reactor effects.
+- `tests`: portable ownership, movement, economy and geometry checks.
 
-## Checks and build
+The only client action remote remains `Action:FireServer("Drop")` with no payload.
+Pickup/deposit use server-created prompts and check distance, live character,
+carried ownership, base allocation and base owner. Robot counts, scrap and cash
+are never accepted from the client. All ownership transitions and capacity
+checks are synchronous. Income is settled at the old robot rate before a new
+robot starts earning. Partial dollar amounts survive frame boundaries.
 
-Tools used: Rojo **7.7.1**, Luau **0.744**, Python **3**. No third-party
-runtime modules or paid/external assets are required by the game.
+There is no complete movement/teleport anti-cheat. Proximity checks do not prove
+a replicated character reached that position legitimately. Eight bases are
+available; additional players must rejoin a server with space. No live queue.
 
-In this prepared cloud environment:
+## Checks and artifacts
+
+Tools: Rojo **7.7.1**, Luau **0.744**, Python **3**.
 
 ```sh
 cd /workspace/Catch-the-scrap
@@ -31,44 +50,29 @@ source /workspace/.catch-the-scrap-tools/activate.sh
 python3 scripts/check.py
 ```
 
-The check script analyzes the pure shared modules and tests, executes their
-assertions, compiles every Luau source, builds binary and XML Roblox places,
-checks that each source is embedded exactly once, and bundles editable sources.
-An unsuccessful command fails the script. The standalone analyzer does not
-supply Roblox engine globals: engine-facing scripts are compiled, not claimed
-as engine-typechecked. Run the manual Studio checklist for runtime coverage.
+This analyzes pure shared modules and tests, runs every test file, compiles all
+application Luau, builds XML and binary places, verifies all source embedding,
+and bundles editable sources. Engine-facing scripts are compiled, not claimed
+as engine-typechecked. Actual physics, prompt visibility, UI layout, reactor
+animation and multiplayer need Studio testing per `STUDIO_START_SV.md`.
 
-Generated, ignored outputs:
+Ignored outputs: `build/Catch-the-scrap.rbxl`, `.rbxlx`, and
+`build/Catch-the-scrap-source.zip`. Published test builds live in `downloads/`.
+After source changes, regenerate and explicitly replace the shared download;
+the checked-in downloadable artifact is a versioned snapshot, not an automatic
+side effect of every test run.
 
-- `build/Catch-the-scrap.rbxl`: open in Studio for the first test.
-- `build/Catch-the-scrap.rbxlx`: inspectable XML equivalent.
-- `build/Catch-the-scrap-source.zip`: editable source plus docs and tests.
+The map is generated at Play time, so editor-mode emptiness is expected. For
+local sync, run `rojo serve default.project.json` on the same computer as Studio.
+Cloud loopback is a different machine from the user's Windows PC.
 
-The map is generated at runtime rather than stored in the place. Editor-mode
-emptiness is expected until Play. Do not mix manual map edits with generated
-geometry without first deciding which source owns those changes.
+Optional asset preview (Blender is not a game/build dependency):
 
-For local source sync, run `rojo serve default.project.json` on the same machine
-as Studio with the matching Rojo plugin. Cloud loopback is not desktop loopback.
-No public endpoint or Roblox authentication is needed to build these artifacts.
+```sh
+luau scripts/export-blueprints.luau > build/blueprints.json
+blender -b -t 4 --python scripts/render-preview.py
+```
 
-## Authority and lifecycle
-
-Clients can request only `Action:FireServer("Drop")` without extra arguments.
-Pickup and deposit use server-created ProximityPrompt callbacks, with independent
-server checks for live character, distance, base allocation, carrying state and
-base ownership. All requests share a per-player cooldown. Ownership checks and
-transitions do not yield, so contested pickups have a single winner.
-
-Carried visuals are massless and noncolliding; the inventory is authoritative,
-not the visual's position or client metadata. Dropped loot is anchored on
-server-raycast ground; unsafe drops return to the original spawn. Death,
-character replacement, or disconnect returns held loot to its original spawn.
-Deposits consume one item, count once, and schedule one replacement after eight
-seconds. Session counts survive character death and clear when a player leaves.
-There is no complete movement/teleport anti-cheat; proximity validation does not
-prove that a replicated character reached that position legitimately.
-
-Eight bases are allocated for this prototype; configure private playtests for
-at most eight players. Extra players cannot pick up loot until rejoining a
-server with a free base. Live-session queueing is deferred.
+This renders the actual shared geometry with example robot progress. It is an
+asset preview, not a Roblox runtime screenshot. References and access limitations
+are documented in `DESIGN_REFERENCES_SV.md`. No external models are imported.

@@ -29,7 +29,8 @@ def main():
     sources = sorted((ROOT / 'src').rglob('*.luau'))
     tests = sorted((ROOT / 'tests').rglob('*.luau'))
     run(tool('luau-analyze'), *sorted((ROOT / 'src/shared').glob('*.luau')), *tests)
-    run(tool('luau'), 'tests/core.spec.luau')
+    for test in tests:
+        run(tool('luau'), test)
     # The standalone analyzer has no Roblox engine globals/types. The compiler
     # still checks every engine-facing script; runtime checks need Studio.
     run(tool('luau-compile'), '--null', *sources, *tests)

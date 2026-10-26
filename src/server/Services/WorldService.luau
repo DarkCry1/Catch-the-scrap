@@ -1,6 +1,7 @@
 --!nonstrict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.CatchTheScrapShared.Config)
+local BaseBuilder = require(script.Parent.Parent.Assets.BaseBuilder)
 local WorldService = {}
 WorldService.__index = WorldService
 
@@ -51,7 +52,15 @@ function WorldService.new()
     items.Parent = root
     self.items = items
 
-    part(root, "HomeGround", Vector3.new(290, 2, 170), Vector3.new(0, -1, -65), Color3.fromRGB(32, 42, 56))
+    part(root, "Landscape", Vector3.new(450, 2, 800), Vector3.new(0, -2.1, 60), Color3.fromRGB(71, 93, 72), Enum.Material.Grass)
+    part(root, "HomeGround", Vector3.new(200, 2, 320), Vector3.new(0, -1, -140), Color3.fromRGB(53, 65, 72), Enum.Material.Concrete)
+    part(root, "WorkshopStreet", Vector3.new(43, 0.08, 302), Vector3.new(0, 0.05, -131), Color3.fromRGB(37, 47, 56), Enum.Material.Asphalt)
+    for z = -260, -15, 25 do
+        for _, side in { -1, 1 } do
+            local arrow = part(root, "TrackArrow", Vector3.new(0.6, 0.06, 4), Vector3.new(side * 1.3, 0.13, z), Color3.fromRGB(255, 193, 76), Enum.Material.Neon)
+            arrow.CFrame *= CFrame.Angles(0, math.rad(side * 45), 0)
+        end
+    end
     sign(root, "Title", Vector3.new(0, 13, 5), "CATCH THE SCRAP\nHämta skrot • ta hem ditt fynd", Color3.fromRGB(255, 198, 80), 38)
     for zone, definition in Config.Items do
         local startZ = Config.TrackStart + (zone - 1) * Config.ZoneLength
@@ -74,40 +83,23 @@ function WorldService.new()
     part(root, "EndBarrier", Vector3.new(Config.TrackWidth, 5, 2), Vector3.new(0, 2.5, Config.TrackStart + 3 * Config.ZoneLength), Color3.fromRGB(85, 155, 255))
 
     for index = 1, Config.BaseCount do
-        local column = (index - 1) % 4
-        local row = math.floor((index - 1) / 4)
-        local origin = Vector3.new((column - 1.5) * 68, 0, -40 - row * 65)
-        local folder = Instance.new("Folder")
-        folder.Name = "Base" .. index
-        folder.Parent = root
-        part(folder, "Floor", Vector3.new(56, 0.3, 49), origin + Vector3.new(0, 0.15, 0), Color3.fromRGB(52, 66, 83))
-        local deposit = part(folder, "Deposit", Vector3.new(12, 1, 9), origin + Vector3.new(0, 0.8, 13), Color3.fromRGB(255, 187, 65), Enum.Material.Neon)
-        local prompt = Instance.new("ProximityPrompt")
-        prompt.ActionText = "Lämna in"
-        prompt.ObjectText = "Ledig bas"
-        prompt.KeyboardKeyCode = Enum.KeyCode.E
-        prompt.HoldDuration = 0.25
-        prompt.MaxActivationDistance = Config.InteractionDistance
-        prompt.RequiresLineOfSight = false
-        prompt.Enabled = false
-        prompt.Parent = deposit
-        local spawn = Instance.new("SpawnLocation")
-        spawn.Name = "Spawn"
-        spawn.Size = Vector3.new(7, 0.5, 7)
-        local spawnPosition = origin + Vector3.new(0, 0.6, -9)
-        spawn.CFrame = CFrame.lookAt(spawnPosition, spawnPosition + Vector3.new(0, 0, 1))
-        spawn.Anchored = true
-        spawn.Neutral = true
-        spawn.Duration = 0
-        spawn.Color = Color3.fromRGB(100, 195, 220)
-        spawn.Material = Enum.Material.SmoothPlastic
-        spawn.Parent = folder
-        local label = sign(folder, "OwnerSign", origin + Vector3.new(0, 8, -20), "LEDIG BAS " .. index, Color3.fromRGB(225, 235, 250), 32)
-        local base = { index = index, owner = nil, spawn = spawn, deposit = deposit, prompt = prompt, label = label }
+        local left = index % 2 == 1
+        local row = math.floor((index - 1) / 2)
+        local position = Vector3.new(if left then -62 else 62, 0, -35 - row * 66)
+        local origin = CFrame.new(position) * CFrame.Angles(0, if left then math.pi / 2 else -math.pi / 2, 0)
+        local base = BaseBuilder.create(root, index, origin)
         table.insert(self.bases, base)
-        prompt.Triggered:Connect(function(player)
+        base.prompt.Triggered:Connect(function(player)
             if self.onDeposit then self.onDeposit(player, base) end
         end)
+        local pole = part(root, "StreetLamp", Vector3.new(0.7, 13, 0.7), Vector3.new(if left then -29 else 29, 6.5, position.Z + 24), Color3.fromRGB(80, 101, 110), Enum.Material.Metal)
+        local lamp = part(root, "Lamp", Vector3.new(3, 0.4, 3), pole.Position + Vector3.new(0, 6.5, 0), Color3.fromRGB(255, 220, 155), Enum.Material.Neon)
+        local light = Instance.new("PointLight")
+        light.Color = lamp.Color
+        light.Brightness = 0.6
+        light.Range = 18
+        light.Shadows = false
+        light.Parent = lamp
     end
     return self
 end
@@ -117,8 +109,8 @@ function WorldService:assignBase(player)
         if base.owner == nil then
             base.owner = player.UserId
             base.prompt.Enabled = true
-            base.prompt.ObjectText = player.DisplayName .. " · bas " .. base.index
-            base.label.Text = player.DisplayName .. "\nBAS " .. base.index .. " · 0 inlämnade"
+            base.prompt.ObjectText = player.DisplayName .. " · verkstad " .. base.index
+            base.folder:SetAttribute("OwnerUserId", player.UserId)
             player.RespawnLocation = base.spawn
             return base
         end
@@ -126,15 +118,16 @@ function WorldService:assignBase(player)
     return nil
 end
 
-function WorldService:updateBase(base, player, delivered)
-    base.label.Text = string.format("%s\nBAS %d · %d inlämnade", player.DisplayName, base.index, delivered)
+function WorldService:updateEconomy(base, player, account)
+    BaseBuilder.update(base, player.DisplayName, account)
 end
 
 function WorldService:releaseBase(base)
     base.owner = nil
+    base.folder:SetAttribute("OwnerUserId", nil)
     base.prompt.Enabled = false
-    base.prompt.ObjectText = "Ledig bas"
-    base.label.Text = "LEDIG BAS " .. base.index
+    base.prompt.ObjectText = "Ledig verkstad"
+    BaseBuilder.update(base, "", nil)
 end
 
 return WorldService

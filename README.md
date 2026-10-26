@@ -1,10 +1,12 @@
 # Catch-the-scrap
 
-Första prototypen finns nu som Luau-källkod: plocka upp, bära, släppa och lämna in.
+Aktuellt bygge: egna verkstäder, plocka upp/bära/lämna in och robotar som byggs av 10 scrap och tjänar $5 per sekund. Fyra robotplatser per spelare; progress gäller bara aktuell spelsession.
 Se [Kom igång i Roblox Studio på Windows](docs/STUDIO_START_SV.md) för första testet
 och [utvecklarguiden](docs/DEVELOPMENT.md) för bygge och automatiska kontroller.
 Platsfiler skapas i `build/` med `python3 scripts/check.py`.
-Själva Roblox Studio-testet återstår; dokumentet nedan är spelets ursprungliga designbrief.
+Det nya verkstads-/ekonomibygget ska testas i Roblox Studio; dokumentet nedan är spelets ursprungliga designbrief.
+
+[Hämta v0.2-platsfilen](downloads/Catch-the-scrap-v0.2.rbxl) · [Modellförhandsvisning](downloads/workshop-preview.png) · [Designreferenser](docs/DESIGN_REFERENCES_SV.md)
 
 CATCH THE SCRAP — Project Brief / Game Design Document
 

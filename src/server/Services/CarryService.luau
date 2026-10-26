@@ -17,8 +17,8 @@ local function actor(player)
     return humanoid, root
 end
 
-function CarryService.new(world, items, inventory, feedback)
-    return setmetatable({ world = world, items = items, inventory = inventory, feedback = feedback, players = {} }, CarryService)
+function CarryService.new(world, items, inventory, feedback, economy)
+    return setmetatable({ world = world, items = items, inventory = inventory, feedback = feedback, economy = economy, players = {} }, CarryService)
 end
 
 function CarryService:notify(player, message)
@@ -82,6 +82,7 @@ function CarryService:addPlayer(player)
     local base = self.world:assignBase(player)
     local entry = { base = base, counter = counter, lastAction = -math.huge }
     self.players[player] = entry
+    self.economy:addPlayer(player, base)
     player:SetAttribute("BaseIndex", if base then base.index else 0)
     self:writeState(player)
 
@@ -111,6 +112,7 @@ function CarryService:removePlayer(player)
     if not entry then return end
     self:resetCarried(player)
     Inventory.removePlayer(self.inventory, player.UserId)
+    self.economy:removePlayer(player)
     entry.characterConnection:Disconnect()
     entry.removingConnection:Disconnect()
     if entry.deathConnection then entry.deathConnection:Disconnect() end
@@ -159,14 +161,22 @@ end
 
 function CarryService:deposit(player, base)
     if not self:allowAction(player) then return end
+    if not self.economy:canDeposit(player) then
+        self:notify(player, "Alla robotplatser är fulla eller så saknar du en bas. Du behåller ditt fynd.")
+        return
+    end
     local id, reason = Inventory.deposit(self.inventory, player.UserId, base.owner, self:context(player, base.deposit.Position))
     if not id then self:notify(player, reason); return end
     local record = self.items.records[id]
     local name = record.definition.name
+    local built, scrap = self.economy:addScrap(player)
     self.items:consume(record)
     self:writeState(player)
-    self.world:updateBase(base, player, self.inventory.delivered[player.UserId])
-    self:notify(player, name .. " inlämnat! Hämta ett nytt fynd på banan.")
+    if built > 0 then
+        self:notify(player, "Scrap Bot MK-I är färdig! Din nya robot tjänar $" .. Config.Robot.IncomePerRobot .. " per sekund.")
+    else
+        self:notify(player, string.format("%s inlämnat! Nästa robot: %d / %d scrap.", name, scrap, Config.Robot.ScrapPerRobot))
+    end
 end
 
 return CarryService

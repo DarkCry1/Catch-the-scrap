@@ -8,11 +8,13 @@ local Inventory = require(Shared.Inventory)
 local WorldService = require(script.Parent.Services.WorldService)
 local ItemService = require(script.Parent.Services.ItemService)
 local CarryService = require(script.Parent.Services.CarryService)
+local EconomyService = require(script.Parent.Services.EconomyService)
 
 local inventory = Inventory.new(Config.InteractionDistance)
 local world = WorldService.new()
 local items = ItemService.new(world, inventory)
-local carry = CarryService.new(world, items, inventory, Remotes.Feedback)
+local economy = EconomyService.new(world)
+local carry = CarryService.new(world, items, inventory, Remotes.Feedback, economy)
 items.onPickup = function(player, record) carry:pickup(player, record) end
 world.onDeposit = function(player, base) carry:deposit(player, base) end
 items:start()
@@ -27,4 +29,4 @@ Players.PlayerAdded:Connect(function(player) carry:addPlayer(player) end)
 Players.PlayerRemoving:Connect(function(player) carry:removePlayer(player) end)
 for _, player in Players:GetPlayers() do carry:addPlayer(player) end
 Remotes:SetAttribute("Ready", true)
-print("[Catch the Scrap] Prototyp startad: 3 zoner, 12 föremål, 8 baser. Ingen datasparning.")
+print("[Catch the Scrap] Verkstäder startade: 10 scrap = 1 robot, $5/sek, 4 platser per bas. Ingen datasparning.")
