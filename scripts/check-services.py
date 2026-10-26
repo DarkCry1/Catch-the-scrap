@@ -194,6 +194,21 @@ economy:removePlayer(player)
 local final=attrs.Cash
 clock+=100;heartbeat()
 check(attrs.Cash==final,"disconnected accounts stop producing")
+-- Publish and complete each newly introduced tier through the real services.
+for _,stage in modules.Config.Stages do
+    if stage.Rarity=="Common" or stage.Rarity=="Uncommon" or stage.Rarity=="Rare" then continue end
+    local attrs2={}
+    local advanced={leaderstats={},SetAttribute=function(_,name,value) attrs2[name]=value end,GetAttribute=function(_,name) return attrs2[name] end}
+    economy:addPlayer(advanced,base)
+    local recipe=modules.Config.Robot.Recipes[stage.Rarity]
+    for count=1,recipe.Parts do
+        check(economy:canDeposit(advanced,stage.Rarity),"new tier accepted by server service")
+        economy:addPart(advanced,stage.Rarity)
+        check(attrs2[stage.Rarity.."Parts"]==(if count==recipe.Parts then 0 else count),"new tier partial progress published")
+    end
+    check(attrs2.RobotCount==1 and attrs2.IncomePerSecond==recipe.Income,"new tier robot earns its configured rate")
+    economy:removePlayer(advanced)
+end
 -- Exercise actual client streaming cleanup and distance activation, not GPU output.
 RobotAnimator.start()
 local reactor={Transparency=.3,IsA=function(_,kind) return kind=="BasePart" end,Destroying={Connect=function() return{Disconnect=function() end} end}}

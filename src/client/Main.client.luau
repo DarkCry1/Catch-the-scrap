@@ -7,6 +7,8 @@ local player=Players.LocalPlayer
 local Config=require(ReplicatedStorage:WaitForChild("CatchTheScrapShared"):WaitForChild("Config"))
 require(script.Parent:WaitForChild("RobotAnimator")).start()
 require(script.Parent:WaitForChild("EnvironmentEffects")).start(player)
+require(script.Parent:WaitForChild("CameraGuard")).start(player)
+require(script.Parent:WaitForChild("PickupAnimator")).start(player)
 local remotes=ReplicatedStorage:WaitForChild("CatchTheScrapRemotes")
 local actionRemote=remotes:WaitForChild("Action")
 local feedbackRemote=remotes:WaitForChild("Feedback")
@@ -52,14 +54,20 @@ title.Text="CATCH THE SCRAP"
 local home=text(panel,"Home",13)
 local money=text(panel,"Money",23,Color3.fromRGB(110,240,180))
 money.Font=Enum.Font.GothamBold
+local recipeList=Instance.new("ScrollingFrame")
+recipeList.Name="RobotRecipes";recipeList.BackgroundTransparency=1;recipeList.BorderSizePixel=0
+recipeList.ScrollBarThickness=3;recipeList.ScrollBarImageColor3=Color3.fromRGB(115,145,162)
+recipeList.CanvasSize=UDim2.fromOffset(0,#Config.Stages*25);recipeList.ScrollingDirection=Enum.ScrollingDirection.Y
+recipeList.Parent=panel
 local recipes={}
-for _,rarity in {"Common","Uncommon","Rare"} do
+for _,stage in Config.Stages do
+    local rarity=stage.Rarity
     local color=Color3.fromRGB(unpack(Config.Robot.Recipes[rarity].Color))
-    local label=text(panel,rarity.."Recipe",13,color)
+    local label=text(recipeList,rarity.."Recipe",13,color)
     local background=Instance.new("Frame")
     background.BackgroundColor3=Color3.fromRGB(43,57,69)
     background.BorderSizePixel=0
-    background.Parent=panel
+    background.Parent=recipeList
     local fill=Instance.new("Frame")
     fill.Size=UDim2.fromScale(0,1)
     fill.BackgroundColor3=color
@@ -105,12 +113,15 @@ local function layout()
     place(title,if compact then 6 else 10,24,if compact then 16 else 20)
     place(home,if compact then 29 else 39,18,if compact then 11 else 13)
     place(money,if compact then 49 else 65,27,if compact then 19 else 23)
-    for index,rarity in {"Common","Uncommon","Rare"} do
+    recipeList.Position=UDim2.fromOffset(0,if compact then 78 else 103)
+    recipeList.Size=UDim2.new(1,-4,0,if compact then 54 else 76)
+    for index,stage in Config.Stages do
+        local rarity=stage.Rarity
         local row=recipes[rarity]
-        local y=(if compact then 78 else 103)+(index-1)*(if compact then 18 else 25)
+        local y=(index-1)*25
         place(row.label,y,16,if compact then 11 else 13)
         row.background.Position=UDim2.fromOffset(14,y+16)
-        row.background.Size=UDim2.new(1,-28,0,3)
+        row.background.Size=UDim2.new(1,-28,0,2)
     end
     place(carrying,if compact then 136 else 184,24,if compact then 12 else 14)
     place(stats,if compact then 159 else 215,18,11)
@@ -167,9 +178,24 @@ feedbackRemote.OnClientEvent:Connect(function(value)
         if feedbackVersion==version then feedbackVersion=0;message.Text=defaultMessage() end
     end)
 end)
-for _,attribute in {"BaseIndex","DeliveredCount","CarriedName","CarriedRarity","CarriedWeight","CarrySpeed","CarryStrength","Cash","IncomePerSecond","RobotCount","UsedPlatforms","CommonParts","UncommonParts","RareParts"} do
+for _,attribute in {"BaseIndex","DeliveredCount","CarriedName","CarriedRarity","CarriedWeight","CarrySpeed","CarryStrength","Cash","IncomePerSecond","RobotCount","UsedPlatforms","CommonParts","UncommonParts","RareParts","EpicParts","LegendaryParts","MythicParts","CelestialParts"} do
     player:GetAttributeChangedSignal(attribute):Connect(render)
 end
 remotes:GetAttributeChangedSignal("Ready"):Connect(render)
 render()
 require(script.Parent:WaitForChild("MechanicShop")).start(player,actionRemote,gui)
+
+-- Follow the current district once on entry; players may still scroll recipes manually.
+local currentStage,elapsed=0,0
+local function focusRecipe()
+    local root=player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    local stage=math.clamp(math.floor((root.Position.Z-Config.TrackStart)/Config.ZoneLength)+1,1,#Config.Stages)
+    if stage~=currentStage then
+        currentStage=stage
+        recipeList.CanvasPosition=Vector2.new(0,math.min((stage-1)*25,math.max(0,#Config.Stages*25-recipeList.AbsoluteSize.Y)))
+    end
+end
+game:GetService("RunService").Heartbeat:Connect(function(dt)
+    elapsed+=dt;if elapsed<.4 then return end;elapsed=0;focusRecipe()
+end)

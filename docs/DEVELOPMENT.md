@@ -1,4 +1,4 @@
-# Development: visual scrapyard, mechanic upgrades and rarity recipes
+# Development: seven-stage scrapyard, bounded camera and animated salvage
 
 All custom game UI, prompts, signs, feedback and leaderboard columns are English.
 Beginner-facing instructions in chat and STUDIO_START_SV.md remain Swedish.
@@ -8,6 +8,10 @@ Beginner-facing instructions in chat and STUDIO_START_SV.md remain Swedish.
 - Common: **5 Common parts**, $5/sec per completed robot.
 - Uncommon: **7 Uncommon parts**, $10/sec (provisional balance).
 - Rare: **10 Rare parts**, $20/sec.
+- Epic: **12 Epic parts**, $45/sec.
+- Legendary: **15 Legendary parts**, $100/sec.
+- Mythic: **18 Mythic parts**, $225/sec.
+- Celestial: **20 Celestial parts**, $500/sec. New values are provisional balance.
 - Four platforms per player. The first part reserves a platform for its rarity.
   Matching parts continue the unfinished project. Capacity is checked before
   inventory consumption, and reserved projects can still finish when no slots
@@ -20,10 +24,10 @@ Beginner-facing instructions in chat and STUDIO_START_SV.md remain Swedish.
 
 ## World
 
-The yard is **160 × 1440 studs** (formerly 44 × 360), divided into three 480-stud
+The yard is **160 × 3360 studs** (formerly 44 × 360), divided into seven 480-stud
 zones. Each has 32 pickups. Original deterministic scenery includes containers,
 car wrecks, tire bays, pipes, heaps, dismantled robots, reactors and overhead
-cranes. The central 28 studs remain clear for walking. Version 0.5 adds solid scrap-clad perimeter walls, plaza boundaries, weathered surfaces and detailed collectible models; see VISUAL_PASS_V05.md for budgets and preview limitations. Pickup footprints are
+cranes. The central 28 studs remain clear for walking. Version 0.6 raises scrap-clad walls to 64 studs and adds turbine/furnace/void/star-engine scenery. See STAGES_V06.md for current budgets and preview limitations. Pickup footprints are
 checked against junk bounds. Fence-line piles fill the perimeter without
 blocking pickups. Hidden tire details are omitted to limit part count.
 
@@ -115,4 +119,32 @@ camera differ from Roblox. There are no imported Toolbox models or asset IDs.
 
 Workspace streams at min/target radii 128/256. The yard is Nonatomic; small pickups and the mechanic stand are Atomic. Workshop models use PersistentPerPlayer and are pinned/unpinned by WorldService on assignment/release. Client ambient tags activate lights/particles within Config.Visuals.EffectDistance and clean up on stream-out. Reactor tweens restart safely when instances return. These behaviors need actual Studio and device testing.
 
-PickupBlueprint supplies both welded visual geometry and ground clearance. Item roots are invisible, anchored when resting, and welded to the character when carried. PlacementRules rejects ground outside the new perimeter before placing a dropped item. Gameplay recipe, account and upgrade values were not rebalanced in this pass.
+PickupBlueprint supplies both welded visual geometry and ground clearance. Item roots are invisible, anchored when resting, and welded to the character when carried. PlacementRules rejects ground outside the new perimeter before placing a dropped item. Existing three recipes and mechanic upgrade prices are retained; four new recipes are configured in Config. All districts are open, with four total robot slots; replacement/recycling is not implemented.
+
+## Camera and salvage presentation (v0.6)
+
+`Config.Stages` is the ordered authority for districts, spawn types, labels,
+server progress publication and recipe HUD. Shared `CameraBounds` clips the
+focus-to-camera ray against the union of the plaza and the narrower yard. It
+stops at the first boundary rather than jumping across an entrance corner.
+`CameraGuard` runs after the default Roblox camera, includes near-plane padding,
+limits ordinary zoom to 32 studs and skips Scriptable cinematic cameras.
+StarterPlayer uses Zoom occlusion. This is camera containment, not anti-cheat.
+Wall and ground segments are at most 480 studs long, below Roblox's 2048-stud
+part dimension limit. No invisible giant colliders are needed.
+
+PickupBuilder creates one Motor6D from the server carrier root to a massless
+visual pivot, plus a stationary segmented ground halo. PickupAnimator adjusts
+only local C0 and halo transparency within 110 studs. Shared PickupMotion is a
+continuous upward bob, slow spin and small tilt. CarrierUserId changes stop the
+idle effect immediately, while the server also hides carried halos. Distance
+checks run every 0.2 seconds; per-frame work visits nearby rigs. Stream-out
+removes records and attribute connections. Gameplay prompts, item coordinates,
+weights, server ownership and rewards are independent of the cosmetic motion.
+
+`check-presentation.py` executes the actual camera/animation adapters with
+mocked signals, vectors and camera transforms. It verifies orbit containment,
+carry/drop, distance gating and stream cleanup. Shared tests sweep camera
+corners/entrance seams and ground clearance across motion phases; service tests
+complete and publish all new recipes. These cannot verify engine joint physics,
+camera feel, GUI clipping or GPU performance; test those in Windows Studio.

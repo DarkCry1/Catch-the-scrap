@@ -19,6 +19,10 @@ for _,item in Config.Items do
     pickupVisuals[item.rarity]={parts=PickupBlueprint.build(item.rarity,item.color),clearance=PickupBlueprint.clearance(item.rarity,item.color)}
 end
 print(json({
+    stages=Config.Stages,
+    wallHeight=Config.WallHeight,
+    zoneLength=Config.ZoneLength,
+    trackStart=Config.TrackStart,
     pickupVisuals=pickupVisuals,
     mechanic = require("../src/shared/MechanicBlueprint"),
     base = require("../src/shared/BaseBlueprint"),

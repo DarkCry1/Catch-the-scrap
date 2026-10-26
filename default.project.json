@@ -26,6 +26,11 @@
         "CatchTheScrap": {
           "$path": "src/client"
         }
+      },
+      "$properties": {
+        "CameraMaxZoomDistance": 32,
+        "CameraMinZoomDistance": 0.5,
+        "DevCameraOcclusionMode": "Zoom"
       }
     },
     "Workspace": {

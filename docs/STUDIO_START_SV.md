@@ -1,10 +1,10 @@
-# Testa v0.5 på Windows
+# Testa v0.6 på Windows
 
 Alla spelets egna texter är nu på **engelska**. Vi använder svenska för instruktioner och samtal.
 
 ## Öppna rätt platsfil
 
-1. Hämta **Catch-the-scrap-v0.5.rbxl** från `downloads` på GitHub-grenen `codex/scrapyard-visual-overhaul`. Klicka **Download raw file**, nedåtpilen vid filen.
+1. Hämta **Catch-the-scrap-v0.6.rbxl** från `downloads` på GitHub-grenen `codex/epic-salvage-stages`. Klicka **Download raw file**, nedåtpilen vid filen.
 2. Stoppa pågående Play i Roblox Studio. Öppna den **nya** filen via **File → Open from File… / Ctrl+O**.
 3. Tryck **Play / F5**. Världen skapas vid spelstart; en tom editor före Play är normalt.
 4. Öppna **Output** via View/Window om du behöver se felmeddelanden.
@@ -17,7 +17,7 @@ Alla spelets egna texter är nu på **engelska**. Vi använder svenska för inst
 - **Q / Drop [Q]** släpper delen och återställer farten.
 - Gå in i din egen verkstad och håll **E / Deposit part** vid maskinen med orange kant.
 
-Skrotgården är **160 studs bred och 1 440 studs lång**, med tre områden och 32 upphämtningsplatser i varje. Områdena heter **Sorting Yard**, **Machine Graveyard** och **Reactor Wrecks**. Föremål återkommer åtta sekunder efter inlämning. Släppta delar dupliceras inte.
+Skrotgården är **160 studs bred och 3 360 studs lång**, med sju områden och 32 upphämtningsplatser i varje. Områdena heter **Sorting Yard**, **Machine Graveyard**, **Reactor Wrecks**, **Turbine Foundry**, **Golden Furnace**, **Void Salvage** och **Starforge Ruins**. Föremål återkommer åtta sekunder efter inlämning. Släppta delar dupliceras inte.
 
 ## Matchande delar och robotar
 
@@ -26,10 +26,14 @@ Skrotgården är **160 studs bred och 1 440 studs lång**, med tre områden och 
 | Common | 5 Common | $5/sek |
 | Uncommon | 7 Uncommon | $10/sek |
 | Rare | 10 Rare | $20/sek |
+| Epic | 12 Epic | $45/sek |
+| Legendary | 15 Legendary | $100/sek |
+| Mythic | 18 Mythic | $225/sek |
+| Celestial | 20 Celestial | $500/sek |
 
-Common och Rare följer dina önskade recept. Uncommon-värdena är tills vidare testbalans. En Common-del kan aldrig ersätta en Rare-del.
+Common och Rare följer dina önskade recept. Övriga nya värden är tills vidare testbalans. En Common-del kan aldrig ersätta en Rare-del.
 
-Första inlämningen av en rarity startar ett projekt på en ledig robotplattform. Nästa del av samma rarity fortsätter det projektet. Det går att arbeta på flera rarities samtidigt. Varje projekt reserverar sin plattform, så andra robotbyggen inte kan ta platsen innan det är färdigt. Det finns fyra plattformar per spelare.
+Första inlämningen av en rarity startar ett projekt på en ledig robotplattform. Nästa del av samma rarity fortsätter det projektet. Det går att arbeta på flera rarities samtidigt. Varje projekt reserverar sin plattform, så andra robotbyggen inte kan ta platsen innan det är färdigt. Det finns fyra plattformar per spelare. Alla sju områden är öppna från början; välj vilka fyra robotprojekt du vill bygga. Byte/återvinning av färdiga robotar ingår ännu inte.
 
 Robotmodellen har fem visuella monteringsgrupper: ben/fötter, kropp, armar, huvud samt reaktor/slutdetaljer. Common visar en ny grupp per del. Rare behöver två delar per grupp. Bara färdiga robotar ger pengar. HUD:ens rarity-räknare återgår till noll efter färdig robot och kan starta ett nytt projekt om det finns plats.
 
@@ -60,14 +64,26 @@ Första Speed kan betalas efter cirka 15 sekunders produktion från en Common-ro
 - [ ] Två spelare har separata saldon och nivåer och kan handla samtidigt.
 - [ ] Menyn och köpknapparna går att använda i telefonläge, stående och liggande.
 
-## Visuell genomgång av v0.5
+## Nytt i v0.6: områden, kamera och animerat skrot
+
+Väggarna är nu **64 studs höga** runt både banan och basområdet. Kameran begränsas innanför yttergränserna, även när kartdelar strömmas in. Vanlig högerknappsrotation och mobilkamera finns kvar, med högst 32 studs utzoomning. Föremålen svävar mjukt, roterar, vickar och har en pulserande ring på marken. Ringen döljs och animationen stoppas när en del bärs.
+
+- [ ] Håll höger musknapp och vrid kameran vid båda långväggarna, basområdets bakvägg, sista väggen och ingångens hörn. Zooma ut och prova shift lock/förstaperson. Kameran ska hållas på insidan utan att klippa igenom ytterväggen.
+- [ ] Prova samma sak i telefonläge, både stående och liggande, samt efter Reset Character.
+- [ ] Gå genom alla sju områden. HUD:ens receptlista följer området när du går in; du kan också scrolla i listan.
+- [ ] Prova att plocka upp/släppa en del medan den studsar, direkt efter respawn och efter att ha lämnat området och återvänt. Den ska följa spelaren stadigt under bärandet.
+- [ ] Testa Epic, Legendary, Mythic och Celestial som nya robotprojekt i separata serverbesök om plattformarna tar slut. Kontrollera exakt delantal och inkomst enligt tabellen.
+
+[Modellbilder och tekniska uppgifter](STAGES_V06.md)
+
+## Visuell genomgång av v0.6
 
 Det nya bygget har höga skrotklädda väggar, lagad plåt, silor, markslitage, olje-/våtfläckar, avrinningsgaller, verkstadsljus och mer detaljerade fynd, baser, robotar och mekaniker. Ljuset ligger i sen eftermiddag. Rök och gnistor är sparsamma och aktiveras i närheten av spelaren.
 
 - [ ] Öppna den **nya platsfilen**. Streaming- och ljusinställningar ingår i den; använd den som utgångspunkt även om du tidigare synkat koden till en äldre plats.
-- [ ] Gå genom alla tre områden och bedöm ljus, material, väggarnas skrotklädsel och att text och upphämtningsdelar är tydliga.
+- [ ] Gå genom alla sju områden och bedöm ljus, material, väggarnas skrotklädsel och att text och upphämtningsdelar är tydliga.
 - [ ] Kontrollera att mittvägen och alla upphämtningsplatser är fria från nya hinder.
-- [ ] Plocka upp, bär, släpp och lämna in Common Gear, Uncommon Motor och Rare Core. Modellerna ska följa spelaren utan kollision, och släppta modeller ska ligga över markytan.
+- [ ] Plocka upp, bär, släpp och lämna in alla sju sorters skrot. Modellerna ska följa spelaren utan kollision; släppta modeller ska börja sväva igen över markytan.
 - [ ] Släpp en del nära ytterväggen: den ska hamna säkert eller återställas till sin ursprungsplats, inte bli oåtkomlig bakom väggen.
 - [ ] Gå längst bort i banan och tillbaka. Den egna basen, robotarna och inlämningen ska fortfarande fungera.
 - [ ] Reset Character från Rare-området ska ge en säker återkomst till den egna basen.

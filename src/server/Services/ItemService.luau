@@ -49,7 +49,7 @@ function ItemService:spawn(slot)
     local billboard = Instance.new("BillboardGui")
     billboard.Name = "ItemLabel"
     billboard.Size = UDim2.fromOffset(180, 54)
-    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.StudsOffset = Vector3.new(0, 4.2, 0)
     billboard.MaxDistance = 65
     billboard.Parent = root
     local label = Instance.new("TextLabel")
@@ -83,6 +83,7 @@ function ItemService:start()
 end
 
 function ItemService:attach(record, characterRoot)
+    for _,part in record.model.GroundHalo:GetChildren() do part.Transparency=1 end
     record.prompt.Enabled = false
     record.billboard.Enabled = false
     record.model:PivotTo(characterRoot.CFrame * CFrame.new(0, 0, -3))
@@ -100,6 +101,7 @@ function ItemService:place(record, position)
     record.root.Anchored = true
     record.model:PivotTo(CFrame.new(position))
     record.model:SetAttribute("CarrierUserId", nil)
+    for _,part in record.model.GroundHalo:GetChildren() do part.Transparency=.3 end
     record.prompt.Enabled = true
     record.billboard.Enabled = true
 end

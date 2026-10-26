@@ -81,7 +81,7 @@ end)
 
 test("no retroactive income, unknown recipes, or shared accounts",function()
     local alice,bob=Economy.new(),Economy.new()
-    check(not Economy.addPart(alice,"Legendary",settings),"unknown rarity rejected")
+    check(not Economy.addPart(alice,"Unknown",settings),"unknown rarity rejected")
     check(#alice.projects==0,"unknown rarity has no effects")
     Economy.advance(alice,100,settings);add(alice,"Common",5)
     check(alice.cash==0,"old time earns no money")

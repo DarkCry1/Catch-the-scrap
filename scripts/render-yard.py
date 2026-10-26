@@ -62,7 +62,7 @@ for index in range(8):
   x,y,z=piece['position'];position=[ox+x*math.cos(angle)+z*math.sin(angle),y,oz-x*math.sin(angle)+z*math.cos(angle)]
   palette=piece['palette'];color=DATA['accent'] if palette=='accent' else DATA['palette'][palette]
   part(dict(name=piece['name'],position=position,size=piece['size'],color=color,material=piece['material'],yaw=math.degrees(angle)+piece['yaw']))
-for z in range(65,1460,60):
+for z in range(65,DATA['trackStart']+DATA['zoneLength']*len(DATA['stages']),60):
  for lane,direction,color in ((7,1,[235,178,65]),(-7,-1,[100,192,190])):
   for side in (-1,1):
    a=(lane+side*2.5,z-direction*2.5);b=(lane,z+direction*2.5)
@@ -81,14 +81,14 @@ for sign in DATA['yard']['signs']:
 bpy.ops.object.light_add(type='SUN',location=(100,-100,200))
 bpy.context.object.data.energy=3.1;bpy.context.object.data.color=(1,.86,.68);bpy.context.object.rotation_euler=(.72,-.35,-.5)
 bpy.ops.object.light_add(type='AREA',location=(-80,120,160));bpy.context.object.data.energy=200000;bpy.context.object.data.size=160
-bpy.ops.object.camera_add(location=(190,-100,140))
-camera=bpy.context.object;camera.rotation_euler=(Vector((0,250,4))-camera.location).to_track_quat('-Z','Y').to_euler()
+bpy.ops.object.camera_add(location=(280,1120,250))
+camera=bpy.context.object;camera.rotation_euler=(Vector((0,1680,8))-camera.location).to_track_quat('-Z','Y').to_euler()
 camera.data.lens=32;camera.data.clip_end=5000;scene.camera=camera
 scene.render.filepath=str(ROOT/'build/scrapyard-preview.png')
 bpy.ops.render.render(write_still=True)
 # A second, eye-level view makes wall cladding and collectible detail assessable.
-camera.location=(5,8,7)
-camera.rotation_euler=(Vector((0,180,9))-camera.location).to_track_quat('-Z','Y').to_euler()
+camera.location=(5,DATA["trackStart"]+DATA["zoneLength"]*3-10,7)
+camera.rotation_euler=(Vector((0,DATA["trackStart"]+DATA["zoneLength"]*3+175,10))-camera.location).to_track_quat('-Z','Y').to_euler()
 camera.data.lens=25
 scene.render.filepath=str(ROOT/'build/scrapyard-ground-preview.png')
 bpy.ops.render.render(write_still=True)

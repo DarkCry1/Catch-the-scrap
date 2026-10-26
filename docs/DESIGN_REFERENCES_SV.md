@@ -39,3 +39,8 @@ Milo är en egen mekanikerrobot med skyddsglasögon och skiftnyckel bakom en lit
 ## Uppdatering v0.5
 
 Skrotgården har fått en egen sammanhängande industrimiljö med skrotklädda ytterväggar och infart, plåtlager och förstärkningar, silor, lagade verkstäder och detaljerade kugghjul, motorer och kärnor. All geometri är fortsatt egen. Spelet använder Roblox inbyggda material och paketerade partikeltexturer. [Den visuella genomgången](VISUAL_PASS_V05.md) visar modellrenderingar och beskriver vilka verkliga Studio-tester som återstår. Inga nya externa spelbilder eller modeller importerades.
+
+
+## Uppdatering v0.6
+
+Epic, Legendary, Mythic och Celestial följer etablerat rarity-språk från loot-/simulatorspel. De nya områdesnamnen Turbine Foundry, Golden Furnace, Void Salvage och Starforge Ruins är egna och anpassade till skrotgårdens tema. Geometri, modeller och animationer är byggda i projektet. Inga nya externa spel har speltestats eller visuellt granskats i molnet för denna uppdatering.

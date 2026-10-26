@@ -36,7 +36,7 @@ function ScrapyardBuilder.build(world)
     for _, sign in layout.signs do
         FloatingText.create(yard,"YardLabel",CFrame.new(unpack(sign.position)),sign.text,Color3.fromRGB(unpack(sign.color)),36,3,90)
     end
-    for z = Config.TrackStart+45, Config.TrackStart+Config.ZoneLength*3-15, 60 do
+    for z = Config.TrackStart+45, Config.TrackStart+Config.ZoneLength*#Config.Stages-15, 60 do
         NavigationRenderer.draw(yard,7,z,1,Color3.fromRGB(235,178,65))
         NavigationRenderer.draw(yard,-7,z,-1,Color3.fromRGB(100,192,190))
     end

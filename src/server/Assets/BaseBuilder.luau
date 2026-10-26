@@ -70,7 +70,7 @@ function BaseBuilder.create(parent, index, origin)
     local ownerLabel = surfaceLabel(pieces.GateHeader, "WORKSHOP " .. index .. "  /  UNCLAIMED", accent)
     pieces.ProgressBoard.Transparency = 1
     pieces.ProgressBoard.CastShadow = false
-    local progressLabel = FloatingText.create(folder,"BuildProgress",origin*CFrame.new(0,7,-16),"DEPOSIT MATCHING PARTS\nCOMMON 0/5  |  RARE 0/10",color("amber",accent),16,4,65)
+    local progressLabel = FloatingText.create(folder,"BuildProgress",origin*CFrame.new(0,7,-16),"DEPOSIT MATCHING PARTS\n7 RARITIES / 4 ROBOT PLATFORMS",color("amber",accent),16,4,65)
     local deposit = part(folder, "Deposit", Vector3.new(8, 3, 1), origin * CFrame.new(0, 2.8, -7.5), accent, Enum.Material.SmoothPlastic, false)
     deposit.Transparency = 1
     local prompt = Instance.new("ProximityPrompt")
@@ -117,13 +117,17 @@ end
 function BaseBuilder.update(base, displayName, account)
     if not account then
         base.label.Text = "WORKSHOP " .. base.index .. "  /  UNCLAIMED"
-        base.progressLabel.Text = "DEPOSIT MATCHING PARTS\nCOMMON 0/5  |  RARE 0/10"
+        base.progressLabel.Text = "DEPOSIT MATCHING PARTS\n7 RARITIES / 4 ROBOT PLATFORMS"
         base.robots:ClearAllChildren()
         for slot, pad in base.pads do pad.model=nil; pad.key=""; pad.label.Text="SLOT "..slot end
         return
     end
     base.label.Text = string.format("%s  /  WORKSHOP %02d\n%d ROBOTS  |  $%d / SEC",displayName,base.index,Economy.robotCount(account),Economy.incomePerSecond(account,Config.Robot))
-    base.progressLabel.Text = string.format("MATCHING PARTS ONLY\nC %d/5  |  U %d/7  |  R %d/10",Economy.progress(account,"Common"),Economy.progress(account,"Uncommon"),Economy.progress(account,"Rare"))
+    local active={}
+    for _,project in account.projects do
+        if not project.complete then table.insert(active,string.format("%s %d/%d",project.rarity:upper(),project.parts,Config.Robot.Recipes[project.rarity].Parts)) end
+    end
+    base.progressLabel.Text = if #active>0 then "ASSEMBLY / "..table.concat(active," | ") else "DEPOSIT MATCHING PARTS\n7 RARITIES / 4 ROBOT PLATFORMS"
     for slot, pad in base.pads do
         local project = account.projects[slot]
         local key = if project then project.rarity..":"..project.parts else "empty"

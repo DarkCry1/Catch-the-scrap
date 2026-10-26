@@ -7,6 +7,7 @@ export type Sign = { position: {number}, text: string, color: {number} }
 export type Bounds = { x: number, z: number, width: number, depth: number }
 export type Effect = {kind: string, position: {number}, color: {number}}
 export type Layout = { parts: {Part}, spawns: {Spawn}, signs: {Sign}, bounds: {Bounds}, effects: {Effect} }
+local Config = require("./Config")
 local Blueprint = {}
 
 function Blueprint.build(width: number, zoneLength: number, start: number): Layout
@@ -80,6 +81,34 @@ function Blueprint.build(width: number, zoneLength: number, start: number): Layo
             for band=-2,2,2 do at("RivetBand",{.24,10.2,.24},{band,6,6.55},dark) end
             at("Vent", {4, 4, 4}, {0, 13, 0}, rust)
             at("Cap", {6, .4, 6}, {0, 15.2, 0}, dark)
+        elseif kind == "Turbine" or kind == "Furnace" or kind == "VoidEngine" or kind == "StarEngine" then
+            w,d=20,20
+            local tint=if kind=="Turbine" then Config.Robot.Recipes.Epic.Color elseif kind=="Furnace" then Config.Robot.Recipes.Legendary.Color elseif kind=="VoidEngine" then Config.Robot.Recipes.Mythic.Color else Config.Robot.Recipes.Celestial.Color
+            at("Plinth",{19,1,19},{0,.5,0},dark,"DiamondPlate")
+            if kind=="Turbine" then
+                at("Housing",{8,16,16},{0,8,0},steel,"CorrodedMetal","Cylinder",90)
+                at("Face",{.3,13,13},{0,8,4.2},dark,"Metal","Cylinder",90)
+                at("Hub",{.6,4,4},{0,8,4.6},tint,"Neon","Cylinder",90)
+                for blade=0,7 do
+                    local angle=blade*math.pi/4
+                    at("Blade",{4,1,.5},{math.cos(angle)*4,8+math.sin(angle)*4,4.5},steel,"Metal","Block",0,math.deg(angle)+25)
+                end
+            elseif kind=="Furnace" then
+                at("Shell",{16,13,15},{0,7,0},steel,"CorrodedMetal")
+                at("Door",{11,8,.4},{0,6,7.7},dark)
+                for slit=-2,2 do at("HotGrille",{1.3,6,.2},{slit*1.8,6,8},tint,"Neon") end
+                for _,side in {-1,1} do at("Exhaust",{8,3,3},{side*5,17,0},rust,"CorrodedMetal","Cylinder",0,90) end
+            else
+                at("Core",{7,7,7},{0,8,0},tint,"Neon","Ball")
+                for _,side in {-1,1} do
+                    at("Support",{2,14,2},{side*7,7,0},steel)
+                    at("Clamp",{15,1,3},{0,8+side*6,0},dark)
+                end
+                for blade=0,7 do
+                    local angle=blade*math.pi/4
+                    at("OrbitSegment",{5,.6,.8},{math.cos(angle)*7,8+math.sin(angle)*7,0},if kind=="StarEngine" then tint else steel,"Metal","Block",0,math.deg(angle)+90)
+                end
+            end
         elseif kind == "RobotWreck" then
             w, d = 24, 24
             at("Body", {13, 7, 10}, {0, 4.2, 0}, dark)
@@ -100,43 +129,51 @@ function Blueprint.build(width: number, zoneLength: number, start: number): Layo
         local radians = math.rad(yaw)
         table.insert(layout.bounds, {x=x, z=z, width=math.abs(w*math.cos(radians))+math.abs(d*math.sin(radians)), depth=math.abs(w*math.sin(radians))+math.abs(d*math.cos(radians))})
     end
-    local total = zoneLength * 3
+    local total = zoneLength * #Config.Stages
+    local wallHeight = Config.WallHeight
     part("HomeGround",{208,2,320},{0,-1,-140},{58,63,62},"Concrete")
     for _,side in {-1,1} do
-        part("PlazaBoundary",{4,13,320},{side*104,6.5,-140},dark,"Concrete")
-        part("PlazaFrontBoundary",{24,12,4},{side*94,6,20},dark,"Concrete")
+        part("PlazaBoundary",{4,wallHeight,320},{side*104,wallHeight/2,-140},dark,"Concrete")
+        part("PlazaFrontBoundary",{24,wallHeight,4},{side*94,wallHeight/2,20},dark,"Concrete")
         for bay=0,7 do
-            part("PlazaSalvageCladding",{.35,10,35},{side*101.7,6,-280+bay*40},if bay%2==0 then rust else steel,"CorrodedMetal","Block",0,0,false)
-            part("PlazaWallTop",{5,3,16},{side*105,13,-280+bay*40},rust,"CorrodedMetal","Block",bay*20,0,false)
+            part("PlazaSalvageCladding",{.35,wallHeight-6,35},{side*101.7,wallHeight/2,-280+bay*40},if bay%2==0 then rust else steel,"CorrodedMetal","Block",0,0,false)
+            part("PlazaWallTop",{5,3,16},{side*105,wallHeight+1,-280+bay*40},rust,"CorrodedMetal","Block",bay*20,0,false)
         end
     end
-    part("PlazaBackBoundary",{208,15,4},{0,7.5,-300},dark,"Concrete")
-    for x=-90,90,30 do part("PlazaBackCladding",{25,11,.35},{x,7,-297.7},rust,"CorrodedMetal","Block",0,0,false) end
-    part("YardTerrain", {width + 140, 2, total + 100}, {0, -2, start + total / 2}, {80, 72, 56}, "Ground")
-    local tiers = {"Common", "Uncommon", "Rare"}
-    local names = {"SORTING YARD", "MACHINE GRAVEYARD", "REACTOR WRECKS"}
-    local colors = {{200, 207, 198}, {78, 215, 145}, {90, 160, 255}}
-    for zone = 1, 3 do
+    part("PlazaBackBoundary",{208,wallHeight,4},{0,wallHeight/2,-300},dark,"Concrete")
+    for x=-90,90,30 do part("PlazaBackCladding",{25,wallHeight-6,.35},{x,wallHeight/2,-297.7},rust,"CorrodedMetal","Block",0,0,false) end
+    -- Segments stay below Roblox's 2048-stud BasePart size limit and stream locally.
+    for zone=1,#Config.Stages do
+        part("YardTerrain", {width + 140, 2, zoneLength}, {0, -2, start + (zone-.5)*zoneLength}, {80, 72, 56}, "Ground")
+    end
+    for zone, stage in Config.Stages do
         local first = start + (zone - 1) * zoneLength
-        local tint = colors[zone]
+        local tint = stage.Color
         part("YardFloor", {width, 1, zoneLength}, {0, -.5, first + zoneLength / 2}, if zone == 1 then {100, 94, 80} else {78, 75, 65}, if zone == 1 then "Concrete" else "Ground")
         part("HaulRoad", {34, .08, zoneLength}, {0, .05, first + zoneLength / 2}, {54, 58, 57}, "Asphalt")
         for _, side in {-1, 1} do
             part("SafetyLine", {.3, .05, zoneLength}, {side * 17, .12, first + zoneLength / 2}, amber, "SmoothPlastic", "Block", 0, 0, false)
 
         end
-        table.insert(layout.signs, {position={0, 14, first + 15},text=tiers[zone]:upper() .. " / " .. names[zone],color=tint})
+        table.insert(layout.signs, {position={0, 14, first + 15},text=string.format("STAGE %02d / %s / %s",zone,stage.Rarity:upper(),stage.Name:upper()),color=tint})
         for row = 0, 7 do
             for _, x in {-55, -22, 22, 55} do
-                table.insert(layout.spawns,{ position={x, 2.2, first + (row + .5) * zoneLength / 8}, rarity=tiers[zone] })
+                table.insert(layout.spawns,{ position={x, 2.2, first + (row + .5) * zoneLength / 8}, rarity=stage.Rarity })
             end
         end
-        local kinds = if zone == 1 then {"Container", "CarWreck", "Tires", "Pile"} elseif zone == 2 then {"Pipes", "CarWreck", "Container", "RobotWreck"} else {"Reactor", "RobotWreck", "Pipes", "Reactor"}
+        local kinds = if zone == 1 then {"Container", "CarWreck", "Tires", "Pile"} elseif zone == 2 then {"Pipes", "CarWreck", "Container", "RobotWreck"} elseif zone==3 then {"Reactor", "RobotWreck", "Pipes", "Reactor"} elseif zone==4 then {"Turbine", "Pipes", "Turbine", "RobotWreck"} elseif zone==5 then {"Furnace", "Container", "Furnace", "Reactor"} elseif zone==6 then {"VoidEngine", "RobotWreck", "VoidEngine", "Reactor"} else {"StarEngine", "Reactor", "StarEngine", "RobotWreck"}
         for row = 0, 3 do
             local z = first + (row + .5) * zoneLength / 4
             prop(kinds[row+1], -48, z, if row % 2 == 0 then 0 else 90)
             prop(kinds[(row+1)%4+1], 48, z, if row % 2 == 0 then 90 else 0)
         end
+        -- Color-keyed gateway: each salvage district has its own identity.
+        for _, side in {-1,1} do
+            part("StagePylon",{3,22,3},{side*24,11,first+8},dark)
+            part("StageEnergyStrip",{.22,17,.22},{side*22.4,11,first+6.4},tint,"Neon","Block",0,0,false)
+        end
+        part("StageGantry",{52,2,3},{0,22,first+8},dark)
+        part("StageGantryAccent",{46,.3,.2},{0,22,first+6.4},tint,"Neon","Block",0,0,false)
         -- Denser fence-line salvage bays leave pickup rows and the haul road clear.
         for row = 0, 5 do
             local z = first + (row + .5) * zoneLength / 6
@@ -167,18 +204,20 @@ function Blueprint.build(width: number, zoneLength: number, start: number): Layo
         part("Hook", {2.5, .7, 1}, {27, 11.8, craneZ}, steel)
         part("Magnet",{1.5,7,7},{27,10.6,craneZ},dark,"Metal","Cylinder",0,90)
         part("MagnetRim",{.2,7.2,7.2},{27,9.8,craneZ},amber,"Metal","Cylinder",0,90)
-        table.insert(layout.effects,{kind=if zone==3 then "sparks" else "smoke",position={-48,if zone==1 then 5.5 elseif zone==2 then 8 else 14,first+zoneLength*.875},color=if zone==3 then {110,193,255} else {124,117,100}})
+        table.insert(layout.effects,{kind=if zone>=3 then "sparks" else "smoke",position={-48,if zone==1 then 5.5 elseif zone==2 then 8 else 14,first+zoneLength*.875},color=if zone>=3 then tint else {124,117,100}})
     end
     -- Tall continuous walls are structural; layered salvage is noncolliding cladding.
     for _,side in {-1,1} do
-        part("BoundaryWall",{4,22,total},{side*(width/2+4),11,start+total/2},{46,52,52},"Concrete")
+        for zone=1,#Config.Stages do
+            part("BoundaryWall",{4,wallHeight,zoneLength},{side*(width/2+4),wallHeight/2,start+(zone-.5)*zoneLength},{46,52,52},"Concrete")
+        end
         for bay=0,math.floor(total/40)-1 do
             local z=start+bay*40+20
             local tint=if bay%3==0 then rust elseif bay%3==1 then {91,109,105} else {115,104,83}
-            part("WallLowerScrap",{.5,9,35},{side*(width/2+1.6),5.5,z},tint,"CorrodedMetal","Block",0,(bay%3-1)*3,false)
-            part("WallUpperScrap",{.4,9,31},{side*(width/2+1.4),15,z+3},if bay%2==0 then steel else rust,"CorrodedMetal","Block",0,0,false)
-            part("WallReinforcement",{1.6,24,1.4},{side*(width/2+1.2),12,z-19},dark)
-            part("RaggedWallTop",{7,4+(bay%3),16},{side*(width/2+5),23,z-7},tint,"CorrodedMetal","Block",bay*19,12,false)
+            part("WallLowerScrap",{.5,wallHeight/2-3,35},{side*(width/2+1.6),wallHeight/4,z},tint,"CorrodedMetal","Block",0,(bay%3-1)*3,false)
+            part("WallUpperScrap",{.4,wallHeight/2-3,31},{side*(width/2+1.4),wallHeight*.75,z+3},if bay%2==0 then steel else rust,"CorrodedMetal","Block",0,0,false)
+            part("WallReinforcement",{1.6,wallHeight+2,1.4},{side*(width/2+1.2),wallHeight/2,z-19},dark)
+            part("RaggedWallTop",{7,4+(bay%3),16},{side*(width/2+5),wallHeight+1,z-7},tint,"CorrodedMetal","Block",bay*19,12,false)
             if bay%2==0 then
                 part("WallSafetyPatch",{.12,1.5,7},{side*(width/2+.95),4,z+9},amber,"Metal","Block",0,0,false)
             end
@@ -188,21 +227,21 @@ function Blueprint.build(width: number, zoneLength: number, start: number): Layo
                 table.insert(layout.effects,{kind="lamp",position={side*(width/2-1),18,z},color={255,204,150}})
             end
         end
-        for zone=0,2 do
+        for zone=0,#Config.Stages-1 do
             local z=start+zone*zoneLength+zoneLength*.7
             part("SkylineSilo",{34,19,19},{side*(width/2+33),17,z},{74,82,80},"CorrodedMetal","Cylinder",0,90)
             part("SiloCap",{1,21,21},{side*(width/2+33),34.5,z},dark,"Metal","Cylinder",0,90)
             part("SiloExhaust",{10,4,4},{side*(width/2+33),40,z},rust,"CorrodedMetal","Cylinder",0,90)
         end
     end
-    part("EntranceLintel",{width+12,4,6},{0,29,start},dark)
+    part("EntranceLintel",{width+12,4,6},{0,wallHeight-3,start},dark)
     for _,side in {-1,1} do
-        part("EntrancePillar",{5,30,7},{side*(width/2+2),15,start},steel)
+        part("EntrancePillar",{5,wallHeight,7},{side*(width/2+2),wallHeight/2,start},steel)
         part("EntranceLamp",{.35,15,.35},{side*(width/2-1),11,start-3.6},amber,"Neon","Block",0,0,false)
     end
-    part("EndFence",{width+8,24,4},{0,12,start+total+2},dark,"Concrete")
+    part("EndFence",{width+8,wallHeight,4},{0,wallHeight/2,start+total+2},dark,"Concrete")
     for x=-70,70,20 do
-        part("EndWallCladding",{17,18,.5},{x,10,start+total-.1},if x%40==10 then rust else steel,"CorrodedMetal","Block",0,0,false)
+        part("EndWallCladding",{17,wallHeight-6,.5},{x,wallHeight/2,start+total-.1},if x%40==10 then rust else steel,"CorrodedMetal","Block",0,0,false)
     end
     table.insert(layout.signs,{position={0,10,start+total-12},text="END OF THE YARD / RETURN TO YOUR WORKSHOP",color=amber})
     return layout

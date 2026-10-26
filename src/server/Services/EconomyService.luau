@@ -24,7 +24,8 @@ end
 function EconomyService:publish(player, entry)
     entry.lastPublish = os.clock()
     local account = entry.account
-    for _, rarity in {"Common","Uncommon","Rare"} do
+    for _, stage in Config.Stages do
+        local rarity = stage.Rarity
         attribute(player, rarity .. "Parts", Economy.progress(account, rarity))
     end
     attribute(player, "UsedPlatforms", #account.projects)

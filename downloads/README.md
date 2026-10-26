@@ -1,36 +1,25 @@
-# Catch the Scrap v0.5 – industrial scrapyard visual pass
+# Catch the Scrap v0.6
 
-1. Open [Catch-the-scrap-v0.5.rbxl](Catch-the-scrap-v0.5.rbxl) on GitHub.
+1. Open [Catch-the-scrap-v0.6.rbxl](Catch-the-scrap-v0.6.rbxl) on GitHub.
 2. Click **Download raw file** (the down-arrow button).
-3. Stop the old Studio test. Open this new file using **File → Open from File / Ctrl+O**.
+3. Stop the old Studio test. Open the new file with **File → Open from File / Ctrl+O**.
 4. Press **Play / F5**. The world is constructed at startup.
 
-## The new visual pass
-
-Scrap-clad perimeter walls, reinforced entrances, silos, layered weathered panels,
-vehicle and machine details, stained ground, drains and warm work lights make
-the 160 × 1440-stud yard feel like an industrial salvage site. Workshops, robots
-and Milo's stand have extra mechanical details. Collectibles now look like gears,
-motors and clamped reactor cores. Lighting uses a late-afternoon atmosphere,
-clouds and restrained bloom, with nearby-only ambient lights, smoke and sparks.
-
-The world streams in sections. Your own workshop remains loaded for you. Test
-returning from the far end and resetting your character in the new place file.
+Seven rarity stages span a **160 × 3360-stud** scrapyard: Common, Uncommon, Rare,
+Epic, Legendary, Mythic and Celestial. Each has matching scrap and robot recipes.
+64-stud walls and a camera guard contain normal orbit and zoom inside the map.
+Detailed collectibles now hover, rotate, tilt and pulse with a ground halo while
+resting. Idle motion stops while carried. Four robot platforms per player;
+progress is session-only. All custom game text is English.
 
 **WASD** move · **Hold E** pick up/deposit/browse · **Q** drop · **X** close shop.
-All custom in-game text is English. Milo sells Speed and Strength upgrades with
-earned cash. Common robots need 5 matching parts, Uncommon 7, Rare 10. Upgrades,
-robots and money are session-only; permanent saving is not implemented.
 
-[Windows test guide (Swedish)](../docs/STUDIO_START_SV.md) · [Editable source ZIP](Catch-the-scrap-v0.5-source.zip) · [Visual review](../docs/VISUAL_PASS_V05.md)
+[Windows guide (Swedish)](../docs/STUDIO_START_SV.md) · [Editable source ZIP](Catch-the-scrap-v0.6-source.zip) · [Stage recipes and review](../docs/STAGES_V06.md)
 
-![Ground-level model render](scrapyard-ground-preview.png)
+![Seven collectible models](pickup-preview-v0.6.png)
 
-![Overview model render](scrapyard-preview.png)
+![Epic district model render](epic-yard-preview-v0.6.png)
 
-![Collectible model render](pickup-preview.png)
-
-These are Blender asset renders using shared geometry, **not Roblox Studio
-screenshots**. Native lighting, materials, text and particles differ. Automated
-checks and builds passed; actual Studio interaction, streaming, lighting and
-device performance still need testing. Older versioned downloads are archives.
+These are Blender asset renders, **not Studio screenshots**. Automated checks
+and builds pass; real camera/input behavior, animations and device performance
+still require Windows Studio testing. Older downloads are archived versions.

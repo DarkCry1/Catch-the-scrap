@@ -1,18 +1,20 @@
 # Catch-the-scrap
 
-Current build **v0.5** gives the scrapyard a complete industrial visual pass:
-scrap-clad perimeter walls, a reinforced entrance, weathered workshops, detailed
-gears/motors/cores, mechanical robot details, late-afternoon lighting and bounded
-ambient effects. Streaming limits distant geometry; owners retain their workshop.
-All custom game text is English.
+Current build **v0.6** expands the scrapyard to **seven stages / 160 × 3360 studs**.
+Epic, Legendary, Mythic and Celestial add original industrial districts, detailed
+salvage models and matching-part robots. All pickups hover, turn and pulse with a
+ground halo while resting. Carrying stops the idle animation.
 
-The 160 × 1440-stud yard, rarity recipes, passive robot income and Milo's Speed/
-Strength upgrades remain available. Progress is session-only.
+Scrap-clad walls are **64 studs tall**. A camera guard keeps ordinary orbit and
+zoom inside the connected plaza/yard, independently of streamed wall geometry.
+All custom game text remains English. Milo's upgrades and passive income remain
+available. Four robot platforms per player; progress is session-only.
 
-[Download v0.5](downloads/Catch-the-scrap-v0.5.rbxl) · [Visual review and previews](docs/VISUAL_PASS_V05.md) · [Windows test guide (Swedish)](docs/STUDIO_START_SV.md) · [Development](docs/DEVELOPMENT.md)
+[Download v0.6](downloads/Catch-the-scrap-v0.6.rbxl) · [New stages and previews](docs/STAGES_V06.md) · [Windows test guide (Swedish)](docs/STUDIO_START_SV.md) · [Development](docs/DEVELOPMENT.md)
 
-Build with `python3 scripts/check.py`. Real Studio play, graphics and performance
-tests are still required. The original design brief follows below.
+Build with `python3 scripts/check.py`. Automated checks and asset renders cannot
+replace real Studio interaction, camera, graphics and device-performance tests.
+The original design brief follows below; current rules are documented above.
 
 CATCH THE SCRAP — Project Brief / Game Design Document
 
