@@ -5,9 +5,11 @@ local Config = require(ReplicatedStorage.CatchTheScrapShared.Config)
 local Blueprint = require(ReplicatedStorage.CatchTheScrapShared.RobotBlueprint)
 local RobotBuilder = {}
 
-function RobotBuilder.build(parent, origin, stage, complete)
+function RobotBuilder.build(parent, origin, stage, complete, rarity)
+    local recipe = Config.Robot.Recipes[rarity]
     local model = Instance.new("Model")
-    model.Name = if complete then "ScrapBotMK1" else "RobotUnderConstruction"
+    model.Name = if complete then recipe.Name else rarity.."RobotUnderConstruction"
+    model:SetAttribute("Rarity",rarity)
     model:SetAttribute("BuildStage", stage)
     model:SetAttribute("Complete", complete)
     for _, definition in Blueprint do
@@ -24,6 +26,9 @@ function RobotBuilder.build(parent, origin, stage, complete)
         object.TopSurface = Enum.SurfaceType.Smooth
         object.BottomSurface = Enum.SurfaceType.Smooth
         object.Color = if assembled then Color3.fromRGB(unpack(Config.Palette[definition.palette])) else Color3.fromRGB(80, 205, 215)
+        if assembled and (definition.palette == "amber" or definition.palette == "energy") then
+            object.Color = Color3.fromRGB(unpack(recipe.Color))
+        end
         object.Material = if not assembled or definition.palette == "energy" then Enum.Material.Neon else Enum.Material.Metal
         object.Transparency = if assembled then 0 else 0.9
         object.CastShadow = assembled

@@ -3,26 +3,80 @@
   "tree": {
     "$className": "DataModel",
     "ReplicatedStorage": {
-      "CatchTheScrapShared": { "$path": "src/shared" },
+      "CatchTheScrapShared": {
+        "$path": "src/shared"
+      },
       "CatchTheScrapRemotes": {
         "$className": "Folder",
-        "Action": { "$className": "RemoteEvent" },
-        "Feedback": { "$className": "RemoteEvent" }
+        "Action": {
+          "$className": "RemoteEvent"
+        },
+        "Feedback": {
+          "$className": "RemoteEvent"
+        }
       }
     },
-    "ServerScriptService": { "CatchTheScrap": { "$path": "src/server" } },
-    "StarterPlayer": {
-      "StarterPlayerScripts": { "CatchTheScrap": { "$path": "src/client" } }
+    "ServerScriptService": {
+      "CatchTheScrap": {
+        "$path": "src/server"
+      }
     },
-    "Workspace": { "$properties": { "FilteringEnabled": true } },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "CatchTheScrap": {
+          "$path": "src/client"
+        }
+      }
+    },
+    "Workspace": {
+      "$properties": {
+        "FilteringEnabled": true
+      }
+    },
     "Lighting": {
       "$properties": {
-        "Ambient": [0.35, 0.4, 0.5],
-        "Brightness": 2,
-        "ClockTime": 14,
+        "Ambient": [
+          0.25,
+          0.3,
+          0.34
+        ],
+        "Brightness": 2.2,
+        "ClockTime": 15,
         "GlobalShadows": true
+      },
+      "YardAtmosphere": {
+        "$className": "Atmosphere",
+        "$properties": {
+          "Density": 0.14,
+          "Offset": 0.15,
+          "Haze": 1.2,
+          "Color": [
+            0.72,
+            0.79,
+            0.83
+          ]
+        }
+      },
+      "YardBloom": {
+        "$className": "BloomEffect",
+        "$properties": {
+          "Intensity": 0.12,
+          "Size": 16,
+          "Threshold": 1.5
+        }
+      },
+      "YardColor": {
+        "$className": "ColorCorrectionEffect",
+        "$properties": {
+          "Contrast": 0.05,
+          "Saturation": 0.06
+        }
       }
     },
-    "SoundService": { "$properties": { "RespectFilteringEnabled": true } }
+    "SoundService": {
+      "$properties": {
+        "RespectFilteringEnabled": true
+      }
+    }
   }
 }

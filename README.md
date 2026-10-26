@@ -1,12 +1,15 @@
 # Catch-the-scrap
 
-Aktuellt bygge: egna verkstäder, plocka upp/bära/lämna in och robotar som byggs av 10 scrap och tjänar $5 per sekund. Fyra robotplatser per spelare; progress gäller bara aktuell spelsession.
-Se [Kom igång i Roblox Studio på Windows](docs/STUDIO_START_SV.md) för första testet
-och [utvecklarguiden](docs/DEVELOPMENT.md) för bygge och automatiska kontroller.
-Platsfiler skapas i `build/` med `python3 scripts/check.py`.
-Det nya verkstads-/ekonomibygget ska testas i Roblox Studio; dokumentet nedan är spelets ursprungliga designbrief.
+Current build **v0.3**: an English-only game UI, a 160 × 1440-stud scrapyard,
+transparent floating signs, corrected route arrows and rarity-specific robots.
+Common needs 5 Common parts ($5/sec), Uncommon 7 ($10/sec), Rare 10 ($20/sec).
+Four robot platforms per player; progress is session-only.
 
-[Hämta v0.2-platsfilen](downloads/Catch-the-scrap-v0.2.rbxl) · [Modellförhandsvisning](downloads/workshop-preview.png) · [Designreferenser](docs/DESIGN_REFERENCES_SV.md)
+[Download v0.3](downloads/Catch-the-scrap-v0.3.rbxl) · [Scrapyard geometry preview](downloads/scrapyard-preview.png) · [Windows test guide (Swedish)](docs/STUDIO_START_SV.md) · [Development](docs/DEVELOPMENT.md)
+
+Build with `python3 scripts/check.py`. Actual Studio testing is still required.
+The brief below records the original design plan; current requested changes
+and rules are described in the development guide.
 
 CATCH THE SCRAP — Project Brief / Game Design Document
 

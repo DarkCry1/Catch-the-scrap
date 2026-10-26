@@ -29,4 +29,4 @@ Players.PlayerAdded:Connect(function(player) carry:addPlayer(player) end)
 Players.PlayerRemoving:Connect(function(player) carry:removePlayer(player) end)
 for _, player in Players:GetPlayers() do carry:addPlayer(player) end
 Remotes:SetAttribute("Ready", true)
-print("[Catch the Scrap] Verkstäder startade: 10 scrap = 1 robot, $5/sek, 4 platser per bas. Ingen datasparning.")
+print("[Catch the Scrap] Scrapyard ready: Common 5 parts, Uncommon 7, Rare 10. English UI. Session-only progress.")

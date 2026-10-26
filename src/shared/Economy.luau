@@ -1,43 +1,65 @@
 --!strict
--- This state lives only on the server. The client receives display attributes.
-export type Account = { scrap: number, robots: number, cash: number, fraction: number }
-export type Recipe = { ScrapPerRobot: number, Slots: number, IncomePerRobot: number }
+-- Each unfinished rarity project reserves one platform. Part types never mix.
+export type Recipe = { Parts: number, Income: number, Name: string, Color: {number} }
+export type Settings = { Slots: number, Recipes: {[string]: Recipe} }
+export type Project = { rarity: string, parts: number, complete: boolean }
+export type Account = { projects: {Project}, cash: number, fraction: number }
 local Economy = {}
 
-local function positiveInteger(value: number): boolean
-    return value > 0 and value < math.huge and value % 1 == 0
-end
-
 function Economy.new(): Account
-    return { scrap = 0, robots = 0, cash = 0, fraction = 0 }
+    return { projects = {}, cash = 0, fraction = 0 }
 end
 
-function Economy.canAddScrap(account: Account, amount: number, recipe: Recipe): boolean
-    assert(positiveInteger(recipe.ScrapPerRobot) and positiveInteger(recipe.Slots), "Invalid robot recipe")
-    if not positiveInteger(amount) then return false end
-    local space = (recipe.Slots - account.robots) * recipe.ScrapPerRobot - account.scrap
-    return amount <= space
+function Economy.activeProject(account: Account, rarity: string): (Project?, number?)
+    for index, project in account.projects do
+        if project.rarity == rarity and not project.complete then return project, index end
+    end
+    return nil, nil
 end
 
-function Economy.addScrap(account: Account, amount: number, recipe: Recipe): (boolean, number)
-    if not Economy.canAddScrap(account, amount, recipe) then return false, 0 end
-    local total = account.scrap + amount
-    local built = math.floor(total / recipe.ScrapPerRobot)
-    account.scrap = total % recipe.ScrapPerRobot
-    account.robots += built
-    return true, built
+function Economy.canAddPart(account: Account, rarity: string, settings: Settings): boolean
+    if not settings.Recipes[rarity] then return false end
+    local project = Economy.activeProject(account, rarity)
+    return project ~= nil or #account.projects < settings.Slots
 end
 
-function Economy.incomePerSecond(account: Account, recipe: Recipe): number
-    assert(recipe.IncomePerRobot >= 0 and recipe.IncomePerRobot < math.huge, "Invalid income rate")
-    return account.robots * recipe.IncomePerRobot
+function Economy.addPart(account: Account, rarity: string, settings: Settings): (boolean, boolean, number)
+    if not Economy.canAddPart(account, rarity, settings) then return false, false, 0 end
+    local project, index = Economy.activeProject(account, rarity)
+    if not project then
+        project = { rarity = rarity, parts = 0, complete = false }
+        table.insert(account.projects, project)
+        index = #account.projects
+    end
+    assert(project ~= nil and index ~= nil, "Accepted parts must have a reserved platform")
+    project.parts += 1
+    project.complete = project.parts == settings.Recipes[rarity].Parts
+    return true, project.complete, index
 end
 
-function Economy.advance(account: Account, seconds: number, recipe: Recipe): number
+function Economy.robotCount(account: Account): number
+    local count = 0
+    for _, project in account.projects do if project.complete then count += 1 end end
+    return count
+end
+
+function Economy.progress(account: Account, rarity: string): number
+    local project = Economy.activeProject(account, rarity)
+    return if project then project.parts else 0
+end
+
+function Economy.incomePerSecond(account: Account, settings: Settings): number
+    local rate = 0
+    for _, project in account.projects do
+        if project.complete then rate += settings.Recipes[project.rarity].Income end
+    end
+    return rate
+end
+
+function Economy.advance(account: Account, seconds: number, settings: Settings): number
     assert(seconds >= 0 and seconds < math.huge, "Elapsed time must be finite and nonnegative")
-    local earnings = account.fraction + Economy.incomePerSecond(account, recipe) * seconds
+    local earnings = account.fraction + Economy.incomePerSecond(account, settings) * seconds
     local whole = math.floor(earnings + 1e-9)
-    -- Small tolerance avoids losing an integer to floating-point frame sums.
     account.fraction = math.max(0, earnings - whole)
     account.cash += whole
     return whole

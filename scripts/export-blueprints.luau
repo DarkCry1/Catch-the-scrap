@@ -18,4 +18,7 @@ print(json({
     robot = require("../src/shared/RobotBlueprint"),
     palette = Config.Palette,
     accent = Config.BaseAccents[1],
+    yard = require("../src/shared/ScrapyardBlueprint").build(Config.TrackWidth,Config.ZoneLength,Config.TrackStart),
+    items = Config.Items,
+    navigation = require("../src/shared/Navigation").chevron(0,0,1),
 }))

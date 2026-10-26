@@ -76,7 +76,7 @@ function CarryService:addPlayer(player)
     local stats = Instance.new("Folder")
     stats.Name = "leaderstats"
     local counter = Instance.new("IntValue")
-    counter.Name = "Inlämnat"
+    counter.Name = "Delivered"
     counter.Parent = stats
     stats.Parent = player
     local base = self.world:assignBase(player)
@@ -97,7 +97,7 @@ function CarryService:addPlayer(player)
         if base then character:PivotTo(base.spawn.CFrame * CFrame.new(0, 4, 0)) end
         self:writeState(player)
         entry.deathConnection = humanoid.Died:Connect(function()
-            self:resetCarried(player, "Du tappade ditt fynd. Det ligger på sin ursprungliga plats igen.")
+            self:resetCarried(player, "Your part was returned to its original spawn.")
         end)
     end
     entry.characterConnection = player.CharacterAdded:Connect(characterAdded)
@@ -129,7 +129,7 @@ function CarryService:pickup(player, record)
     self.items:attach(record, root)
     record.model:SetAttribute("CarrierUserId", player.UserId)
     self:writeState(player)
-    self:notify(player, "Du bär " .. record.definition.name .. ". Ta det till BAS " .. self.players[player].base.index .. "!")
+    self:notify(player, "Carrying " .. record.definition.name .. ". Return to Workshop " .. self.players[player].base.index .. "!")
 end
 
 function CarryService:drop(player)
@@ -151,31 +151,36 @@ function CarryService:drop(player)
     Inventory.drop(self.inventory, player.UserId)
     if ground and ground.Normal.Y >= 0.7 then
         self.items:place(record, ground.Position + Vector3.new(0, 1.6, 0))
-        self:notify(player, "Föremålet ligger på marken. Du kan springa fritt igen.")
+        self:notify(player, "Part dropped. Your movement speed is restored.")
     else
         self.items:resetToSpawn(record)
-        self:notify(player, "Ingen säker mark här. Föremålet återställdes till sin ursprungliga plats.")
+        self:notify(player, "No safe ground here. The part was returned to its spawn.")
     end
     self:writeState(player)
 end
 
 function CarryService:deposit(player, base)
     if not self:allowAction(player) then return end
-    if not self.economy:canDeposit(player) then
-        self:notify(player, "Alla robotplatser är fulla eller så saknar du en bas. Du behåller ditt fynd.")
+    local carriedId = self.inventory.carrying[player.UserId]
+    local carried = if carriedId then self.items.records[carriedId] else nil
+    if not carried then self:notify(player, "Collect a part from the scrapyard first."); return end
+    local rarity = carried.definition.rarity
+    if not self.economy:canDeposit(player, rarity) then
+        self:notify(player, "All platforms are reserved. Finish an existing robot with matching parts. Your carried part is safe.")
         return
     end
     local id, reason = Inventory.deposit(self.inventory, player.UserId, base.owner, self:context(player, base.deposit.Position))
     if not id then self:notify(player, reason); return end
     local record = self.items.records[id]
     local name = record.definition.name
-    local built, scrap = self.economy:addScrap(player)
+    local built, scrap = self.economy:addPart(player, rarity)
     self.items:consume(record)
     self:writeState(player)
-    if built > 0 then
-        self:notify(player, "Scrap Bot MK-I är färdig! Din nya robot tjänar $" .. Config.Robot.IncomePerRobot .. " per sekund.")
+    if built then
+        local recipe = Config.Robot.Recipes[rarity]
+        self:notify(player, recipe.Name .. " complete! +$" .. recipe.Income .. " per second.")
     else
-        self:notify(player, string.format("%s inlämnat! Nästa robot: %d / %d scrap.", name, scrap, Config.Robot.ScrapPerRobot))
+        self:notify(player, string.format("%s deposited! %s robot: %d / %d parts.", name, rarity, scrap, Config.Robot.Recipes[rarity].Parts))
     end
 end
 

@@ -97,24 +97,24 @@ def label(text, position, size, mat):
 
 
 for piece in DATA['base']:
+    if piece['name'] == 'ProgressBoard': continue
     geometry(piece['name'], piece['size'], piece['position'], palette[piece['palette']], yaw=piece['yaw'])
 for index, (x, z) in enumerate([(-16, -12), (16, -12), (-16, 8), (16, 8)]):
     geometry('platform', [12, 0.5, 12], [x, .75, z], palette['dark'], 'Cylinder')
     geometry('ring', [12.1, .08, 12.1], [x, .99, z], palette['accent'], 'Cylinder')
     geometry('platform cap', [10.7, .08, 10.7], [x, 1.05, z], palette['floor'], 'Cylinder')
-    geometry('slot sign', [10, 1.7, .2], [x, 1.4, z + 6.5], palette['black'])
-    label('MK-I  /  $5 / SEK' if index == 0 else ('BYGGER  /  5 AV 10' if index == 1 else 'LEDIG PLATS'), [x, 1.4, z + 6.65], .65, palette['accent'])
+    label('COMMON / $5 PER SEC' if index == 0 else ('COMMON / 2 OF 5' if index == 1 else 'AVAILABLE SLOT'), [x, 1.4, z + 6.65], .65, palette['accent'])
     if index > 1:
         continue
     for piece in DATA['robot']:
-        assembled = index == 0 or piece['step'] <= 5
+        assembled = index == 0 or piece['step'] <= 2
         pos = [piece['position'][0] + x, piece['position'][1] + 1.05, piece['position'][2] + z]
         geometry(piece['name'], piece['size'], pos, palette[piece['palette']] if assembled else ghost, piece['shape'])
 for n in range(-3, 4):
     geometry('hazard', [.65, .03, 3], [n * 1.25, .51, -5.5], palette['amber'], yaw=25)
-label('DIN VERKSTAD  /  01', [0, 13.8, 24.55], 1.6, palette['accent'])
-label('1 ROBOT  |  $5 / SEK', [0, 12.1, 24.55], 1.0, palette['amber'])
-label('NASTA ROBOT\n5 / 10 SCRAP', [0, 7, -15.8], .9, palette['amber'])
+label('WORKSHOP / 01', [0, 13.8, 24.55], 1.6, palette['accent'])
+label('1 COMMON ROBOT | $5 / SEC', [0, 12.1, 24.55], 1.0, palette['amber'])
+label('COMMON 2/5 | RARE 0/10', [0, 7, -15.8], .9, palette['amber'])
 geometry('surrounding concrete', [180, 1, 160], [0, -1.1, 0], material('concrete', [73, 86, 92]))
 for y in (28, 32):
     geometry('entry approach', [7, .08, .35], [0, -.5, y], palette['amber'])

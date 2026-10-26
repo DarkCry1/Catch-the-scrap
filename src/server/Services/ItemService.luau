@@ -55,8 +55,9 @@ function ItemService:spawn(slot)
     decoration(model, root, "LeftLight", Vector3.new(0.4, 0.45, 0.2), Vector3.new(-0.6, 0.4, -1.2), Color3.fromRGB(255, 225, 120))
     decoration(model, root, "RightLight", Vector3.new(0.4, 0.45, 0.2), Vector3.new(0.6, 0.4, -1.2), Color3.fromRGB(255, 225, 120))
     local prompt = Instance.new("ProximityPrompt")
-    prompt.ActionText = "Plocka upp"
-    prompt.ObjectText = string.format("%s · %s · vikt %d", definition.name, definition.rarity, definition.weight)
+    prompt.ActionText = "Pick up"
+    prompt.AutoLocalize = false
+    prompt.ObjectText = string.format("%s · %s · weight %d", definition.name, definition.rarity, definition.weight)
     prompt.KeyboardKeyCode = Enum.KeyCode.E
     prompt.HoldDuration = 0.15
     prompt.MaxActivationDistance = Config.InteractionDistance
@@ -71,9 +72,11 @@ function ItemService:spawn(slot)
     local label = Instance.new("TextLabel")
     label.Size = UDim2.fromScale(1, 1)
     label.BackgroundColor3 = Color3.fromRGB(18, 26, 40)
-    label.BackgroundTransparency = 0.15
+    label.BackgroundTransparency = 1
+    label.TextStrokeTransparency = 0.3
+    label.AutoLocalize = false
     label.TextColor3 = Color3.fromRGB(unpack(definition.color))
-    label.Text = string.format("%s\n%s · vikt %d", definition.name, definition.rarity, definition.weight)
+    label.Text = string.format("%s\n%s · weight %d", definition.name, definition.rarity, definition.weight)
     label.Font = Enum.Font.GothamBold
     label.TextSize = 14
     label.Parent = billboard

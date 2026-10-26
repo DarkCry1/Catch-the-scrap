@@ -19,11 +19,15 @@ Officiella sidor för **Steal a Brainrot** och **Grow a Garden** försöktes hä
 - Mörk stålpalett med varm orange maskinkant och olika accentfärger mellan baserna.
 - En central gata, numrerade portar och ägarnamn som gör hemvägen begriplig.
 - Fyra tydliga robotplattformar, en inlämningsmaskin och progressmätare.
-- Scrap Bot MK-I byggs synligt i tio steg: fötter, underben, höft, kropp, reaktor, vänster arm, höger arm, huvud, ansikte och slutdetaljer.
+- Robotarna byggs synligt i fem monteringsgrupper: ben/fötter, kropp, båda armarna, huvud och reaktor/slutdetaljer.
 - Framtida delar visas som en genomskinlig ritning. Färdiga robotar har en pulserande reaktor och en skylt med sin inkomst.
 
 All geometri skapas från egna primitiva Roblox-delar i `BaseBlueprint.luau` och `RobotBlueprint.luau`. Det finns inga externa asset-ID:n eller Toolbox-modeller.
 
-![Modellförhandsvisning av verkstaden](../downloads/workshop-preview.png)
+![Modellförhandsvisning av skrotgården](../downloads/scrapyard-preview.png)
 
-Bilden är en Blender-rendering av samma grundgeometri, med ett exempel på en färdig och en halvfärdig robot. Den är **inte en skärmbild från Roblox Studio**. Ljus, material, text och kamera kan se annorlunda ut i spelet.
+Bilden är en Blender-rendering av skrotgårdens grundgeometri från samma blueprint som spelet använder. Den är **inte en skärmbild från Roblox Studio**. Ljus, material, text och kamera kan se annorlunda ut i spelet.
+
+## Uppdatering v0.3
+
+Spelets egna texter är på engelska. Common kräver 5 Common-delar, Uncommon 7 och Rare 10. Robotarnas fem monteringsgrupper är ben/fötter, kropp, armar, huvud och reaktor/slutdetaljer. Skrotgården är 160 × 1 440 studs och har containrar, vrak, däck- och rörhögar, skrotrobotar och traverskranar. Skylttexterna har inga synliga bakgrundspaneler. Inga ytterligare externa spelbilder har granskats som del av denna ändring.

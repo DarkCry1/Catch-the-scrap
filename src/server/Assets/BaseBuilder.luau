@@ -4,6 +4,8 @@ local Shared = ReplicatedStorage.CatchTheScrapShared
 local Config = require(Shared.Config)
 local Blueprint = require(Shared.BaseBlueprint)
 local RobotBuilder = require(script.Parent.RobotBuilder)
+local Economy = require(Shared.Economy)
+local FloatingText = require(script.Parent.FloatingText)
 local BaseBuilder = {}
 
 local function color(name, accent)
@@ -39,6 +41,7 @@ local function surfaceLabel(board, text, tint)
     label.Size = UDim2.fromScale(0.96, 0.86)
     label.Position = UDim2.fromScale(0.02, 0.03)
     label.BackgroundTransparency = 1
+    label.AutoLocalize = false
     label.Text = text
     label.TextColor3 = tint
     label.Font = Enum.Font.GothamBold
@@ -63,19 +66,16 @@ function BaseBuilder.create(parent, index, origin)
     for n = -3, 3 do
         part(folder, "HazardStripe", Vector3.new(0.65, 0.03, 3), origin * CFrame.new(n * 1.25, 0.51, -5.5) * CFrame.Angles(0, math.rad(25), 0), color("amber", accent), Enum.Material.SmoothPlastic, false)
     end
-    local ownerLabel = surfaceLabel(pieces.GateHeader, "VERKSTAD " .. index .. "  /  LEDIG", accent)
-    local progressLabel = surfaceLabel(pieces.ProgressBoard, "LÄMNA SCRAP HÄR\n0 / 10", color("amber", accent))
-    local bar = Instance.new("Frame")
-    bar.Size = UDim2.fromScale(0, 0.06)
-    bar.Position = UDim2.fromScale(0.02, 0.91)
-    bar.BorderSizePixel = 0
-    bar.BackgroundColor3 = accent
-    bar.Parent = progressLabel.Parent
+    local ownerLabel = surfaceLabel(pieces.GateHeader, "WORKSHOP " .. index .. "  /  UNCLAIMED", accent)
+    pieces.ProgressBoard.Transparency = 1
+    pieces.ProgressBoard.CastShadow = false
+    local progressLabel = FloatingText.create(folder,"BuildProgress",origin*CFrame.new(0,7,-16),"DEPOSIT MATCHING PARTS\nCOMMON 0/5  |  RARE 0/10",color("amber",accent),16,4,65)
     local deposit = part(folder, "Deposit", Vector3.new(8, 3, 1), origin * CFrame.new(0, 2.8, -7.5), accent, Enum.Material.SmoothPlastic, false)
     deposit.Transparency = 1
     local prompt = Instance.new("ProximityPrompt")
-    prompt.ActionText = "Lämna scrap"
-    prompt.ObjectText = "Ledig verkstad"
+    prompt.ActionText = "Deposit part"
+    prompt.AutoLocalize = false
+    prompt.ObjectText = "Unclaimed workshop"
     prompt.KeyboardKeyCode = Enum.KeyCode.E
     prompt.HoldDuration = 0.25
     prompt.MaxActivationDistance = Config.InteractionDistance
@@ -106,44 +106,37 @@ function BaseBuilder.create(parent, index, origin)
         ring.Shape = Enum.PartType.Cylinder
         local cap = part(folder, "PadCap" .. slot, Vector3.new(0.08, 10.7, 10.7), center * CFrame.new(0, 0.30, 0) * CFrame.Angles(0, 0, math.pi / 2), color("floor", accent), Enum.Material.DiamondPlate, false)
         cap.Shape = Enum.PartType.Cylinder
-        local placard = part(folder, "SlotSign" .. slot, Vector3.new(10, 1.7, 0.2), origin * CFrame.new(x, 1.4, z + 6.5), color("black", accent), Enum.Material.SmoothPlastic, false)
-        local label = surfaceLabel(placard, "PLATS " .. slot, accent)
-        table.insert(pads, { origin = origin * CFrame.new(x, 1.05, z), label = label, model = nil })
+        local label = FloatingText.create(folder,"SlotLabel"..slot,origin*CFrame.new(x,2.5,z+6.5),"SLOT "..slot,accent,10,1.5,45)
+        table.insert(pads, { origin = origin * CFrame.new(x, 1.05, z), label = label, model = nil, key = "" })
     end
     return { index = index, owner = nil, origin = origin, folder = folder, spawn = spawn, deposit = deposit, prompt = prompt,
-        label = ownerLabel, progressLabel = progressLabel, progressBar = bar, pads = pads, robots = robots, visualKey = "", accent = accent }
+        label = ownerLabel, progressLabel = progressLabel, pads = pads, robots = robots, visualKey = "", accent = accent }
 end
 
 function BaseBuilder.update(base, displayName, account)
     if not account then
-        base.label.Text = "VERKSTAD " .. base.index .. "  /  LEDIG"
-        base.progressLabel.Text = "LÄMNA SCRAP HÄR\n0 / " .. Config.Robot.ScrapPerRobot
-        base.progressBar.Size = UDim2.fromScale(0, 0.06)
-        base.visualKey = ""
+        base.label.Text = "WORKSHOP " .. base.index .. "  /  UNCLAIMED"
+        base.progressLabel.Text = "DEPOSIT MATCHING PARTS\nCOMMON 0/5  |  RARE 0/10"
         base.robots:ClearAllChildren()
-        for slot, pad in base.pads do pad.model = nil; pad.label.Text = "PLATS " .. slot end
+        for slot, pad in base.pads do pad.model=nil; pad.key=""; pad.label.Text="SLOT "..slot end
         return
     end
-    local rate = account.robots * Config.Robot.IncomePerRobot
-    base.label.Text = string.format("%s  /  VERKSTAD %02d\n%d ROBOTAR  •  $%d / SEK", displayName, base.index, account.robots, rate)
-    local full = account.robots >= Config.Robot.Slots
-    base.progressLabel.Text = if full then string.format("VERKSTADEN ÄR FULL\n%d ROBOTAR IGÅNG", Config.Robot.Slots) else string.format("NÄSTA ROBOT\n%d / %d SCRAP", account.scrap, Config.Robot.ScrapPerRobot)
-    base.progressBar.Size = UDim2.fromScale(if full then 0.96 else 0.96 * account.scrap / Config.Robot.ScrapPerRobot, 0.06)
-    local key = account.robots .. ":" .. account.scrap
-    if key == base.visualKey then return end
-    base.visualKey = key
+    base.label.Text = string.format("%s  /  WORKSHOP %02d\n%d ROBOTS  |  $%d / SEC",displayName,base.index,Economy.robotCount(account),Economy.incomePerSecond(account,Config.Robot))
+    base.progressLabel.Text = string.format("MATCHING PARTS ONLY\nC %d/5  |  U %d/7  |  R %d/10",Economy.progress(account,"Common"),Economy.progress(account,"Uncommon"),Economy.progress(account,"Rare"))
     for slot, pad in base.pads do
-        local complete = slot <= account.robots
-        local active = slot == account.robots + 1 and not full
-        local stage = if complete then 10 else math.floor(account.scrap / Config.Robot.ScrapPerRobot * 10)
-        -- Preserve existing finished models and their client effects.
-        if complete and pad.model and pad.model:GetAttribute("Complete") then continue end
-        if pad.model then pad.model:Destroy(); pad.model = nil end
-        if complete or active then
-            pad.model = RobotBuilder.build(base.robots, pad.origin, stage, complete)
-            pad.label.Text = if complete then "MK-I  /  $" .. Config.Robot.IncomePerRobot .. " PER SEK" else string.format("BYGGER  /  %d AV %d", account.scrap, Config.Robot.ScrapPerRobot)
+        local project = account.projects[slot]
+        local key = if project then project.rarity..":"..project.parts else "empty"
+        if key == pad.key then continue end
+        pad.key=key
+        if pad.model then pad.model:Destroy(); pad.model=nil end
+        if project then
+            local recipe=Config.Robot.Recipes[project.rarity]
+            local stage=if project.complete then 5 else math.floor(project.parts/recipe.Parts*5)
+            pad.model=RobotBuilder.build(base.robots,pad.origin,stage,project.complete,project.rarity)
+            pad.label.Text=if project.complete then project.rarity:upper().." / $"..recipe.Income.." PER SEC" else string.format("%s / %d OF %d",project.rarity:upper(),project.parts,recipe.Parts)
+            pad.label.TextColor3=Color3.fromRGB(unpack(recipe.Color))
         else
-            pad.label.Text = "PLATS " .. slot .. "  /  LEDIG"
+            pad.label.Text="SLOT "..slot.." / AVAILABLE"
         end
     end
 end
