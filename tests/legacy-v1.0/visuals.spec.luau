@@ -1,8 +1,8 @@
 --!strict
-local Config=require("../src/shared/Config")
-local Yard=require("../src/shared/ScrapyardBlueprint")
-local Pickups=require("../src/shared/PickupBlueprint")
-local Placement=require("../src/shared/PlacementRules")
+local Config=require("../../src/shared/Config")
+local Yard=require("../../src/shared/ScrapyardBlueprint")
+local Pickups=require("../../src/shared/PickupBlueprint")
+local Placement=require("../../src/shared/PlacementRules")
 local checks=0
 local function check(ok:boolean,message:string) checks+=1;assert(ok,message) end
 local layout=Yard.build(Config.TrackWidth,Config.ZoneLength,Config.TrackStart)

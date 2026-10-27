@@ -16,6 +16,7 @@ function ScrapyardBuilder.build(world)
     yard.ModelStreamingMode = Enum.ModelStreamingMode.Nonatomic
     yard.Parent = world.root
     local layout = Blueprint.build(Config.TrackWidth, Config.ZoneLength, Config.TrackStart)
+    world.guardianGeometry=layout.parts
     world.spawnObstacles=SpawnRules.obstacles(layout.parts)
     for _, definition in layout.parts do
         local part = Instance.new("Part")

@@ -13,7 +13,7 @@ local remotes=ReplicatedStorage:WaitForChild("CatchTheScrapRemotes")
 local actionRemote=remotes:WaitForChild("Action")
 local feedbackRemote=remotes:WaitForChild("Feedback")
 -- Each presentation module starts independently so a cosmetic failure cannot stop the HUD.
-for _,name in {"RarityWorldEffects","CarryPose","Feel","RobotAnimator","EnvironmentEffects","CameraGuard","PickupAnimator","RareBoxAnnouncements","WorkshopEffects","UnboxingEffects","RebirthCinematic","ButtonFx"} do
+for _,name in {"GuardianAnimator","RarityWorldEffects","CarryPose","Feel","RobotAnimator","EnvironmentEffects","CameraGuard","PickupAnimator","RareBoxAnnouncements","WorkshopEffects","UnboxingEffects","RebirthCinematic","ButtonFx"} do
     task.spawn(function()
         local ok,err=pcall(function() require(script.Parent:WaitForChild(name)).start(player,actionRemote) end)
         if not ok then warn("[Catch the Scrap] "..name..": "..tostring(err)) end

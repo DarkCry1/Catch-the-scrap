@@ -2,7 +2,7 @@
 """Execute real pickup/item lifecycle code with mocked geometry, not engine physics."""
 from pathlib import Path
 import shutil,subprocess
-ROOT=Path(__file__).resolve().parents[1]
+ROOT=Path(__file__).resolve().parents[2]
 header=r'''
 --!nonstrict
 local nativeRequire=require

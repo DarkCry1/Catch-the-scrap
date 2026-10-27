@@ -38,7 +38,7 @@ function Feel.start(player,remote)
     local flash=Instance.new("Frame");flash.Size=UDim2.fromScale(1,1);flash.BackgroundColor3=Color3.fromRGB(255,40,30);flash.BackgroundTransparency=1;flash.BorderSizePixel=0;flash.Parent=overlayGui
     local banner=Instance.new("TextLabel");banner.AnchorPoint=Vector2.new(.5,0);banner.Position=UDim2.new(.5,0,0,-80);banner.Size=UDim2.fromOffset(420,44)
     banner.BackgroundColor3=Color3.fromRGB(120,20,16);banner.BackgroundTransparency=.1;banner.TextColor3=Color3.new(1,1,1);banner.Font=Enum.Font.GothamBlack;banner.TextSize=20
-    banner.Text="SECURITY DRONE! RUN!";banner.AutoLocalize=false;banner.Visible=false;banner.Parent=overlayGui
+    banner.Text="SCRAP GUARDIAN! RUN!";banner.AutoLocalize=false;banner.Visible=false;banner.Parent=overlayGui
     local bannerCorner=Instance.new("UICorner");bannerCorner.CornerRadius=UDim.new(0,10);bannerCorner.Parent=banner
     banner.Visible=true
     local bannerSlot=Stack.add(banner,44)
@@ -71,6 +71,7 @@ function Feel.start(player,remote)
         elseif kind=="Claim" then
             play("Claim");pulse(Color3.fromRGB(110,240,160),.18,.5)
         elseif kind=="DroneAlert" then
+            banner.Text=(packet.name or "SCRAP GUARDIAN"):upper().."! RUN!"
             play("Alarm");pulse(Color3.fromRGB(255,40,30),.35,.6);shake(.35,.25)
         elseif kind=="DroneCatch" then
             play("Catch");pulse(Color3.fromRGB(255,30,20),.55,1);shake(.6,.6)

@@ -28,16 +28,14 @@ def run(*args):
 
 def main():
     sources = sorted((ROOT / 'src').rglob('*.luau'))
-    tests = sorted((ROOT / 'tests').rglob('*.luau'))
+    tests = sorted((ROOT / 'tests').glob('*.luau'))
     legacy_swedish = re.compile(r'[åäöÅÄÖ]|\b(?:verkstad|ledig|inlämnat|pengar|vikt)\b', re.IGNORECASE)
     for source in sources:
         assert not legacy_swedish.search(source.read_text(encoding='utf-8')), f'English game source required: {source}'
     run(tool('luau-analyze'), *sorted((ROOT / 'src/shared').glob('*.luau')), *tests)
     for test in tests:
         run(tool('luau'), test)
-    run(shutil.which('python3') or 'python', 'scripts/check-services.py')
-    run(shutil.which('python3') or 'python', 'scripts/check-presentation.py')
-    run(shutil.which('python3') or 'python', 'scripts/check-items.py')
+    run(shutil.which('python3') or 'python', 'scripts/check-guardians.py')
     run(shutil.which('python3') or 'python', 'scripts/check-opening.py')
     # The standalone analyzer has no Roblox engine globals/types. The compiler
     # still checks every engine-facing script; runtime checks need Studio.

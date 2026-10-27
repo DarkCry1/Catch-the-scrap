@@ -21,9 +21,12 @@ end
 local variants={}
 local Catalog=require("../src/shared/RobotCatalog")
 for _,v in Catalog.List do
-    table.insert(variants,{id=v.Id,name=v.Name,source=Catalog.source("Rare",v.Id),income=Catalog.income(20,v.Id),parts=require("../src/shared/RobotVariants").build(v.Id)})
+    table.insert(variants,{id=v.Id,name=v.Name,source=v.Source,rarity=v.Rarity,income=Catalog.income(20,v.Id),parts=require("../src/shared/RobotVariants").build(v.Id)})
 end
+local guardians={}
+for stage,profile in Config.Guardians.Profiles do table.insert(guardians,{rarity=Config.Stages[stage].Rarity,profile=profile,parts=require("../src/shared/GuardianBlueprint").build(stage)}) end
 print(json({
+    guardians=guardians,
     variants=variants,
     rarityFrames=require("../src/shared/RarityFrame").build(),
     rarityStyles={Epic=require("../src/shared/RarityStyle").get("Epic"),Legendary=require("../src/shared/RarityStyle").get("Legendary"),Celestial=require("../src/shared/RarityStyle").get("Celestial")},

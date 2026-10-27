@@ -2,7 +2,7 @@
 """Run the actual camera/animation adapters across a simulated engine boundary."""
 from pathlib import Path
 import subprocess, shutil
-ROOT=Path(__file__).resolve().parents[1]
+ROOT=Path(__file__).resolve().parents[2]
 header=r'''
 --!nonstrict
 local task={spawn=function(fn) fn() end}

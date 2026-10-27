@@ -1,9 +1,9 @@
 --!strict
-local Catalog=require("../src/shared/RobotCatalog")
-local Variants=require("../src/shared/RobotVariants")
-local Rules=require("../src/shared/CrateRules")
-local Economy=require("../src/shared/Economy")
-local Config=require("../src/shared/Config")
+local Catalog=require("../../src/shared/RobotCatalog")
+local Variants=require("../../src/shared/RobotVariants")
+local Rules=require("../../src/shared/CrateRules")
+local Economy=require("../../src/shared/Economy")
+local Config=require("../../src/shared/Config")
 local checks=0
 local function check(ok:boolean,message:string) checks+=1;assert(ok,message) end
 local fingerprints:{[string]:boolean}={}

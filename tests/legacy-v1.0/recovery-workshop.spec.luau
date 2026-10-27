@@ -1,11 +1,11 @@
 --!strict
-local Config=require("../src/shared/Config")
-local Economy=require("../src/shared/Economy")
-local Crates=require("../src/shared/CrateRules")
-local Box=require("../src/shared/CrateBlueprint")
-local Crusher=require("../src/shared/CrusherBlueprint")
-local Motion=require("../src/shared/WorkshopMotion")
-local Yard=require("../src/shared/ScrapyardBlueprint")
+local Config=require("../../src/shared/Config")
+local Economy=require("../../src/shared/Economy")
+local Crates=require("../../src/shared/CrateRules")
+local Box=require("../../src/shared/CrateBlueprint")
+local Crusher=require("../../src/shared/CrusherBlueprint")
+local Motion=require("../../src/shared/WorkshopMotion")
+local Yard=require("../../src/shared/ScrapyardBlueprint")
 local checks=0
 local function check(ok:boolean,message:string) checks+=1;assert(ok,message) end
 for stage=1,#Config.Stages do

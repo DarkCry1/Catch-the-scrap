@@ -1,9 +1,9 @@
 --!strict
-local Admin=require("../src/shared/AdminRules")
-local Hud=require("../src/shared/HudModel")
-local Spawn=require("../src/shared/SpawnRules")
-local Yard=require("../src/shared/ScrapyardBlueprint")
-local Config=require("../src/shared/Config")
+local Admin=require("../../src/shared/AdminRules")
+local Hud=require("../../src/shared/HudModel")
+local Spawn=require("../../src/shared/SpawnRules")
+local Yard=require("../../src/shared/ScrapyardBlueprint")
+local Config=require("../../src/shared/Config")
 local checks=0
 local function check(ok:boolean,message:string) checks+=1;assert(ok,message) end
 check(Admin.allowed(11824623188,false,false,false,{11824623188}),"explicit requested account can administer published game")

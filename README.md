@@ -1,26 +1,26 @@
 # Catch-the-scrap
 
-Current build **v1.0** adds a consistent seven-rarity palette, glowing Epic and
-Legendary loot, and animated Celestial rainbow frames. Higher-tier box openings
-have 3D energy rings, orbiting crystals, holograms and a skippable owner camera.
+Current build **v1.5** continues from the user-uploaded **v1.4** and adds one
+walking scrap guardian per rarity district. Their bodies and chase speeds scale
+from Common (8.4 studs tall, 15 studs/sec) to Celestial (17.9 studs, 31 studs/sec).
+They warn before chasing, navigate around scenery, stay in their district and
+confiscate only the carried loot.
 
-The **Robot Index** (**I**, or **Details → Robot Index**) contains ten chassis in
-each rarity: **70 collection entries**. Rare and above have build-only,
-box-only and shared chassis. Select your next blueprint, finish a robot to
-discover it, and retire completed robots at your workshop to free a platform.
-Common/Uncommon offer all ten as builds because their tiers have no box events.
+[Download v1.5](downloads/Catch-the-scrap-v1.5.rbxl) · [Guardian rules and size preview](docs/STAGE_GUARDIANS_V15.md) · [Windows guide (Swedish)](docs/STUDIO_START_SV.md) · [Development](docs/DEVELOPMENT.md)
 
-[Download v1.0](downloads/Catch-the-scrap-v1.0.rbxl) · [Rarity and collection details](docs/RARITY_COLLECTION_V10.md) · [Windows guide (Swedish)](docs/STUDIO_START_SV.md) · [Development](docs/DEVELOPMENT.md)
+Retained v1.4 systems include **61 Robotdex species**, random builds/box results,
+six initial/eight maximum platforms, persistent progress with offline fallback,
+rebirth, Gold/Rainbow mutations, daily quests, guide, two-hand carrying and
+cinematic/audio/UI effects. Admin includes UserId **11824623188**.
 
-Native IK/Tool/harness carrying, compact HUD, randomized scrap spawns and the
-server-authorized **F4 / Admin** menu from v0.9 remain available. Admin includes
-UserId **11824623188**, local Studio tests and the personal experience owner.
+All game text is English. Build/check: `python3 scripts/check.py`. Automated
+checks and both place formats pass; native Studio behavior, DataStore saving and
+device performance still require playtests. The size/speed values are our own
+provisional balance, not measured values from the reference Steal An Egg.
 
-All game text is English. **Cash, robots and discoveries last only for the
-current server visit.** Build/check with `python3 scripts/check.py`. Automated
-checks and both place builds pass; actual cinematic, avatar, GUI and device
-behavior still need Roblox Studio playtests. Gallery images are Blender asset
-renders, not Studio screenshots. The original design brief follows below.
+The uploaded v1.4 place is archived in downloads and its recovered source is
+committed separately. Older release documents describe earlier rules. The
+original planning brief follows below and is not the current implementation.
 
 CATCH THE SCRAP — Project Brief / Game Design Document
 

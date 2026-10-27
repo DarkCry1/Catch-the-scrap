@@ -162,4 +162,4 @@ Players.PlayerRemoving:Connect(function(player)
 end)
 for _, player in Players:GetPlayers() do task.spawn(join,player) end
 Remotes:SetAttribute("Ready", true)
-print("[Catch the Scrap] Scrapyard ready. Robotdex v1.2: "..#Catalog.List.." species. Saving: "..(if store then "DataStore" else "session-only"))
+print("[Catch the Scrap] Scrapyard ready. Stage Guardians v1.5 / Robotdex: "..#Catalog.List.." species. Saving: "..(if store then "DataStore" else "session-only"))

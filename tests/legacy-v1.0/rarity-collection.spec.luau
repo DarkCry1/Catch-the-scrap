@@ -1,9 +1,9 @@
 --!strict
-local Style=require("../src/shared/RarityStyle")
-local Frame=require("../src/shared/RarityFrame")
-local Catalog=require("../src/shared/RobotCatalog")
-local Economy=require("../src/shared/Economy")
-local Config=require("../src/shared/Config")
+local Style=require("../../src/shared/RarityStyle")
+local Frame=require("../../src/shared/RarityFrame")
+local Catalog=require("../../src/shared/RobotCatalog")
+local Economy=require("../../src/shared/Economy")
+local Config=require("../../src/shared/Config")
 local checks=0
 local function check(ok:boolean,message:string) checks+=1;assert(ok,message) end
 check(#Catalog.List==10,"ten chassis for every rarity")

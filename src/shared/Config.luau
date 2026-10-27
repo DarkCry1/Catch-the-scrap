@@ -67,12 +67,19 @@ return table.freeze({
     -- put an uploaded or Creator Store sound here ("rbxassetid://123") to
     -- replace any cue, e.g. Overrides = { Click = "rbxassetid://123" }.
     Audio = { Master = 0.8, IncomeTickSeconds = 2.5, Overrides = {} :: {[string]: string} },
-    -- Security drones patrol Epic and higher zones and chase players carrying loot.
-    Drones = {
-        Stages = { [4] = 2, [5] = 2, [6] = 3, [7] = 3 },
-        ChaseSpeed = { [4] = 12.5, [5] = 13.5, [6] = 14.5, [7] = 15.5 },
-        PatrolSpeed = 9, Height = 16, DetectRange = 38, CatchRange = 4.5,
-        ChaseSeconds = 7, CooldownSeconds = 9, BaseSafeRadius = 0,
+    -- One original walking guardian per district. Provisional playtest values,
+    -- not measured values from any other Roblox experience.
+    Guardians = {
+        Step = 0.05, RepathSeconds = 0.7, CooldownSeconds = 8, Grid = 8,
+        Profiles = {
+            { Name = "Rustyard Watcher", Scale = 0.95, PatrolSpeed = 6, ChaseSpeed = 15, DetectRange = 48, WarningSeconds = 1.4, ChaseSeconds = 7 },
+            { Name = "Scrap Bruiser", Scale = 1.10, PatrolSpeed = 7, ChaseSpeed = 17, DetectRange = 54, WarningSeconds = 1.3, ChaseSeconds = 7.5 },
+            { Name = "Core Warden", Scale = 1.25, PatrolSpeed = 8, ChaseSpeed = 19, DetectRange = 60, WarningSeconds = 1.2, ChaseSeconds = 8 },
+            { Name = "Turbine Enforcer", Scale = 1.40, PatrolSpeed = 9, ChaseSpeed = 22, DetectRange = 68, WarningSeconds = 1.1, ChaseSeconds = 8.5 },
+            { Name = "Gilded Colossus", Scale = 1.60, PatrolSpeed = 10, ChaseSpeed = 25, DetectRange = 76, WarningSeconds = 1.0, ChaseSeconds = 9 },
+            { Name = "Void Reaper", Scale = 1.80, PatrolSpeed = 11, ChaseSpeed = 28, DetectRange = 84, WarningSeconds = 0.9, ChaseSeconds = 9.5 },
+            { Name = "Astral Sentinel", Scale = 2.00, PatrolSpeed = 12, ChaseSpeed = 31, DetectRange = 92, WarningSeconds = 0.8, ChaseSeconds = 10 },
+        },
     },
     Robot = {
         Slots = 6,

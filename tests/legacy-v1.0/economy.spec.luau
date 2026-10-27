@@ -1,8 +1,8 @@
 --!strict
-local Economy=require("../src/shared/Economy")
-local Config=require("../src/shared/Config")
-local Base=require("../src/shared/BaseBlueprint")
-local Robot=require("../src/shared/RobotBlueprint")
+local Economy=require("../../src/shared/Economy")
+local Config=require("../../src/shared/Config")
+local Base=require("../../src/shared/BaseBlueprint")
+local Robot=require("../../src/shared/RobotBlueprint")
 local settings=Config.Robot
 local assertions,suites=0,0
 local function check(condition: boolean,message: string)

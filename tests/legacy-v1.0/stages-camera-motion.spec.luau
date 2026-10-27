@@ -1,9 +1,9 @@
 --!strict
-local Config=require("../src/shared/Config")
-local Camera=require("../src/shared/CameraBounds")
-local Motion=require("../src/shared/PickupMotion")
-local Pickups=require("../src/shared/PickupBlueprint")
-local Economy=require("../src/shared/Economy")
+local Config=require("../../src/shared/Config")
+local Camera=require("../../src/shared/CameraBounds")
+local Motion=require("../../src/shared/PickupMotion")
+local Pickups=require("../../src/shared/PickupBlueprint")
+local Economy=require("../../src/shared/Economy")
 local checks=0
 local function check(ok:boolean,message:string) checks+=1;assert(ok,message) end
 local expected={"Common","Uncommon","Rare","Epic","Legendary","Mythic","Celestial"}
