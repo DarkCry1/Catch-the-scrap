@@ -14,7 +14,7 @@ function Menu.start(player,remote,hud)
     panel.BackgroundColor3=Color3.fromRGB(16,25,36);panel.Visible=false;panel.Active=true;panel.Parent=gui;round(panel)
     local limit=Instance.new("UISizeConstraint");limit.MaxSize=Vector2.new(600,510);limit.Parent=panel
     label(panel,"ADMIN CONTROL",UDim2.fromOffset(20,14),UDim2.new(1,-90,0,26),21)
-    local body=Instance.new("ScrollingFrame");body.Position=UDim2.fromOffset(16,54);body.Size=UDim2.new(1,-32,1,-106);body.CanvasSize=UDim2.fromOffset(0,380);body.BackgroundTransparency=1;body.BorderSizePixel=0;body.ScrollBarThickness=4;body.Parent=panel
+    local body=Instance.new("ScrollingFrame");body.Position=UDim2.fromOffset(16,54);body.Size=UDim2.new(1,-32,1,-106);body.CanvasSize=UDim2.fromOffset(0,520);body.BackgroundTransparency=1;body.BorderSizePixel=0;body.ScrollBarThickness=4;body.Parent=panel
     local status=label(panel,"Personal changes affect only you. Events are server-wide.",UDim2.new(0,20,1,-42),UDim2.new(1,-40,0,32),12)
     local function button(parent,text,pos,size,callback)
         local b=Instance.new("TextButton");b.Text=text;b.Position=pos;b.Size=size;b.Font=Enum.Font.GothamBold;b.TextSize=12;b.TextColor3=Color3.fromRGB(18,28,37);b.BackgroundColor3=Color3.fromRGB(105,219,204);b.AutoLocalize=false;b.Parent=parent;round(b);b.Activated:Connect(callback);return b
@@ -50,7 +50,17 @@ function Menu.start(player,remote,hud)
     local tierButton
     tierButton=button(body,tier,UDim2.new(.55,0,0,228),UDim2.new(.43,0,0,36),function() selected=selected%#tiers+1;tier=tiers[selected];tierButton.Text=tier end)
     button(body,"TRIGGER EVENT",UDim2.fromOffset(2,280),UDim2.new(1,-10,0,44),function() send("Event",{rarity=tier,stage=tonumber(stage.Text)}) end)
-    label(body,"Two live boxes maximum. Stats reset when you leave the server.",UDim2.fromOffset(2,336),UDim2.new(1,-10,0,36),11)
+    label(body,"Two live boxes maximum.",UDim2.fromOffset(2,330),UDim2.new(1,-10,0,18),11)
+    label(body,"ROBOTDEX TESTING",UDim2.fromOffset(2,356),UDim2.new(1,-8,0,22),14)
+    local fill=field("FILL TO #",386,"30")
+    button(body,"FILL ROBOTDEX",UDim2.new(.55,0,0,386),UDim2.new(.43,0,0,36),function() send("DexFill",tonumber(fill.Text)) end)
+    local armed=false;local reset
+    reset=button(body,"RESET MY SAVED PROGRESS",UDim2.fromOffset(2,434),UDim2.new(1,-10,0,40),function()
+        if armed then armed=false;reset.Text="RESET MY SAVED PROGRESS";send("ResetProgress",0)
+        else armed=true;reset.Text="TAP AGAIN TO WIPE CASH, ROBOTS AND ROBOTDEX";task.delay(5,function() if armed then armed=false;reset.Text="RESET MY SAVED PROGRESS" end end) end
+    end)
+    reset.BackgroundColor3=Color3.fromRGB(232,120,96)
+    label(body,"Fill marks species #1–#N discovered without placing robots. Reset affects only you.",UDim2.fromOffset(2,480),UDim2.new(1,-10,0,32),11)
     local function access()
         open.Visible=player:GetAttribute("CanAdmin")==true
         if not open.Visible then panel.Visible=false end

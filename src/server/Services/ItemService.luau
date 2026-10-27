@@ -4,6 +4,7 @@ local Shared = ReplicatedStorage.CatchTheScrapShared
 local Config = require(Shared.Config)
 local Inventory = require(Shared.Inventory)
 local Catalog=require(Shared.RobotCatalog)
+local Mutations=require(Shared.Mutations)
 local PickupBuilder=require(script.Parent.Parent.Assets.PickupBuilder)
 local CarryRig=require(script.Parent.Parent.Assets.CarryRig)
 local SpawnRules=require(Shared.SpawnRules)
@@ -87,8 +88,9 @@ function ItemService:spawn(slot)
     local record = { id = id, model = model, root = root, prompt = prompt, billboard = billboard, definition = definition, slot = slot, clearance = slot.clearance, weld = nil }
     if slot.crateStage then
         record.rewardRarity=definition.rarity
-        record.rewardVariant=Catalog.roll(self.random:NextNumber(),self.lastVariant,definition.rarity)
+        record.rewardVariant=Catalog.roll(self.random:NextNumber(),definition.rarity,"Box",self.lastVariant)
         self.lastVariant=record.rewardVariant
+        record.rewardMutation=Mutations.roll(self.random:NextNumber())
     end
     self.records[id] = record
     slot.current = record

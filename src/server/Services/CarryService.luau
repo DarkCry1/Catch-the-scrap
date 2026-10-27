@@ -76,7 +76,7 @@ function CarryService:resetCarried(player, message)
     end
 end
 
-function CarryService:addPlayer(player)
+function CarryService:addPlayer(player, account)
     if self.players[player] then return end
     local stats = Instance.new("Folder")
     stats.Name = "leaderstats"
@@ -87,7 +87,7 @@ function CarryService:addPlayer(player)
     local base = self.world:assignBase(player)
     local entry = { base = base, counter = counter, lastAction = -math.huge }
     self.players[player] = entry
-    self.economy:addPlayer(player, base)
+    self.economy:addPlayer(player, base, account)
     player:SetAttribute("BaseIndex", if base then base.index else 0)
     self:writeState(player)
 
@@ -136,10 +136,11 @@ function CarryService:pickup(player, record)
     record.model:SetAttribute("CarrierUserId", player.UserId)
     self:writeState(player)
     self:notify(player, "Carrying " .. record.definition.name .. ". Return to Workshop " .. self.players[player].base.index .. "!")
+    if self.onEvent then self.onEvent(player, "Pickup", 1, record.definition.rarity) end
 end
 
 function CarryService:setStyle(player,style)
-    if style~="Auto" and style~="Handheld" and style~="Harness" then return end
+    if style~="Auto" and style~="Harness" then return end
     if not self:allowAction(player) then return end
     local entry=self.players[player];entry.style=style
     player:SetAttribute("CarryStyle",style)
@@ -192,19 +193,20 @@ function CarryService:deposit(player, base)
     local record = self.items.records[id]
     local name = record.definition.name
     if isBox then
-        self.economy:recoverRobot(player,record.rewardRarity,record.rewardVariant)
+        self.economy:recoverRobot(player,record.rewardRarity,record.rewardVariant,record.rewardMutation)
         self.items:consume(record)
         self:writeState(player)
         self:notify(player,"Delivery secured! Your mystery robot is unboxing on its platform...")
         return
     end
-    local built, scrap,variant = self.economy:addPart(player, rarity)
+    local built, scrap,variant,new = self.economy:addPart(player, rarity)
     if self.onCrush then self.onCrush(base,record) end
+    if self.onEvent then self.onEvent(player, "Deposit", 1, rarity, scrap) end
     self.items:consume(record)
     self:writeState(player)
     if built then
         local recipe = Config.Robot.Recipes[rarity]
-        self:notify(player, Catalog.name(rarity,variant or "Bastion") .. " complete! +$" .. Catalog.income(recipe.Income,variant,"Build") .. " per second.")
+        self:notify(player, string.format("BUILT: %s%s +$%d per second.", Catalog.label(variant), if new then " (NEW in Robotdex!)" else "", Catalog.income(recipe.Income,variant)))
     else
         self:notify(player, string.format("%s deposited! %s robot: %d / %d parts.", name, rarity, scrap, Config.Robot.Recipes[rarity].Parts))
     end

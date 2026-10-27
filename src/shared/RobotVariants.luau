@@ -1,10 +1,14 @@
 --!strict
 local Base=require("./RobotBlueprint")
 local Catalog=require("./RobotCatalog")
+local Forge=require("./RobotForge")
 export type Part={name:string,step:number,size:{number},position:{number},palette:string,shape:string,yaw:number?,pitch:number?,roll:number?}
 local Variants={}
 function Variants.build(id:string): {Part}
-    Catalog.get(id)
+    local species=Catalog.get(id)
+    -- Forge species carry their own design; the ten original chassis below
+    -- are hand-built variations of the Scrap Bot MK-I blueprint.
+    if species.Design then return Forge.build(species.Design) end
     local parts:{Part}={}
     local function add(name:string,size:{number},position:{number},palette:string,shape:string?,yaw:number?,roll:number?)
         table.insert(parts,{name=name..tostring(#parts+1),step=5,size=size,position=position,palette=palette,shape=shape or "Block",yaw=yaw,roll=roll})

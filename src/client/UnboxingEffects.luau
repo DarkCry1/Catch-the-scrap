@@ -84,7 +84,7 @@ function Effects.start(player)
         if entry.ghost then entry.ghost:Destroy() end
         local details={}
         for _,d in Variants.build(id) do
-            table.insert(details,{name=d.name,size=d.size,position=d.position,shape=d.shape,yaw=d.yaw,roll=d.roll,color={entry.tint.R*255,entry.tint.G*255,entry.tint.B*255},material="Neon"})
+            table.insert(details,{name=d.name,size=d.size,position=d.position,shape=d.shape,pitch=d.pitch,yaw=d.yaw,roll=d.roll,color={entry.tint.R*255,entry.tint.G*255,entry.tint.B*255},material="Neon"})
         end
         entry.ghost=Parts.model("ScanningHologram",details,entry.origin,entry.fx);entry.ghost:ScaleTo(.25)
         for _,part in entry.ghost:GetChildren() do part.Transparency=.6 end

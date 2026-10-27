@@ -3,6 +3,8 @@ local TweenService=game:GetService("TweenService")
 local RunService=game:GetService("RunService")
 local Config=require(game:GetService("ReplicatedStorage").CatchTheScrapShared.Config)
 local Visuals=require(script.Parent.RarityVisuals)
+local Stack=require(script.Parent.TopStack)
+local Audio=require(script.Parent.Audio)
 local Announcements={}
 function Announcements.start(player,remote)
     local gui=Instance.new("ScreenGui");gui.Name="RareRobotEvents";gui.ResetOnSpawn=false;gui.DisplayOrder=30;gui.Parent=player:WaitForChild("PlayerGui")
@@ -12,6 +14,7 @@ function Announcements.start(player,remote)
     local corner=Instance.new("UICorner");corner.CornerRadius=UDim.new(0,14);corner.Parent=banner
     local stroke=Instance.new("UIStroke");stroke.Thickness=2;stroke.Parent=banner
     local scale=Instance.new("UIScale");scale.Parent=banner
+    local slot=Stack.add(banner,118)
     local function text(parent,size,pos,height)
         local label=Instance.new("TextLabel");label.BackgroundTransparency=1;label.Font=Enum.Font.GothamBold;label.TextSize=size;label.AutoLocalize=false
         label.TextWrapped=true;label.Position=UDim2.new(0,14,0,pos);label.Size=UDim2.new(1,-28,0,height);label.TextColor3=Color3.new(1,1,1);label.Parent=parent;return label
@@ -35,13 +38,15 @@ function Announcements.start(player,remote)
         local tint=Color3.fromRGB(unpack(recipe.Color));title.Text=(if packet.rarity=="Epic" then "An " else "A ")..packet.rarity.." Robot Box has spawned!"
         title.TextColor3=tint;stroke.Color=tint;sub.Text=string.format("STAGE %02d / %s — Find the beacon and bring it home!",packet.stage or 0,(packet.district or ""):upper())
         if channel=="RobotUnboxed" or channel=="RobotBuilt" then tag.Text=if channel=="RobotBuilt" then "ROBOT ASSEMBLED!" else "ROBOT RECOVERED!";title.Text=packet.name;sub.Text=packet.rarity:upper().." / +$"..packet.income.." PER SECOND" else tag.Text="SERVER EVENT / ROBOT RECOVERY" end
-        banner.Visible=true;banner.GroupTransparency=0;banner.Position=UDim2.new(.5,0,0,-140);scale.Scale=.85
-        TweenService:Create(banner,TweenInfo.new(.5,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Position=UDim2.new(.5,0,0,34)}):Play()
+        banner.Visible=true;banner.GroupTransparency=0;scale.Scale=.9
+        Stack.show(slot)
         TweenService:Create(scale,TweenInfo.new(.4,Enum.EasingStyle.Back),{Scale=1}):Play()
+        if channel=="RareBoxSpawned" then Audio.play("Open") end
         task.delay(7,function()
             if version~=serial then return end
             TweenService:Create(banner,TweenInfo.new(.45),{GroupTransparency=1}):Play()
-            task.delay(.5,function() if version==serial then banner.Visible=false end end)
+            task.delay(.45,function() if version==serial then Stack.hide(slot) end end)
+            task.delay(.9,function() if version==serial then banner.Visible=false end end)
         end)
     end
     remote.OnClientEvent:Connect(receive)

@@ -1,6 +1,7 @@
 --!nonstrict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.CatchTheScrapShared.Config)
+local WorkshopLayout = require(ReplicatedStorage.CatchTheScrapShared.WorkshopLayout)
 local BaseBuilder = require(script.Parent.Parent.Assets.BaseBuilder)
 local FloatingText = require(script.Parent.Parent.Assets.FloatingText)
 local NavigationRenderer = require(script.Parent.Parent.Assets.NavigationRenderer)
@@ -37,8 +38,9 @@ function WorldService.new()
     items.Parent = root
     self.items = items
 
-    part(root, "WorkshopStreet", Vector3.new(43, 0.08, 302), Vector3.new(0, 0.05, -131), Color3.fromRGB(37, 47, 56), Enum.Material.Asphalt)
-    for z = -260, -15, 25 do
+    local streetEnd = Config.Plaza.BackZ
+    part(root, "WorkshopStreet", Vector3.new(43, 0.08, 20 - streetEnd), Vector3.new(0, 0.05, (20 + streetEnd) / 2), Color3.fromRGB(37, 47, 56), Enum.Material.Asphalt)
+    for z = streetEnd + 20, -15, 25 do
         NavigationRenderer.draw(root,0,z,1,Color3.fromRGB(235,178,65))
     end
     FloatingText.create(root,"YardEntrance",CFrame.new(0,16,0),"CATCH THE SCRAP\nSCRAPYARD AHEAD",Color3.fromRGB(255,198,80),48,7,120)
@@ -46,16 +48,16 @@ function WorldService.new()
     self.mechanic = MechanicBuilder.create(root)
 
     for index = 1, Config.BaseCount do
-        local left = index % 2 == 1
-        local row = math.floor((index - 1) / 2)
-        local position = Vector3.new(if left then -62 else 62, 0, -35 - row * 66)
-        local origin = CFrame.new(position) * CFrame.Angles(0, if left then math.pi / 2 else -math.pi / 2, 0)
+        local placement = WorkshopLayout.placement(index)
+        local left = placement.left
+        local position = Vector3.new(placement.x, 0, placement.z)
+        local origin = CFrame.new(position) * CFrame.Angles(0, placement.yaw, 0)
         local base = BaseBuilder.create(root, index, origin)
         table.insert(self.bases, base)
         base.prompt.Triggered:Connect(function(player)
             if self.onDeposit then self.onDeposit(player, base) end
         end)
-        local pole = part(root, "StreetLamp", Vector3.new(0.7, 13, 0.7), Vector3.new(if left then -29 else 29, 6.5, position.Z + 24), Color3.fromRGB(80, 101, 110), Enum.Material.Metal)
+        local pole = part(root, "StreetLamp", Vector3.new(0.7, 13, 0.7), Vector3.new(if left then -28 else 28, 6.5, position.Z + Config.Workshops.Width / 2 - 6), Color3.fromRGB(80, 101, 110), Enum.Material.Metal)
         local lamp = part(root, "Lamp", Vector3.new(3, 0.4, 3), pole.Position + Vector3.new(0, 6.5, 0), Color3.fromRGB(255, 220, 155), Enum.Material.Neon)
         local light = Instance.new("PointLight")
         light.Color = lamp.Color
@@ -87,7 +89,12 @@ function WorldService:updateEconomy(base, player, account)
     BaseBuilder.update(base, player.DisplayName, account)
 end
 
+function WorldService:applySkin(base, skin)
+    BaseBuilder.applySkin(base, skin)
+end
+
 function WorldService:releaseBase(base)
+    BaseBuilder.applySkin(base, "Default")
     if base.ownerPlayer then base.folder:RemovePersistentPlayer(base.ownerPlayer) end
     base.ownerPlayer = nil
     base.owner = nil

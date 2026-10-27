@@ -13,7 +13,8 @@ function Rules.validate(command:any,value:any): boolean
     if command=="SetCash" or command=="AddCash" then return integer(value,0,1000000000) end
     if command=="SetSpeed" then return integer(value,7,120) end
     if command=="SetStrength" then return integer(value,1,10000) end
-    if command=="ResetStats" or command=="Home" then return value==0 end
+    if command=="ResetStats" or command=="Home" or command=="ResetProgress" then return value==0 end
+    if command=="DexFill" then return integer(value,0,1000) end
     if command=="Event" and type(value)=="table" then
         local tier=value.rarity
         return (tier=="Rare" or tier=="Epic" or tier=="Legendary" or tier=="Mythic" or tier=="Celestial") and integer(value.stage,1,7)

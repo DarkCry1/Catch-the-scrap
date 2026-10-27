@@ -10,7 +10,7 @@ end
 function Parts.model(name,details,origin,parent)
     local model=Instance.new("Model");model.Name=name
     for _,d in details do
-        Parts.new(model,d.name,Vector3.new(unpack(d.size)),origin*CFrame.new(unpack(d.position))*CFrame.Angles(0,math.rad(d.yaw or 0),math.rad(d.roll or 0)),Color3.fromRGB(unpack(d.color)),Enum.Material[d.material],Enum.PartType[d.shape])
+        Parts.new(model,d.name,Vector3.new(unpack(d.size)),origin*CFrame.new(unpack(d.position))*CFrame.Angles(math.rad(d.pitch or 0),math.rad(d.yaw or 0),math.rad(d.roll or 0)),Color3.fromRGB(unpack(d.color)),Enum.Material[d.material],Enum.PartType[d.shape])
     end
     model.WorldPivot=origin;model.Parent=parent
     return model

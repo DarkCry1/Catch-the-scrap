@@ -54,6 +54,7 @@ function MechanicService:buy(player,kind,expectedLevel)
     local ok,message=UpgradeRules.purchase(entry.account,kind,expectedLevel,Config)
     self.economy:publish(player,entry)
     if ok then self.carry:writeState(player) end
+    if ok and self.onEvent then self.onEvent(player,"Upgrade",1) end
     self:send(player,message)
 end
 

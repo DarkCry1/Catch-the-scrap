@@ -1,6 +1,9 @@
 --!nonstrict
 local RunService=game:GetService("RunService")
-local Rules=require(game:GetService("ReplicatedStorage").CatchTheScrapShared.AdminRules)
+local Shared=game:GetService("ReplicatedStorage").CatchTheScrapShared
+local Rules=require(Shared.AdminRules)
+local Economy=require(Shared.Economy)
+local Catalog=require(Shared.RobotCatalog)
 local Access=require(script.Parent.Parent.AdminConfig)
 local Service={}
 Service.__index=Service
@@ -38,6 +41,18 @@ function Service:run(player,command,value)
     elseif command=="SetSpeed" then actor.adminSpeed=value;self.carry:writeState(player)
     elseif command=="SetStrength" then entry.adminStrength=value;self.economy:publish(player,entry);self.carry:writeState(player)
     elseif command=="ResetStats" then actor.adminSpeed=nil;entry.adminStrength=nil;self.economy:publish(player,entry);self.carry:writeState(player)
+    elseif command=="ResetProgress" then
+        -- Wipes this admin's own saved progress (testing the Robotdex grind).
+        entry.account=Economy.new();entry.lastTime=now
+        self.economy:publish(player,entry)
+        if entry.base then self.economy.world:updateEconomy(entry.base,player,entry.account) end
+        if self.dex then self.dex:applySkin(player);self.dex:applyTitle(player);self.dex:send(player,"Progress reset.") end
+        self.carry:writeState(player)
+    elseif command=="DexFill" then
+        -- Marks species #1..#N as discovered (no robots are placed).
+        for _,species in Catalog.List do if species.Number<=value then entry.account.dex[species.Id]=math.max(1,entry.account.dex[species.Id] or 0) end end
+        self.economy:publish(player,entry)
+        if self.dex then self.dex:send(player,"Robotdex filled to #"..value..".") end
     elseif command=="Home" then
         local character=player.Character
         local humanoid=character and character:FindFirstChildOfClass("Humanoid")

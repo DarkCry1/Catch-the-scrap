@@ -45,14 +45,48 @@ return table.freeze({
     ZoneLength = 480,
     TrackStart = 20,
     BaseCount = 8,
+    -- DataStore progress (v1.2). LockSeconds must exceed AutosaveSeconds.
+    Save = { Store = "CatchTheScrap_Progress_v1", LockSeconds = 90, RetrySeconds = 4, ErrorRetries = 3, AutosaveSeconds = 45 },
+    -- Inner faces of the plaza walls (the home street and workshops).
+    Plaza = { HalfWidth = 102, BackZ = -318 },
+    -- Workshop footprint in its own frame: Width runs along the street, Depth
+    -- from the street-facing gate to the back wall. Rows alternate sides.
+    Workshops = { Width = 68, Depth = 66, CenterX = 67, FirstZ = -44, Spacing = 76, PadDiameter = 14 },
+    -- v1.3: each rebirth resets cash, robots and upgrades (the Robotdex stays),
+    -- adds IncomeBonus to the income multiplier and unlocks one extra platform
+    -- (up to Robot.MaxSlots). Cost = BaseCost * Growth ^ rebirths.
+    Rebirth = { BaseCost = 250000, Growth = 4, IncomeBonus = 0.5, Max = 12 },
+    -- Mutations are rolled independently of the species (builds and boxes).
+    Mutations = {
+        { Id = "Gold", Label = "Gold", Chance = 0.05, Multiplier = 2, Color = { 255, 198, 64 } },
+        { Id = "Rainbow", Label = "Rainbow", Chance = 0.01, Multiplier = 4, Color = { 126, 234, 255 } },
+    },
+    -- Daily quests: three per player per UTC day.
+    Quests = { PerDay = 3, CashReward = { 1500, 4000, 10000 }, BonusBox = "Rare" },
+    -- Sound design (client). Every cue is built from Roblox's built-in sounds;
+    -- put an uploaded or Creator Store sound here ("rbxassetid://123") to
+    -- replace any cue, e.g. Overrides = { Click = "rbxassetid://123" }.
+    Audio = { Master = 0.8, IncomeTickSeconds = 2.5, Overrides = {} :: {[string]: string} },
+    -- Security drones patrol Epic and higher zones and chase players carrying loot.
+    Drones = {
+        Stages = { [4] = 2, [5] = 2, [6] = 3, [7] = 3 },
+        ChaseSpeed = { [4] = 12.5, [5] = 13.5, [6] = 14.5, [7] = 15.5 },
+        PatrolSpeed = 9, Height = 16, DetectRange = 38, CatchRange = 4.5,
+        ChaseSeconds = 7, CooldownSeconds = 9, BaseSafeRadius = 0,
+    },
     Robot = {
-        Slots = 4,
+        Slots = 6,
+        MaxSlots = 8,
         Recipes = recipes,
     },
     Palette = {
         dark = { 27, 38, 51 }, floor = { 62, 75, 84 }, wall = { 72, 91, 104 },
         steel = { 118, 140, 151 }, amber = { 255, 181, 61 }, energy = { 90, 240, 217 },
         copper = { 173, 105, 61 }, black = { 12, 20, 29 }, rust = { 138, 77, 49 }, rubber = { 29, 33, 34 },
+        -- Robot body colors (v1.2 Robotdex species)
+        olive = { 98, 110, 64 }, navy = { 42, 62, 102 }, bone = { 214, 206, 184 }, crimson = { 156, 42, 50 },
+        teal = { 40, 128, 128 }, graphite = { 58, 61, 68 }, sand = { 186, 158, 108 }, white = { 222, 228, 234 },
+        gold = { 214, 168, 58 }, ice = { 150, 206, 228 }, void = { 40, 22, 58 }, violet = { 112, 66, 168 },
     },
     BaseAccents = { { 78, 222, 205 }, { 110, 169, 255 }, { 241, 157, 82 }, { 185, 150, 255 } },
     Items = {

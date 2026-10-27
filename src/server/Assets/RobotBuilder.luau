@@ -5,18 +5,28 @@ local Config = require(ReplicatedStorage.CatchTheScrapShared.Config)
 local Blueprint = require(ReplicatedStorage.CatchTheScrapShared.RobotBlueprint)
 local Variants=require(ReplicatedStorage.CatchTheScrapShared.RobotVariants)
 local Catalog=require(ReplicatedStorage.CatchTheScrapShared.RobotCatalog)
+local Mutations=require(ReplicatedStorage.CatchTheScrapShared.Mutations)
 local Decor=require(script.Parent.RarityDecor)
 local RobotBuilder = {}
+-- Surface finish per palette; everything else is painted metal.
+local finishes = { rust = Enum.Material.CorrodedMetal, bone = Enum.Material.SmoothPlastic, white = Enum.Material.SmoothPlastic, sand = Enum.Material.SmoothPlastic, black = Enum.Material.SmoothPlastic, void = Enum.Material.Glass }
 
-function RobotBuilder.build(parent, origin, stage, complete, rarity, scale,variant,route)
+-- Palettes repainted by a mutation (glow/trim keep the rarity color).
+local painted = { steel = true, dark = false, copper = true, rust = true, olive = true, navy = true, bone = true, crimson = true,
+    teal = true, graphite = true, sand = true, white = true, gold = true, ice = true, void = true, violet = true, wall = true, floor = true }
+
+function RobotBuilder.build(parent, origin, stage, complete, rarity, scale,variant,route,mutation)
     scale = scale or 1
     local recipe = Config.Robot.Recipes[rarity]
     local model = Instance.new("Model")
     model.ModelStreamingMode=Enum.ModelStreamingMode.Atomic
-    model.Name = if variant then Catalog.name(rarity,variant) else if complete then recipe.Name else rarity.."RobotUnderConstruction"
+    model.Name = if variant then Catalog.name(variant) else if complete then recipe.Name else rarity.."RobotUnderConstruction"
     model:SetAttribute("Rarity",rarity)
     model:SetAttribute("Variant",variant)
-    model:SetAttribute("Income",Catalog.income(recipe.Income,variant,route))
+    model:SetAttribute("Income",Catalog.income(recipe.Income,variant)*Mutations.multiplier(mutation))
+    model:SetAttribute("Mutation",mutation)
+    local mutationInfo = if complete then Mutations.get(mutation) else nil
+    local partIndex = 0
     model:SetAttribute("BuildStage", stage)
     model:SetAttribute("Complete", complete)
     for _, definition in (if variant then Variants.build(variant) else Blueprint) do
@@ -36,13 +46,31 @@ function RobotBuilder.build(parent, origin, stage, complete, rarity, scale,varia
         if assembled and (definition.palette == "amber" or definition.palette == "energy") then
             object.Color = Color3.fromRGB(unpack(recipe.Color))
         end
-        object.Material = if not assembled or definition.palette == "energy" then Enum.Material.Neon else Enum.Material.Metal
+        object.Material = if not assembled or definition.palette == "energy" then Enum.Material.Neon else (finishes[definition.palette] or Enum.Material.Metal)
         object.Reflectance = if assembled and definition.palette=="steel" then .06 else 0
         object.Transparency = if assembled then 0 else 0.9
         object.CastShadow = assembled
         object.Parent = model
+        partIndex += 1
+        if mutationInfo and painted[definition.palette] then
+            -- Gold: polished gold plating. Rainbow: a moving spectrum (client-animated).
+            object.Color = Color3.fromRGB(unpack(mutationInfo.Color))
+            object.Material = Enum.Material.Metal
+            object.Reflectance = if mutationInfo.Id == "Gold" then .28 else .1
+            if mutationInfo.Id == "Rainbow" then Decor.spectrum(object, partIndex * .037) end
+        end
         if complete and rarity=="Celestial" and (definition.palette=="amber" or definition.palette=="energy") then Decor.spectrum(object,(definition.position[1]+definition.position[2])*.13) end
-        if complete and definition.name == "Reactor" then CollectionService:AddTag(object, "WorkingRobotReactor") end
+        if complete and definition.name == "Reactor" then
+            CollectionService:AddTag(object, "WorkingRobotReactor")
+            if mutationInfo then
+                local sparkle = Instance.new("ParticleEmitter"); sparkle.Name = "MutationSparkle"
+                sparkle.Texture = "rbxasset://textures/particles/sparkles_main.dds"; sparkle.Rate = if mutationInfo.Id == "Rainbow" then 10 else 6
+                sparkle.Lifetime = NumberRange.new(.8, 1.6); sparkle.Speed = NumberRange.new(.6, 2); sparkle.SpreadAngle = Vector2.new(180, 180)
+                sparkle.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, .28), NumberSequenceKeypoint.new(1, 0) })
+                sparkle.LightEmission = 1; sparkle.Color = ColorSequence.new(Color3.fromRGB(unpack(mutationInfo.Color))); sparkle.Parent = object
+                if mutationInfo.Id == "Rainbow" then Decor.spectrum(sparkle, .5) end
+            end
+        end
     end
     model.Parent = parent
     return model

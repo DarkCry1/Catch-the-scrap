@@ -25,12 +25,13 @@ function Bounds.limit(focus:Point,desired:Point,padding:number): Point
     local function project(x:number,z0:number,z1:number): Point
         return {x=math.clamp(focus.x,-x,x),y=math.clamp(focus.y,.5,Config.WallHeight-padding),z=math.clamp(focus.z,z0,z1)}
     end
-    local plaza=project(102-padding,-298+padding,Config.TrackStart)
+    local plazaX,plazaBack=Config.Plaza.HalfWidth,Config.Plaza.BackZ
+    local plaza=project(plazaX-padding,plazaBack+padding,Config.TrackStart)
     local yard=project(Config.TrackWidth/2-padding,Config.TrackStart,endZ-padding)
     local function distance(p:Point): number return (p.x-focus.x)^2+(p.y-focus.y)^2+(p.z-focus.z)^2 end
     focus=if distance(plaza)<=distance(yard) then plaza else yard
     local delta={x=desired.x-focus.x,y=desired.y-focus.y,z=desired.z-focus.z}
-    local plazaLow,plazaHigh=interval(focus,delta,102-padding,-298+padding,Config.TrackStart,padding)
+    local plazaLow,plazaHigh=interval(focus,delta,plazaX-padding,plazaBack+padding,Config.TrackStart,padding)
     local yardLow,yardHigh=interval(focus,delta,Config.TrackWidth/2-padding,Config.TrackStart,endZ-padding,padding)
     local high=0
     if plazaLow<=0 and plazaHigh>=0 then high=plazaHigh end

@@ -3,7 +3,8 @@ local Config=require("./Config")
 local Rules={}
 function Rules.roll(unit:number): string
     assert(unit>=0 and unit<1,"Random sample must be in [0,1)")
-    return if unit<.7 then "Rare" elseif unit<.92 then "Epic" elseif unit<.98 then "Legendary" elseif unit<.998 then "Mythic" else "Celestial"
+    -- v1.2: 68 / 22 / 7 / 2.5 / 0.5 percent (Robotdex box pages must be completable).
+    return if unit<.68 then "Rare" elseif unit<.90 then "Epic" elseif unit<.97 then "Legendary" elseif unit<.995 then "Mythic" else "Celestial"
 end
 function Rules.definition(rarity:string)
     local recipe=Config.Robot.Recipes[rarity]

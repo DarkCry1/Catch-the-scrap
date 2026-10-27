@@ -131,17 +131,23 @@ function Blueprint.build(width: number, zoneLength: number, start: number): Layo
     end
     local total = zoneLength * #Config.Stages
     local wallHeight = Config.WallHeight
-    part("HomeGround",{208,2,320},{0,-1,-140},{58,63,62},"Concrete")
+    -- Home plaza: inner wall faces at x=+-Plaza.HalfWidth and z=Plaza.BackZ.
+    local plazaX,plazaBack=Config.Plaza.HalfWidth,Config.Plaza.BackZ
+    local plazaLength=start-plazaBack+4
+    local plazaMid=(start+plazaBack-4)/2
+    part("HomeGround",{plazaX*2+4,2,plazaLength},{0,-1,plazaMid},{58,63,62},"Concrete")
+    local bays=math.floor((start-plazaBack)/37.5)
     for _,side in {-1,1} do
-        part("PlazaBoundary",{4,wallHeight,320},{side*104,wallHeight/2,-140},dark,"Concrete")
+        part("PlazaBoundary",{4,wallHeight,plazaLength},{side*(plazaX+2),wallHeight/2,plazaMid},dark,"Concrete")
         part("PlazaFrontBoundary",{24,wallHeight,4},{side*94,wallHeight/2,20},dark,"Concrete")
-        for bay=0,7 do
-            part("PlazaSalvageCladding",{.35,wallHeight-6,35},{side*101.7,wallHeight/2,-280+bay*40},if bay%2==0 then rust else steel,"CorrodedMetal","Block",0,0,false)
-            part("PlazaWallTop",{5,3,16},{side*105,wallHeight+1,-280+bay*40},rust,"CorrodedMetal","Block",bay*20,0,false)
+        for bay=0,bays-1 do
+            local z=plazaBack+18.5+bay*37.5
+            part("PlazaSalvageCladding",{.35,wallHeight-6,35},{side*(plazaX-.3),wallHeight/2,z},if bay%2==0 then rust else steel,"CorrodedMetal","Block",0,0,false)
+            part("PlazaWallTop",{5,3,16},{side*(plazaX+3),wallHeight+1,z},rust,"CorrodedMetal","Block",bay*20,0,false)
         end
     end
-    part("PlazaBackBoundary",{208,wallHeight,4},{0,wallHeight/2,-300},dark,"Concrete")
-    for x=-90,90,30 do part("PlazaBackCladding",{25,wallHeight-6,.35},{x,wallHeight/2,-297.7},rust,"CorrodedMetal","Block",0,0,false) end
+    part("PlazaBackBoundary",{plazaX*2+4,wallHeight,4},{0,wallHeight/2,plazaBack-2},dark,"Concrete")
+    for x=-90,90,30 do part("PlazaBackCladding",{25,wallHeight-6,.35},{x,wallHeight/2,plazaBack+.3},rust,"CorrodedMetal","Block",0,0,false) end
     -- Segments stay below Roblox's 2048-stud BasePart size limit and stream locally.
     for zone=1,#Config.Stages do
         part("YardTerrain", {width + 140, 2, zoneLength}, {0, -2, start + (zone-.5)*zoneLength}, {80, 72, 56}, "Ground")
