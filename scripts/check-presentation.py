@@ -40,7 +40,7 @@ services.CollectionService={
 local shared={Config="Config",CameraBounds="CameraBounds",WaitForChild=function(_,name) return name end}
 services.ReplicatedStorage={CatchTheScrapShared={Config="Config",PickupMotion="PickupMotion",WorkshopMotion="WorkshopMotion"},WaitForChild=function() return shared end}
 local game={GetService=function(_,name) return services[name] end}
-local Enum={RenderPriority={Camera={Value=200}},CameraType={Scriptable="Scriptable"}}
+local Enum={RenderPriority={Camera={Value=200},Character={Value=300}},CameraType={Scriptable="Scriptable"}}
 local require=function(name) return assert(modules[name]) end
 local camera={CameraType="Custom",CFrame=CFrame.new(120,12,200),Focus=CFrame.new(77,6,200),ViewportSize=vector(1920,1080,0),NearPlaneZ=-.5,FieldOfView=70}
 local workspace={CurrentCamera=camera}
@@ -100,7 +100,9 @@ local function rig(names,id)
  local list={}
  for _,name in names do
   local baseline=CFrame.new(0,0,0)
-  local joint={Name=name,Parent=true,Transform=baseline,C0={Rotation={Inverse=function() return CFrame.new(0,0,0) end}},baseline=baseline,IsA=function(_,class) return class=="Motor6D" end}
+  local joint={Name=name,Parent=true,Transform=baseline,C0=CFrame.new(0,0,0),baseline=baseline,IsA=function(_,class) return class=="Motor6D" end}
+  joint.C0.Rotation.Inverse=function() return CFrame.new(0,0,0) end
+  joint.originalC0=joint.C0
   table.insert(list,joint)
  end
  local actor={UserId=id,carrying="Scrap"}
@@ -114,16 +116,17 @@ services.Players.GetPlayers=function() return{r6,r15} end
 services.Players.PlayerAdded=playersAdded;services.Players.PlayerRemoving=playersRemoved
 player.Character=r6.Character
 CarryPose.start(player)
-preSimulation:Fire(.3)
-check(r6Joints[1].Transform.poseAlpha>.9 and r15Joints[1].Transform.poseAlpha>.9,"both native rig name sets lift their shoulders")
-for _,joint in r15Joints do check(joint.Transform.poseAlpha>.9,"R15 elbows/wrists blend into the carry pose") end
+bound(.3);preSimulation:Fire(.3)
+check(r6Joints[1].C0.poseAlpha>.9 and r15Joints[1].C0.poseAlpha>.9 and r6Joints[1].Transform==CFrame.identity,"both native rig name sets lift their shoulders")
+for _,joint in r15Joints do check(joint.C0.poseAlpha>.9,"R15 elbows/wrists blend into the carry pose") end
 preAnimation:Fire()
 check(r6Joints[1].Transform==r6Joints[1].baseline and r15Joints[1].Transform==r15Joints[1].baseline,"overrides restore before Animator evaluates the next frame")
-preSimulation:Fire(.016);playersRemoved:Fire(r6)
-check(r6Joints[1].Transform==r6Joints[1].baseline,"player removal releases any active joint override")
+check(r6Joints[1].C0~=r6Joints[1].originalC0 and r15Joints[1].C0~=r15Joints[1].originalC0,"Animator can reset Transform without lowering the held C0 pose")
+bound(.016);preSimulation:Fire(.016);playersRemoved:Fire(r6)
+check(r6Joints[1].Transform==r6Joints[1].baseline and r6Joints[1].C0==r6Joints[1].originalC0,"player removal releases any active joint override")
 r15.carrying=""
-for _=1,20 do preAnimation:Fire();preSimulation:Fire(.1) end
-check(r15Joints[1].Transform==r15Joints[1].baseline,"dropping fades back to normal animation without frozen arms")
+for _=1,20 do preAnimation:Fire();bound(.1);preSimulation:Fire(.1) end
+check(r15Joints[1].Transform==r15Joints[1].baseline and r15Joints[1].C0==r15Joints[1].originalC0,"dropping fades back to normal animation without frozen arms")
 print(string.format("Actual camera/pickup/carry-pose adapters passed %d simulated-boundary checks; Studio remains required",checks))
 '''
 fixture=ROOT/'build/presentation-integration.spec.luau'

@@ -179,7 +179,7 @@ function CarryService:deposit(player, base)
     local record = self.items.records[id]
     local name = record.definition.name
     if isBox then
-        self.economy:recoverRobot(player,record.rewardRarity)
+        self.economy:recoverRobot(player,record.rewardRarity,record.rewardVariant)
         self.items:consume(record)
         self:writeState(player)
         self:notify(player,"Delivery secured! Your mystery robot is unboxing on its platform...")

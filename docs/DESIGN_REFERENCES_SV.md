@@ -49,3 +49,8 @@ Epic, Legendary, Mythic och Celestial följer etablerat rarity-språk från loot
 ## Uppdatering v0.7
 
 Bärposen är procedurbyggd för R6/R15. Kvarn, sågblad och kartonger är egen geometri; tejp, fraktetikett och robotstämpel består av vanliga delar. Unboxing sker efter hemleverans på en ledig robotplattform. Inga Toolbox-modeller eller uppladdade animationer används. Gnistor använder Roblox medföljande partikeltextur. Modellbilderna är från Blender, inte från Roblox Studio.
+
+
+## Uppdatering v0.8
+
+De sex robotvarianterna är byggda av projektets egen geometri: Iron Bastion, Volt Runner, Drillmaster, Magnetron, Orbital Warden och Sunforge Sentinel. Ingen ny extern modell eller animation har kopierats. Rare-boxar är nu tidsstyrda serverevent med garanterad annonserad rarity. Bärposen har bytt till C0-styrning efter användarens Studio-bild som visade att v0.7:s Transform-metod inte lyfte armarna.

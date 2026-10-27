@@ -1,10 +1,10 @@
-# Testa v0.7 på Windows
+# Testa v0.8 på Windows
 
 Alla spelets egna texter är nu på **engelska**. Vi använder svenska för instruktioner och samtal.
 
 ## Öppna rätt platsfil
 
-1. Hämta **Catch-the-scrap-v0.7.rbxl** från `downloads` på GitHub-grenen `codex/carry-crusher-unboxing`. Klicka **Download raw file**, nedåtpilen vid filen.
+1. Hämta **Catch-the-scrap-v0.8.rbxl** från `downloads` på GitHub-grenen `codex/rare-box-events-robot-variants`. Klicka **Download raw file**, nedåtpilen vid filen.
 2. Stoppa pågående Play i Roblox Studio. Öppna den **nya** filen via **File → Open from File… / Ctrl+O**.
 3. Tryck **Play / F5**. Världen skapas vid spelstart; en tom editor före Play är normalt.
 4. Öppna **Output** via View/Window om du behöver se felmeddelanden.
@@ -19,37 +19,49 @@ Alla spelets egna texter är nu på **engelska**. Vi använder svenska för inst
 
 Skrotgården är **160 studs bred och 3 360 studs lång**, med sju områden och 32 upphämtningsplatser i varje. Områdena heter **Sorting Yard**, **Machine Graveyard**, **Reactor Wrecks**, **Turbine Foundry**, **Golden Furnace**, **Void Salvage** och **Starforge Ruins**. Föremål återkommer åtta sekunder efter inlämning. Släppta delar dupliceras inte.
 
-## Nytt i v0.7: bära över huvudet, kvarn och robotlådor
+## Nytt i v0.8: bärpose, sällsynta boxevent och robotvarianter
 
-När du plockar upp skrot eller en låda lyfter karaktären armarna och bär fyndet ovanför huvudet. Posen tonas mjukt in och ut och är gjord för både R6 och R15. Alla spelare i närheten ska se bärposen.
+Bärposen är ombyggd. Den håller axelledernas ursprungliga fästen i en höjd pose och neutraliserar armarnas vanliga animation under bärandet. Detta ersätter v0.7:s metod som inte fungerade för avataren på din bild. Posen tonas in och ut; händerna ska synas över huvudet. Prova först samma avatar och en Common Gear, sedan R6 och R15, gång/hopp, Q, inlämning och Reset Character. Molnmiljön kan inte verifiera din riktiga avatar i Studio.
 
-### Skrotkvarnen
+### Sällsynta robotboxar
 
-Lämna in vanligt skrot med **E / Deliver scrap or box**. Delen dras från bärpositionen in i kvarnen, krymper/krossas mellan motroterande blad och försvinner med gnistor och små metallbitar. Pressen rör sig medan kvarnen arbetar. Dekorationen kan inte skada eller knuffa spelare.
+- Det ligger inte längre 14 boxar på kartan vid start. **Första eventet kommer efter ungefär 60 sekunder**. En liten räknare högst upp visar tiden.
+- Därefter sker ett event ungefär **var 4–7 minut**, med högst två levande boxar inklusive sådana som bärs.
+- Alla får en stor annons, till exempel **“A Rare Robot Box has spawned!”**, med rätt område. Följ den färgade ljuspelaren i området.
+- En **Rare Robot Box innehåller alltid en Rare-robot**. Epic, Legendary, Mythic och Celestial-boxar kan också förekomma. Modellen är hemlig tills öppningen är klar.
+- Boxar som ligger obevakade på marken försvinner efter tre minuter. En buren box försvinner inte ur händerna. Om den släpps börjar marktimern om.
 
-### Hitta en färdig robot i en kartong
+### Öppna en box hemma
 
-1. Leta efter **Sealed Robot Box**. Det finns två lådor i varje område, totalt 14. De första ligger bredvid vägen i Common-området.
-2. Håll **E / Recover box** och spring hem. Lådan är ett separat fynd, inte en bunt skrotdelar. Innehållet är hemligt under transporten och ändras inte om lådan släpps.
-3. Du behöver **en ledig robotplattform**. Lämna in vid samma maskin med **E / Deliver scrap or box**.
-4. Lådan flyttas till den reserverade plattformen, skakar, tappar tejpen och öppnar luckorna med ljus och partiklar. Efter **3,8 sekunder** avslöjas den färdiga roboten, som gör en kort entré på sin plats.
-5. Roboten börjar då ge sin vanliga rarity-inkomst. Ingen delinsamling behövs för just denna robot. Påbörjade skrotprojekt påverkas inte.
+1. Håll **E / Recover box**, bär hem och lämna in med **E / Deliver scrap or box**.
+2. Du behöver **en ledig robotplattform**. Påbörjade skrotprojekt får vara kvar.
+3. Öppningen tar **5,6 sekunder**: laddning, skakningar, tejp som brister, luckor som öppnas, hologram som växlar, energiringar och kartongpaneler som flyger isär.
+4. Den riktiga roboten avslöjas med namn och inkomst. Först då börjar den tjäna pengar.
 
-Robotlådor mals aldrig i kvarnen. Full bas eller nekad inlämning behåller lådan i händerna. Två spelare kan inte ta samma låda. Efter godkänd leverans kommer en ny låda efter 35 sekunder; den får ett nytt serverbestämt innehåll.
+| Modell | Rare-inkomst |
+|---|---:|
+| Iron Bastion | $80/sek |
+| Volt Runner | $92/sek |
+| Drillmaster | $108/sek |
+| Magnetron | $120/sek |
+| Orbital Warden | $144/sek |
+| Sunforge Sentinel | $180/sek |
 
-### Testa den nya uppdateringen
+Modellerna har olika geometri: tung rustning, smal sprintkropp, borrarm, banddrift/magnet, svävande kropp eller solvingar/extra armar. Inkomsterna är testbalans. Samma modell upprepas inte i två på varandra följande serverboxar. Släpp/reset ändrar aldrig innehållet.
 
-- [ ] Prova först i en ny Play-session med lediga plattformar.
-- [ ] Plocka upp både en liten skrotdel och en kartong. Kontrollera händer och huvud med din avatar; testa R15 och R6 separat.
-- [ ] Spring, hoppa, släpp och plocka upp igen. Händerna ska återgå till normal animation efter släpp/inlämning och efter död/reset.
-- [ ] Lämna in alla typer av skrot och se att bladen roterar, pressen rör sig, delen försvinner i kvarnen och gnistor syns utan att kvarnen blockerar spelaren.
-- [ ] Bär hem en kartong och kontrollera hela öppningen och rätt inkomst efter avslöjandet.
-- [ ] Reservera sista plattformen med ett skrotprojekt och försök sedan lämna in en låda. Lådan ska behållas och det gamla projektet ska gå att slutföra.
-- [ ] Testa två spelare: båda ser bärposer och kvarneffekter, men bara ägaren får roboten. Annans bas nekar leveransen.
-- [ ] Lämna servern under en öppning. En ny ägare ska inte få den gamla spelarens robot.
-- [ ] Gå bort och tillbaka medan effekter körs; kontrollera streaming, mobilvy och låg grafiknivå.
+### Testa detta bygge
 
-[Förhandsbilder av kvarnen och kartongerna](DELIVERY_V07.md) är modellrenderingar, inte Studio-skärmbilder. Riktig avatarpassning, animationstiming och FPS behöver bekräftas i Studio/enhet.
+- [ ] Öppna den nya filen och kontrollera bärposen med avataren från bilden.
+- [ ] Vänta på första eventet i en ny Play-session och se att annons och ljuspelare stämmer med boxens rarity och område.
+- [ ] Testa med två spelare: båda får samma annons, en spelare kan ta boxen och bara ägaren får roboten efter leverans.
+- [ ] Anslut en andra spelare efter spawn: en kvarvarande obevakad box ska också annonseras för den spelaren.
+- [ ] Kontrollera hela öppningen, namnet, rätt modell och rätt inkomst enligt tabellen. Hologrammen under avläsningen är förhandsvisningar; bara slutresultatet är belöningen.
+- [ ] Släpp och plocka upp boxen igen. Innehållet och den annonserade rarityn ska inte ändras.
+- [ ] Full bas eller fel verkstad ska behålla boxen i händerna. Ett nytt event ska inte starta genom snabb inlämning eller mark-expiry.
+- [ ] Kontrollera att armarna återgår normalt efter Q, inlämning, död och reset, och att andra spelare ser bärposen.
+- [ ] Prova låg grafik, telefonläge, streaming och återkomst till basen. Inga gamla hologram, ringar eller armposer ska ligga kvar.
+
+[Bilder på de sex modellerna och eventdetaljer](RARE_EVENTS_V08.md). Bilden är en Blender-modellrendering, inte en Studio-skärmbild.
 
 ## Matchande delar och robotar
 

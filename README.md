@@ -1,20 +1,21 @@
 # Catch-the-scrap
 
-Current build **v0.7** adds overhead carrying poses, an animated scrap shredder
-and sealed cardboard boxes containing ready-made robots. Deliver scrap to watch
-it pulled into counter-rotating blades with a moving press, sparks and offcuts.
-Recover a box from the yard and carry it home: its flaps open on a reserved robot
-platform, followed by a mystery reveal and a complete income-producing robot.
+Current build **v0.8** replaces ordinary robot crates with scarce server events.
+Everyone sees “A Rare Robot Box has spawned!” (or its actual higher tier), plus
+its district. The announced tier is guaranteed; one of six distinct robot models
+is hidden inside. Rare event robots generate **$80–$180/sec**, depending on model.
 
-The seven-stage **160 × 3360-stud** yard, detailed hovering salvage, 64-stud walls,
-bounded orbit camera and Milo's upgrades are available. All custom game text is
-English. Four platforms per workshop; progress is session-only.
+The overhead carry pose now uses persistent shoulder joint offsets so ordinary
+Animator updates cannot lower the arms. Unboxing lasts 5.6 seconds, with charging,
+opening flaps, hologram scanning, energy arcs, flying carton panels and a named
+robot reveal. Four total robot slots; progress is session-only. All custom game
+text is English.
 
-[Download v0.7](downloads/Catch-the-scrap-v0.7.rbxl) · [Carry, crusher and unboxing details](docs/DELIVERY_V07.md) · [Windows test guide (Swedish)](docs/STUDIO_START_SV.md) · [Development](docs/DEVELOPMENT.md)
+[Download v0.8](downloads/Catch-the-scrap-v0.8.rbxl) · [Rare events and six robot variants](docs/RARE_EVENTS_V08.md) · [Windows test guide (Swedish)](docs/STUDIO_START_SV.md) · [Development](docs/DEVELOPMENT.md)
 
-Build with `python3 scripts/check.py`. Automated tests and asset renders cannot
-replace real Roblox Studio animation, camera and device-performance tests.
-The original design brief follows; current rules are documented above.
+Build with `python3 scripts/check.py`. Automated checks and geometry renders do
+not replace real Roblox Studio testing of avatars, effects and performance.
+The original design brief follows; current implementation rules are above.
 
 CATCH THE SCRAP — Project Brief / Game Design Document
 

@@ -9,6 +9,8 @@ local WorldService = require(script.Parent.Services.WorldService)
 local ItemService = require(script.Parent.Services.ItemService)
 local CarryService = require(script.Parent.Services.CarryService)
 local EconomyService = require(script.Parent.Services.EconomyService)
+local RareBoxService=require(script.Parent.Services.RareBoxService)
+local Catalog=require(Shared.RobotCatalog)
 local MechanicService = require(script.Parent.Services.MechanicService)
 
 local inventory = Inventory.new(Config.InteractionDistance)
@@ -24,13 +26,15 @@ carry.onCrush=function(base,record)
     base.folder:SetAttribute("CrusherActiveUntil",now+Config.Presentation.CrushSeconds)
     Remotes.Action:FireAllClients("Crusher",{serial=effectSerial,time=now,baseIndex=base.index,origin=base.origin,start=record.root.CFrame,rarity=record.definition.rarity})
 end
-economy.onRecovered=function(player,rarity)
+economy.onRecovered=function(player,rarity,variant)
     local recipe=Config.Robot.Recipes[rarity]
-    Remotes.Feedback:FireClient(player,string.format("UNBOXED: %s! +$%d per second.",recipe.Name,recipe.Income))
+    Remotes.Action:FireClient(player,"RobotUnboxed",{rarity=rarity,name=Catalog.get(variant).Name,income=Catalog.income(recipe.Income,variant)})
+    Remotes.Feedback:FireClient(player,string.format("UNBOXED: %s! +$%d per second.",Catalog.get(variant).Name,Catalog.income(recipe.Income,variant)))
 end
 items.onPickup = function(player, record) carry:pickup(player, record) end
 world.onDeposit = function(player, base) carry:deposit(player, base) end
 items:start()
+local rareBoxes=RareBoxService.new(world,items,inventory,Remotes.Action)
 
 -- Client requests contain intent only; prices, cash, effects, positions and
 -- ownership are resolved and validated on the server.
@@ -42,7 +46,7 @@ Remotes.Action.OnServerEvent:Connect(function(player, action, ...)
         mechanic:buy(player, ...)
     end
 end)
-Players.PlayerAdded:Connect(function(player) carry:addPlayer(player) end)
+Players.PlayerAdded:Connect(function(player) carry:addPlayer(player);rareBoxes:announceTo(player) end)
 Players.PlayerRemoving:Connect(function(player)
     mechanic:removePlayer(player)
     carry:removePlayer(player)

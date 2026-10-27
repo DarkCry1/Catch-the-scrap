@@ -77,10 +77,10 @@ function EconomyService:canRecoverRobot(player)
     return entry~=nil and entry.base~=nil and Economy.canRecoverRobot(entry.account,Config.Robot)
 end
 
-function EconomyService:recoverRobot(player,rarity)
+function EconomyService:recoverRobot(player,rarity,variant)
     local entry=self.players[player]
     self:settle(player,entry,os.clock())
-    local index=Economy.reserveRobot(entry.account,rarity,Config.Robot,workspace:GetServerTimeNow())
+    local index=Economy.reserveRobot(entry.account,rarity,Config.Robot,workspace:GetServerTimeNow(),variant)
     assert(index,"Recovered robot capacity must be checked before consuming a box")
     local project=entry.account.projects[index]
     self:publish(player,entry)
@@ -92,7 +92,7 @@ function EconomyService:recoverRobot(player,rarity)
         if not Economy.finishRecovery(entry.account,index,Config.Robot) then return end
         self:publish(player,entry)
         self.world:updateEconomy(entry.base,player,entry.account)
-        if self.onRecovered then self.onRecovered(player,rarity) end
+        if self.onRecovered then self.onRecovered(player,rarity,project.variant) end
     end)
     return index
 end

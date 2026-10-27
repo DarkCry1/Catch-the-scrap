@@ -2,8 +2,9 @@
 -- Each unfinished rarity project reserves one platform. Part types never mix.
 export type Recipe = { Parts: number, Income: number, Name: string, Color: {number} }
 export type Settings = { Slots: number, Recipes: {[string]: Recipe} }
-export type Project = { rarity: string, parts: number, complete: boolean, opening: boolean?, startedAt: number?, recovered: boolean? }
+export type Project = { rarity: string, parts: number, complete: boolean, opening: boolean?, startedAt: number?, recovered: boolean?, variant: string? }
 export type Account = { projects: {Project}, cash: number, fraction: number, upgrades: {[string]: number} }
+local Catalog=require("./RobotCatalog")
 local Economy = {}
 
 function Economy.new(): Account
@@ -41,9 +42,9 @@ function Economy.canRecoverRobot(account: Account, settings: Settings): boolean
     return #account.projects < settings.Slots
 end
 
-function Economy.reserveRobot(account: Account, rarity: string, settings: Settings, startedAt: number): number?
+function Economy.reserveRobot(account: Account, rarity: string, settings: Settings, startedAt: number,variant: string?): number?
     if not settings.Recipes[rarity] or not Economy.canRecoverRobot(account,settings) then return nil end
-    table.insert(account.projects,{rarity=rarity,parts=0,complete=false,opening=true,startedAt=startedAt,recovered=true})
+    table.insert(account.projects,{rarity=rarity,parts=0,complete=false,opening=true,startedAt=startedAt,recovered=true,variant=variant or "Bastion"})
     return #account.projects
 end
 
@@ -68,7 +69,7 @@ end
 function Economy.incomePerSecond(account: Account, settings: Settings): number
     local rate = 0
     for _, project in account.projects do
-        if project.complete then rate += settings.Recipes[project.rarity].Income end
+        if project.complete then rate += Catalog.income(settings.Recipes[project.rarity].Income,project.variant) end
     end
     return rate
 end

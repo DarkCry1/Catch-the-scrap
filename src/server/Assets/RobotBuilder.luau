@@ -3,24 +3,28 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CollectionService = game:GetService("CollectionService")
 local Config = require(ReplicatedStorage.CatchTheScrapShared.Config)
 local Blueprint = require(ReplicatedStorage.CatchTheScrapShared.RobotBlueprint)
+local Variants=require(ReplicatedStorage.CatchTheScrapShared.RobotVariants)
+local Catalog=require(ReplicatedStorage.CatchTheScrapShared.RobotCatalog)
 local RobotBuilder = {}
 
-function RobotBuilder.build(parent, origin, stage, complete, rarity, scale)
+function RobotBuilder.build(parent, origin, stage, complete, rarity, scale,variant)
     scale = scale or 1
     local recipe = Config.Robot.Recipes[rarity]
     local model = Instance.new("Model")
     model.ModelStreamingMode=Enum.ModelStreamingMode.Atomic
-    model.Name = if complete then recipe.Name else rarity.."RobotUnderConstruction"
+    model.Name = if variant then Catalog.get(variant).Name else if complete then recipe.Name else rarity.."RobotUnderConstruction"
     model:SetAttribute("Rarity",rarity)
+    model:SetAttribute("Variant",variant)
+    model:SetAttribute("Income",Catalog.income(recipe.Income,variant))
     model:SetAttribute("BuildStage", stage)
     model:SetAttribute("Complete", complete)
-    for _, definition in Blueprint do
+    for _, definition in (if variant then Variants.build(variant) else Blueprint) do
         local assembled = definition.step <= stage
         local object = Instance.new("Part")
         object.Name = definition.name
         object.Shape = Enum.PartType[definition.shape]
         object.Size = Vector3.new(unpack(definition.size)) * scale
-        object.CFrame = origin * CFrame.new(Vector3.new(unpack(definition.position)) * scale) * CFrame.Angles(0,math.rad(definition.yaw or 0),0)
+        object.CFrame = origin * CFrame.new(Vector3.new(unpack(definition.position)) * scale) * CFrame.Angles(math.rad(definition.pitch or 0),math.rad(definition.yaw or 0),math.rad(definition.roll or 0))
         object.Anchored = true
         object.CanCollide = false
         object.CanTouch = false

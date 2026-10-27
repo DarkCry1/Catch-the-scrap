@@ -17,7 +17,7 @@ function PickupBuilder.build(model,root,definition)
         part.Name=detail.name;part.Size=Vector3.new(unpack(detail.size))
         part.CFrame=root.CFrame*CFrame.new(unpack(detail.position))*CFrame.Angles(0,math.rad(detail.yaw),math.rad(detail.roll))
         part.Shape=Enum.PartType[detail.shape];part.Material=Enum.Material[detail.material]
-        part.Color=Color3.fromRGB(unpack(detail.color));part.Reflectance=if detail.material=="Metal" then .12 else 0
+        part.Color=Color3.fromRGB(unpack(if isBox and (detail.name=="PackingTape" or detail.name=="TopTape" or detail.name=="StampEye") then definition.color else detail.color));part.Reflectance=if detail.material=="Metal" then .12 else 0
         part.CastShadow=detail.material~="Neon" and math.min(unpack(detail.size))>.3
         part.CanCollide=false;part.CanTouch=false;part.CanQuery=false;part.Massless=true
         part.TopSurface=Enum.SurfaceType.Smooth;part.BottomSurface=Enum.SurfaceType.Smooth;part.Parent=model
@@ -35,6 +35,13 @@ function PickupBuilder.build(model,root,definition)
         local weld=Instance.new("WeldConstraint");weld.Part0=root;weld.Part1=marker;weld.Parent=marker
     end
     model:SetAttribute("IdlePhase",(root.Position.X*7+root.Position.Z*13)%628/100)
+    if isBox then
+        local a=Instance.new("Attachment");a.Name="BeaconFoot";a.Parent=root
+        local b=Instance.new("Attachment");b.Name="BeaconTop";b.Position=Vector3.new(0,24,0);b.Parent=root
+        local beam=Instance.new("Beam");beam.Name="EventBeacon";beam.Attachment0=a;beam.Attachment1=b
+        beam.Color=ColorSequence.new(Color3.fromRGB(unpack(definition.color)));beam.Width0=1.6;beam.Width1=.3
+        beam.FaceCamera=true;beam.LightEmission=1;beam.Transparency=NumberSequence.new(.55);beam.Parent=root
+    end
     CollectionService:AddTag(model,"AnimatedScrap")
 end
 return PickupBuilder

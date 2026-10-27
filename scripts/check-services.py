@@ -246,9 +246,9 @@ check(attrs3.UsedPlatforms==1 and attrs3.RobotCount==0 and attrs3.IncomePerSecon
 check(#deferred==1 and deferred[1].seconds==modules.Config.Crates.OpenSeconds,"unboxing completion waits for the presentation window")
 clock+=modules.Config.Crates.OpenSeconds
 local finish=deferred[1].fn;finish()
-check(attrs3.RobotCount==1 and attrs3.IncomePerSecond==45 and attrs3.Cash==0,"Epic robot starts producing only at reveal")
+check(attrs3.RobotCount==1 and attrs3.IncomePerSecond==180 and attrs3.Cash==0,"Epic robot starts producing only at reveal")
 finish();check(recovered==1 and attrs3.RobotCount==1,"duplicate callback cannot award twice")
-clock+=1;heartbeat();check(attrs3.Cash==45,"recovered robot produces normal passive income")
+clock+=1;heartbeat();check(attrs3.Cash==180,"recovered robot produces normal passive income")
 -- Reserve three more slots; the fifth box is preserved, including the case of an active partial build.
 for n=1,3 do holdBox("box-"..n);clock+=.3;carry:deposit(owner,boxBase) end
 holdBox("box-full");clock+=.3

@@ -44,8 +44,9 @@ function ScrapyardBuilder.build(world)
     end
     local definitions = {}
     for _, item in Config.Items do definitions[item.rarity]=item end
+    world.crateSpawns={}
     for _,crate in layout.crates do
-        table.insert(world.spawns,{position=Vector3.new(unpack(crate.position)),definition=CrateRules.definition(crate.stage),clearance=CrateBlueprint.clearance(),crateStage=crate.stage})
+        table.insert(world.crateSpawns,{position=Vector3.new(unpack(crate.position)),clearance=CrateBlueprint.clearance(),crateStage=crate.stage})
     end
     for _, spawn in layout.spawns do
         local definition=definitions[spawn.rarity]

@@ -18,7 +18,13 @@ local pickupVisuals={}
 for _,item in Config.Items do
     pickupVisuals[item.rarity]={parts=PickupBlueprint.build(item.rarity,item.color),clearance=PickupBlueprint.clearance(item.rarity,item.color)}
 end
+local variants={}
+local Catalog=require("../src/shared/RobotCatalog")
+for _,v in Catalog.List do
+    table.insert(variants,{id=v.Id,name=v.Name,income=Catalog.income(20,v.Id),parts=require("../src/shared/RobotVariants").build(v.Id)})
+end
 print(json({
+    variants=variants,
     crate=require("../src/shared/CrateBlueprint").build(),
     crusher=require("../src/shared/CrusherBlueprint").build(),
     stages=Config.Stages,

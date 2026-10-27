@@ -9,15 +9,15 @@ local Yard=require("../src/shared/ScrapyardBlueprint")
 local checks=0
 local function check(ok:boolean,message:string) checks+=1;assert(ok,message) end
 for stage=1,#Config.Stages do
-    local def=Crates.definition(stage)
-    check(def.kind=="RobotCrate" and def.rarity=="Mystery" and def.name=="Sealed Robot Box","public box identity hides reward tier")
+    local def=Crates.definition("Rare")
+    check(def.kind=="RobotCrate" and def.rarity=="Rare" and def.name=="Rare Robot Box","public box identity hides reward tier")
     for _,sample in {0,.69,.7,.89,.9,.989,.99,.999999} do
-        local result=Crates.roll(stage,sample)
+        local result=Crates.roll(sample)
         check(Config.Robot.Recipes[result]~=nil,"server roll always produces a configured robot")
     end
 end
-check(Crates.roll(1,.95)=="Uncommon" and Crates.roll(1,.999)=="Rare","early districts can hide surprise higher tiers")
-for _,sample in {-1,1,math.huge,0/0} do check(not pcall(function() Crates.roll(1,sample) end),"invalid random samples reject") end
+check(Crates.roll(.1)=="Rare" and Crates.roll(.999)=="Celestial","early districts can hide surprise higher tiers")
+for _,sample in {-1,1,math.huge,0/0} do check(not pcall(function() Crates.roll(sample) end),"invalid random samples reject") end
 local account=Economy.new()
 Economy.addPart(account,"Common",Config.Robot)
 local slot=Economy.reserveRobot(account,"Common",Config.Robot,10)
@@ -26,14 +26,14 @@ check(Economy.progress(account,"Common")==1 and Economy.robotCount(account)==0,"
 check(Economy.advance(account,3.8,Config.Robot)==0,"sealed/opening robots cannot earn early")
 check(Economy.finishRecovery(account,2,Config.Robot),"reserved box finishes exactly once")
 check(not Economy.finishRecovery(account,2,Config.Robot),"replayed completion has no effect")
-check(Economy.incomePerSecond(account,Config.Robot)==5 and Economy.progress(account,"Common")==1,"whole robot income and unfinished scrap coexist")
+check(Economy.incomePerSecond(account,Config.Robot)==20 and Economy.progress(account,"Common")==1,"whole robot income and unfinished scrap coexist")
 Economy.reserveRobot(account,"Epic",Config.Robot,11)
 Economy.reserveRobot(account,"Rare",Config.Robot,12)
 check(not Economy.canRecoverRobot(account,Config.Robot) and Economy.reserveRobot(account,"Legendary",Config.Robot,13)==nil,"all reserved/finished slots count toward crate capacity")
 check(Economy.canAddPart(account,"Common",Config.Robot),"full workshop can still finish existing scrap project")
 check(not Economy.canAddPart(account,"Rare",Config.Robot),"opening Rare crate is never treated as a scrap build")
 local layout=Yard.build(Config.TrackWidth,Config.ZoneLength,Config.TrackStart)
-check(#layout.crates==14,"two sealed robot boxes per district")
+check(#layout.crates==14,"two potential event positions per district")
 for _,crate in layout.crates do
     local x,z=crate.position[1],crate.position[3]
     check(math.abs(x)-2.2>=14,"box leaves haul road open")

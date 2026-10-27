@@ -1,4 +1,4 @@
-# Development: carrying, scrap processing and recovered robot boxes
+# Development: rare box events, robot variants and reliable overhead carrying
 
 All custom game UI, prompts, signs, feedback and leaderboard columns are English.
 Beginner-facing instructions in chat and STUDIO_START_SV.md remain Swedish.
@@ -12,7 +12,7 @@ Beginner-facing instructions in chat and STUDIO_START_SV.md remain Swedish.
 - Legendary: **15 Legendary parts**, $100/sec.
 - Mythic: **18 Mythic parts**, $225/sec.
 - Celestial: **20 Celestial parts**, $500/sec. New values are provisional balance.
-- Recovered robot boxes contain one whole robot and need one free platform. They reserve the slot immediately and complete after 3.8 seconds; partial scrap projects are not merged or consumed.
+- Recovered robot boxes contain one whole robot and need one free platform. They reserve the slot immediately and complete after 5.6 seconds; partial scrap projects are not merged or consumed.
 - Four platforms per player. The first part reserves a platform for its rarity.
   Matching parts continue the unfinished project. Capacity is checked before
   inventory consumption, and reserved projects can still finish when no slots
@@ -151,54 +151,66 @@ corners/entrance seams and ground clearance across motion phases; service tests
 complete and publish all new recipes. These cannot verify engine joint physics,
 camera feel, GUI clipping or GPU performance; test those in Windows Studio.
 
-## Carrying, shredder and recovery (v0.7)
+## Carrying, shredder and rare recovery (v0.8)
 
-CarryPose applies local R6/R15 shoulder/elbow/wrist Motor6D transforms for all
-nearby player characters. It restores the previous override before PreAnimation,
-then blends over Animator's current transform during PreSimulation. Character
-changes, dropping and player removal release the pose. ItemService positions the
-server carrier root above the head using actual head height and item clearance.
-All carry visuals remain noncolliding and massless.
+CarryPose uses per-character original Motor6D C0 values and shoulder-axis
+conjugation for R6/R15. Its blended C0 offsets survive Animator replacing
+Transform, which caused the v0.7 failure reported in a real Studio screenshot.
+PreSimulation and a Character+1 render binding neutralize arm Transform while
+carrying; PreAnimation restores baseline transforms for Animator evaluation.
+Dropping/removal/respawn restores the original C0 and current animation baseline.
+Nearby observers run the same controller locally. Unusual avatar packages still
+need an actual playtest. ItemService retains head-relative overhead item placement.
 
-CrusherBlueprint/CrusherBuilder replace the previous closed deposit surface
-with an open twin-shaft shredder and a press. Accepted scrap invokes the server
-onCrush hook before destroying the item; it broadcasts an authoritative Crusher
-packet on Action and sets CrusherActiveUntil on the owning workshop. WorkshopEffects
-handles local intake, scale/fade, offcuts, press travel, rotor speed, sparks and
-light, bounded by distance. One intake model per workshop replaces older visual
-intakes; all accepted deposits still count. Cosmetics never determine rewards.
+CrusherBlueprint/CrusherBuilder and WorkshopEffects handle accepted scrap
+intake, press, counter-rotating blades, sparks and offcuts. The server awards
+ordinary scrap at acceptance; presentation never authorizes any reward.
 
-CrateRules draws a result once on the server at spawn. Public crate attributes,
-label and geometry contain only Mystery/Sealed Robot Box; rewardRarity stays in
-the server record. Dropping/resetting does not reroll. Two boxes per district are
-placed in tested free spaces outside the haul road. Their respawn is 35 seconds.
-Stage-relative rolls: current tier 70%, previous tier 20%, next tier 9%, two tiers
-higher 1%, clamped to the available tier range. These are free found items.
+RareBoxService alone schedules robot boxes. ItemService.start spawns only normal
+scrap. The map exposes 14 candidate crate positions, not 14 live crates. Initial
+event delay is 60 seconds; subsequent intervals are 240–420 seconds. Live limit
+is two, including carried items. Unclaimed ground boxes expire after 180 seconds;
+held boxes refresh the ground deadline and cannot disappear from a player's hands.
+Consuming/expiring a crate does not schedule an ordinary item replacement.
 
-Inventory accepts a box only at its owner's workshop. Economy.reserveRobot
-creates an opening project that counts toward platform capacity, earns nothing
-and cannot receive scrap parts. The server delay verifies the same account,
-project and workshop owner before settling OLD income and completing the robot.
-Disconnects invalidate pending callbacks; character resets retain the account.
-finishRecovery is idempotent. No client request names a robot reward or amount.
+Event tiers: Rare 70%, Epic 22%, Legendary 6%, Mythic 1.8%, Celestial 0.2%.
+CrateRules.definition publishes the actual tier. ItemService stores the exact
+variant only in its server record. RobotCatalog selects among six weighted
+models, excluding the immediately previous server box's model. Dropping/resetting
+never rerolls. The actual tier promised by an event is always the reward tier.
 
-CrateBuilder displays the neutral box on its reserved platform. UnboxingEffects
-animates its real flaps/tape and a local light/burst; server completion replaces
-the box with the actual robot. Its short reveal uses the server RevealAt time.
-WorldPivot is not replicated: rotor pivots and RevealOrigin are sent as explicit
-attributes and applied locally before animation/scaling. Robot models stream
-atomically. Effects clean up on stream-out and skip stale reveals.
+Recovered projects reserve a free slot, preserve partial scrap builds and earn
+nothing during their 5.6-second opening. The completion timer checks the same
+account/project/base owner before settling old income and completing exactly
+once. Recovered income is round(recipe income × 4 × variant multiplier). Crafted
+robots use their original recipe income. RobotVariants supplies distinct model
+geometry used by RobotBuilder, unboxing holograms and the optional Blender gallery.
+Full robot name, Variant and Income are exposed only on the final built model.
 
-Action now also carries a server-to-client Crusher packet (serial, time,
-baseIndex, origin, start, rarity). Client-to-server requests remain only Drop and
-BuyUpgrade, with their existing argument validation. No new remotes or uploaded
-animation/audio/texture assets are required.
+RareBoxSpawned is broadcast on Action and includes event id, actual tier,
+district and time. NextRareBoxAt and two active-event snapshots are replicated as
+attributes so late clients can recover announcements. Clients deduplicate ids.
+RobotUnboxed is owner-only and carries the final model name and actual income.
+Client-to-server requests remain Drop/BuyUpgrade; clients cannot request spawns,
+rerolls or rewards. There are still only two remotes.
 
-Additional checks execute actual item attach/drop/respawn code with mocked
-geometry; verify sealed contents, replay safety, pickup callback identity and
-head-relative carry height. Carry-pose mocks test R6/R15 joint discovery, blends,
-pre-animation restoration and cleanup. Recovery service tests cover proximity,
-liveness, foreign bases, capacity, delayed income, duplicate callbacks and
-owner/disconnect changes. Shared geometry tests cover all crate positions and
-motion bounds. Engine physics, avatar fitting, visual feel and FPS still need
-Windows Studio playtests.
+UnboxingEffects renders charging, hinged flaps, cycling holograms, energy arcs,
+launched carton panels, a particle burst and the actual robot reveal. Preview
+holograms are cosmetic and do not choose the reward. All temporary effects are
+local, distance-limited and cleaned on stream-out. No camera takeover or uploaded
+assets are required. Model pivots are explicitly replicated through attributes.
+
+Checks execute the real schedule, item lifecycle, finance/recovery services and
+pose adapter across mocked engine boundaries. Tests cover event intervals,
+exact announced tiers, live caps, expiry, late-join state, no ordinary respawn,
+variant incomes, no immediate model repetition, separate reservations, duplicate
+callbacks and ownership/disconnect guards. Shoulder matrix tests cover R6/R15
+native axes, and adapter checks verify C0 survives Animator Transform restoration.
+These do not replace the real avatar/graphics/device tests listed in STUDIO_START_SV.md.
+
+Optional current model gallery:
+
+```sh
+luau scripts/export-blueprints.luau > build/blueprints.json
+blender -b -t 4 --python scripts/render-variants.py
+```

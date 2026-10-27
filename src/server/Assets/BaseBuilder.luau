@@ -8,6 +8,7 @@ local Economy = require(Shared.Economy)
 local FloatingText = require(script.Parent.FloatingText)
 local CrusherBuilder=require(script.Parent.CrusherBuilder)
 local CrateBuilder=require(script.Parent.CrateBuilder)
+local Catalog=require(Shared.RobotCatalog)
 local BaseBuilder = {}
 
 local function color(name, accent)
@@ -140,19 +141,19 @@ function BaseBuilder.update(base, displayName, account)
         if project then
             local recipe=Config.Robot.Recipes[project.rarity]
             if project.opening then
-                pad.model=CrateBuilder.display(base.robots,pad.origin*CFrame.new(0,2.35,0),project.startedAt)
-                pad.label.Text="MYSTERY ROBOT / UNBOXING...";pad.label.TextColor3=Color3.fromRGB(235,194,121)
+                pad.model=CrateBuilder.display(base.robots,pad.origin*CFrame.new(0,2.35,0),project.startedAt,project.rarity)
+                pad.label.Text=project.rarity:upper().." ROBOT / UNBOXING...";pad.label.TextColor3=Color3.fromRGB(235,194,121)
                 continue
             end
             local stage=if project.complete then 5 else math.floor(project.parts/recipe.Parts*5)
-            pad.model=RobotBuilder.build(base.robots,pad.origin,stage,project.complete,project.rarity)
+            pad.model=RobotBuilder.build(base.robots,pad.origin,stage,project.complete,project.rarity,nil,project.variant)
             if project.recovered then
                 pad.model.WorldPivot=pad.origin
                 pad.model:SetAttribute("RevealAt",project.startedAt+Config.Crates.OpenSeconds)
                 pad.model:SetAttribute("RevealOrigin",pad.origin)
                 game:GetService("CollectionService"):AddTag(pad.model,"RecoveredRobotReveal")
             end
-            pad.label.Text=if project.complete then project.rarity:upper().." / $"..recipe.Income.." PER SEC" else string.format("%s / %d OF %d",project.rarity:upper(),project.parts,recipe.Parts)
+            pad.label.Text=if project.complete then (if project.variant then Catalog.get(project.variant).Name:upper() else project.rarity:upper()).." / $"..Catalog.income(recipe.Income,project.variant).." PER SEC" else string.format("%s / %d OF %d",project.rarity:upper(),project.parts,recipe.Parts)
             pad.label.TextColor3=Color3.fromRGB(unpack(recipe.Color))
         else
             pad.label.Text="SLOT "..slot.." / AVAILABLE"

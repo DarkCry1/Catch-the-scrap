@@ -3,103 +3,128 @@ local CollectionService=game:GetService("CollectionService")
 local RunService=game:GetService("RunService")
 local Shared=game:GetService("ReplicatedStorage").CatchTheScrapShared
 local Config=require(Shared.Config)
-local Motion=require(Shared.WorkshopMotion)
+local Catalog=require(Shared.RobotCatalog)
+local Variants=require(Shared.RobotVariants)
 local Parts=require(script.Parent.EffectParts)
 local Effects={}
 function Effects.start(player)
     local entries,pending={},{}
     local folder=Instance.new("Folder");folder.Name="LocalUnboxingEffects";folder.Parent=workspace
-    local gold=Color3.fromRGB(255,209,112)
     local function near(position)
         local root=player.Character and player.Character:FindFirstChild("HumanoidRootPart")
         return root and (root.Position-position).Magnitude<Config.Presentation.Distance
     end
+    local function clearFx(entry)
+        if entry.fx then entry.fx:Destroy();entry.fx=nil;entry.rings=nil;entry.caption=nil;entry.ghost=nil;entry.ghostId=nil end
+        if entry.highlight then entry.highlight:Destroy();entry.highlight=nil end
+    end
     local function detach(model)
         pending[model]=nil
-        local entry=entries[model]
-        if not entry then return end
-        if entry.glow then entry.glow:Destroy() end
-        if entry.highlight then entry.highlight:Destroy() end
+        local entry=entries[model];if not entry then return end
+        clearFx(entry)
         if model.Parent then
             if entry.kind=="Robot" then model:ScaleTo(1);model:PivotTo(entry.origin)
             else for _,item in entry.parts do if item.part.Parent then item.part.CFrame=entry.origin*item.localFrame;item.part.LocalTransparencyModifier=0 end end end
         end
         entries[model]=nil
     end
-    local function box(model)
+    local function attach(model,kind)
         local token={};pending[model]=token
         task.spawn(function()
-            if not model:WaitForChild("BoxBottom",10) or pending[model]~=token then return end
+            if not model:WaitForChild(if kind=="Robot" then "Reactor" else "BoxBottom",10) or pending[model]~=token then return end
             pending[model]=nil
-            local origin=model:GetAttribute("Origin");local start=model:GetAttribute("StartedAt")
-            if not origin or not start then return end
-            local entry={kind="Box",model=model,origin=origin,start=start,parts={}}
-            for _,part in model:GetChildren() do
-                if part:IsA("BasePart") then table.insert(entry.parts,{part=part,localFrame=origin:ToObjectSpace(part.CFrame)}) end
-            end
+            local start=model:GetAttribute(if kind=="Robot" then "RevealAt" else "StartedAt")
+            if not start or (kind=="Robot" and workspace:GetServerTimeNow()-start>1.5) then return end
+            local origin=model:GetAttribute(if kind=="Robot" then "RevealOrigin" else "Origin") or model:GetPivot()
+            model.WorldPivot=origin
+            local entry={kind=kind,model=model,origin=origin,start=start,parts={}}
+            for _,part in model:GetChildren() do if part:IsA("BasePart") then table.insert(entry.parts,{part=part,localFrame=origin:ToObjectSpace(part.CFrame)}) end end
+            local recipe=Config.Robot.Recipes[model:GetAttribute("Rarity")]
+            entry.tint=Color3.fromRGB(unpack(if recipe then recipe.Color else {255,210,110}))
             entries[model]=entry
         end)
     end
-    local function robot(model)
-        local token={};pending[model]=token
-        task.spawn(function()
-            if not model:WaitForChild("Reactor",10) or pending[model]~=token then return end
-            pending[model]=nil
-            local started=model:GetAttribute("RevealAt")
-            if not started or workspace:GetServerTimeNow()-started>1.2 then return end
-            local origin=model:GetAttribute("RevealOrigin") or model:GetPivot()
-            model.WorldPivot=origin
-            entries[model]={kind="Robot",model=model,origin=origin,start=started}
-        end)
-    end
-    for tag,attach in {OpeningRobotBox=box,RecoveredRobotReveal=robot} do
-        CollectionService:GetInstanceAddedSignal(tag):Connect(attach)
+    for tag,kind in {OpeningRobotBox="Box",RecoveredRobotReveal="Robot"} do
+        local thisKind=kind
+        CollectionService:GetInstanceAddedSignal(tag):Connect(function(model) attach(model,thisKind) end)
         CollectionService:GetInstanceRemovedSignal(tag):Connect(detach)
-        for _,model in CollectionService:GetTagged(tag) do attach(model) end
+        for _,model in CollectionService:GetTagged(tag) do attach(model,thisKind) end
+    end
+    local function makeFx(entry)
+        local fx=Instance.new("Folder");fx.Name="UnboxingStage";fx.Parent=folder;entry.fx=fx;entry.rings={}
+        for ring=1,2 do
+            for segment=0,15 do
+                local part=Parts.new(fx,"EnergyArc",Vector3.new(.7,.09,.13),entry.origin,entry.tint,Enum.Material.Neon)
+                table.insert(entry.rings,{part=part,ring=ring,angle=segment*math.pi/8})
+            end
+        end
+        local anchor=Parts.new(fx,"ScanCaption",Vector3.one*.1,entry.origin*CFrame.new(0,5.5,0),entry.tint);anchor.Transparency=1
+        local board=Instance.new("BillboardGui");board.Size=UDim2.fromOffset(300,64);board.MaxDistance=95;board.Parent=anchor
+        local label=Instance.new("TextLabel");label.Size=UDim2.fromScale(1,1);label.BackgroundTransparency=1;label.TextColor3=entry.tint
+        label.Font=Enum.Font.GothamBlack;label.TextSize=21;label.TextStrokeTransparency=.25;label.TextWrapped=true;label.AutoLocalize=false;label.Parent=board;entry.caption=label
+        local light=Instance.new("PointLight");light.Color=entry.tint;light.Range=13;light.Shadows=false;light.Brightness=1.5;light.Parent=anchor;entry.light=light
+    end
+    local function ghost(entry,id)
+        if entry.ghostId==id then return end
+        if entry.ghost then entry.ghost:Destroy() end
+        local details={}
+        for _,d in Variants.build(id) do
+            table.insert(details,{name=d.name,size=d.size,position=d.position,shape=d.shape,yaw=d.yaw,roll=d.roll,color={entry.tint.R*255,entry.tint.G*255,entry.tint.B*255},material="Neon"})
+        end
+        entry.ghost=Parts.model("ScanningHologram",details,entry.origin,entry.fx);entry.ghost:ScaleTo(.25)
+        for _,part in entry.ghost:GetChildren() do part.Transparency=.6 end
+        entry.ghostId=id
     end
     RunService.RenderStepped:Connect(function()
         local now=workspace:GetServerTimeNow()
         for model,entry in entries do
             if not model.Parent then detach(model);continue end
-            local visible=near(entry.origin.Position)
-            local t=math.max(0,now-entry.start)
+            local visible=near(entry.origin.Position);local t=math.max(0,now-entry.start)
             if entry.kind=="Robot" then
-                if not visible or t>1.15 then detach(model);continue end
-                local recipe=Config.Robot.Recipes[model:GetAttribute("Rarity")]
-                if not entry.burst and recipe then
-                    entry.burst=true
-                    local tint=Color3.fromRGB(unpack(recipe.Color))
-                    Parts.burst(folder,entry.origin*CFrame.new(0,3.5,0),tint,32)
-                    local highlight=Instance.new("Highlight");highlight.Adornee=model;highlight.FillColor=tint;highlight.OutlineColor=tint
-                    highlight.FillTransparency=.75;highlight.OutlineTransparency=.1;highlight.DepthMode=Enum.HighlightDepthMode.Occluded
-                    highlight.Parent=folder;entry.highlight=highlight
+                if not visible or t>1.5 then detach(model);continue end
+                if not entry.burst then
+                    entry.burst=true;Parts.burst(folder,entry.origin*CFrame.new(0,3.5,0),entry.tint,45)
+                    local h=Instance.new("Highlight");h.Adornee=model;h.FillColor=entry.tint;h.OutlineColor=entry.tint;h.FillTransparency=.5;h.DepthMode=Enum.HighlightDepthMode.Occluded;h.Parent=folder;entry.highlight=h
                 end
-                local p=math.clamp(t/.8,0,1)
-                local scale=1+2.7*(p-1)^3+1.7*(p-1)^2
-                model:ScaleTo(math.max(.12,scale));model:PivotTo(entry.origin*CFrame.new(0,math.sin(p*math.pi)*1.3,0)*CFrame.Angles(0,(1-p)*math.rad(25),0))
-                if entry.highlight then entry.highlight.FillTransparency=.75+p*.25;entry.highlight.OutlineTransparency=.1+p*.9 end
+                local p=math.clamp(t/1.05,0,1);local scale=1+2.7*(p-1)^3+1.7*(p-1)^2
+                model:ScaleTo(math.max(.08,scale))
+                model:PivotTo(entry.origin*CFrame.new(0,math.sin(p*math.pi)*.9,0)*CFrame.Angles(0,(1-p)*math.pi*.8,0))
+                if entry.highlight then entry.highlight.FillTransparency=.5+p*.5;entry.highlight.OutlineTransparency=p end
             elseif visible then
-                local shake,angle,glow=Motion.unbox(t)
-                local frame=entry.origin*CFrame.Angles(shake,shake*.5,-shake)
+                if not entry.fx then makeFx(entry) end
+                local charge=math.clamp(t/1.4,0,1)
+                local shake=math.sin(t*(22+t*7))*.065*charge*(1-math.clamp((t-1.4)/.7,0,1))
+                local opening=math.clamp((t-1.45)/.85,0,1);local angle=(1-(1-opening)^3)*math.rad(135)
+                local launch=math.clamp((t-4.15)/1.1,0,1)
+                local frame=entry.origin*CFrame.new(0,math.sin(t*8)*.05*charge,0)*CFrame.Angles(shake,shake*.4,-shake)
                 for _,item in entry.parts do
-                    local part=item.part
-                    if part.Name=="FlapLeft" or part.Name=="FlapRight" then
-                        local side=if part.Name=="FlapLeft" then -1 else 1
-                        part.CFrame=frame*CFrame.new(side*2.08,2.08,0)*CFrame.Angles(0,0,-side*angle)*CFrame.new(-side*1.04,0,0)
+                    local part=item.part;local name=part.Name
+                    if name=="FlapLeft" or name=="FlapRight" then
+                        local side=if name=="FlapLeft" then -1 else 1
+                        part.CFrame=frame*CFrame.new(side*2.08,2.08,0)*CFrame.Angles(0,0,-side*angle)*CFrame.new(-side*(1.04+launch*3),launch*2,0)
                     else
-                        part.CFrame=frame*item.localFrame
-                        if part.Name=="TopTape" then part.LocalTransparencyModifier=if t>.85 then 1 else 0 end
+                        local p=item.localFrame.Position
+                        local outward=if math.abs(p.X)>math.abs(p.Z) then Vector3.new(if p.X<0 then -1 else 1,0,0) else Vector3.new(0,0,if p.Z<0 then -1 else 1)
+                        part.CFrame=frame*item.localFrame*CFrame.new(outward*launch*3+Vector3.new(0,math.sin(launch*math.pi)*1.8,0))*CFrame.Angles(launch*.5,launch*.4,0)
                     end
+                    part.LocalTransparencyModifier=if name=="TopTape" and t>1.25 then 1 else launch
                 end
-                if glow>0 then
-                    if not entry.glow then
-                        entry.glow=Parts.new(folder,"MysteryLight",Vector3.new(5,2.7,2.7),entry.origin*CFrame.new(0,1.7,0)*CFrame.Angles(0,0,math.pi/2),gold,Enum.Material.Neon,Enum.PartType.Cylinder)
-                        local light=Instance.new("PointLight");light.Color=gold;light.Range=12;light.Brightness=1.2;light.Shadows=false;light.Parent=entry.glow
-                    end
-                    entry.glow.Transparency=1-glow*.22
-                    if not entry.burst and angle>1.4 then entry.burst=true;Parts.burst(folder,entry.origin*CFrame.new(0,2,0),gold,18) end
+                for _,arc in entry.rings do
+                    local radius=(if arc.ring==1 then 2.8 else 1.8)+charge*.5+launch*4
+                    local a=arc.angle+t*(if arc.ring==1 then 1.7 else -2.3)
+                    local y=if arc.ring==1 then -1.95 else 1+math.sin(t*3)*.25
+                    arc.part.CFrame=entry.origin*CFrame.new(math.cos(a)*radius,y,math.sin(a)*radius)*CFrame.Angles(0,-a+math.pi/2,0)
+                    arc.part.Size=Vector3.new(radius*.34,.09,.13);arc.part.Transparency=.7-charge*.45+launch*.3
                 end
-            elseif entry.glow then entry.glow:Destroy();entry.glow=nil end
+                entry.light.Brightness=1+charge*2+math.sin(t*25)*.3
+                entry.caption.Text=if t<1.45 then "REACTOR CHARGING..." elseif t<4.15 then "IDENTIFYING ROBOT..." else "SIGNAL CONFIRMED!"
+                if t>=2 and t<4.15 then
+                    local index=math.floor((t-2)*4)%#Catalog.List+1
+                    ghost(entry,Catalog.List[index].Id)
+                    entry.ghost:PivotTo(entry.origin*CFrame.new(0,1.9+math.sin(t*5)*.2,0)*CFrame.Angles(0,t*2,0))
+                elseif entry.ghost then entry.ghost:Destroy();entry.ghost=nil;entry.ghostId=nil end
+                if t>4.15 and not entry.burst then entry.burst=true;Parts.burst(folder,entry.origin*CFrame.new(0,2.5,0),entry.tint,40) end
+            else clearFx(entry) end
         end
     end)
 end

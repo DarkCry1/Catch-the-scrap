@@ -3,7 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage.CatchTheScrapShared
 local Config = require(Shared.Config)
 local Inventory = require(Shared.Inventory)
-local CrateRules=require(Shared.CrateRules)
+local Catalog=require(Shared.RobotCatalog)
 local PickupBuilder=require(script.Parent.Parent.Assets.PickupBuilder)
 local ItemService = {}
 ItemService.__index = ItemService
@@ -69,7 +69,11 @@ function ItemService:spawn(slot)
     corner.CornerRadius = UDim.new(0, 8)
     corner.Parent = label
     local record = { id = id, model = model, root = root, prompt = prompt, billboard = billboard, definition = definition, slot = slot, clearance = slot.clearance, weld = nil }
-    if slot.crateStage then record.rewardRarity=CrateRules.roll(slot.crateStage,self.random:NextNumber()) end
+    if slot.crateStage then
+        record.rewardRarity=definition.rarity
+        record.rewardVariant=Catalog.roll(self.random:NextNumber(),self.lastVariant)
+        self.lastVariant=record.rewardVariant
+    end
     self.records[id] = record
     slot.current = record
     Inventory.registerItem(self.inventory, id)
@@ -87,6 +91,7 @@ end
 
 function ItemService:attach(record, characterRoot)
     for _,part in record.model.GroundHalo:GetChildren() do part.Transparency=1 end
+    local beacon=record.root:FindFirstChild("EventBeacon");if beacon then beacon.Enabled=false end
     record.prompt.Enabled = false
     record.billboard.Enabled = false
     local head=characterRoot.Parent:FindFirstChild("Head")
@@ -108,6 +113,7 @@ function ItemService:place(record, position)
     record.model:PivotTo(CFrame.new(position))
     record.model:SetAttribute("CarrierUserId", nil)
     for _,part in record.model.GroundHalo:GetChildren() do part.Transparency=.3 end
+    local beacon=record.root:FindFirstChild("EventBeacon");if beacon then beacon.Enabled=true end
     record.prompt.Enabled = true
     record.billboard.Enabled = true
 end
@@ -116,12 +122,20 @@ function ItemService:resetToSpawn(record)
     self:place(record, record.slot.position)
 end
 
+function ItemService:despawn(record)
+    local item=self.inventory.items[record.id]
+    if not item or item.owner~=nil then return false end
+    self.inventory.items[record.id]=nil;self.records[record.id]=nil;record.slot.current=nil;record.model:Destroy()
+    return true
+end
+
 function ItemService:consume(record)
     self.records[record.id] = nil
     record.slot.current = nil
     record.model:Destroy()
-    -- One replacement per successful deposit; dropped items are never duplicated.
-    task.delay(if record.definition.kind=="RobotCrate" then Config.Crates.RespawnSeconds else Config.RespawnSeconds, function()
+    if record.definition.kind=="RobotCrate" then return end
+    -- Scrap replacements only; rare boxes are scheduled by RareBoxService.
+    task.delay(Config.RespawnSeconds, function()
         if self.world.root.Parent and record.slot.current == nil then self:spawn(record.slot) end
     end)
 end
