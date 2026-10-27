@@ -11,6 +11,7 @@ local CarryService = require(script.Parent.Services.CarryService)
 local EconomyService = require(script.Parent.Services.EconomyService)
 local RareBoxService=require(script.Parent.Services.RareBoxService)
 local Catalog=require(Shared.RobotCatalog)
+local RobotIndexService=require(script.Parent.Services.RobotIndexService)
 local AdminService=require(script.Parent.Services.AdminService)
 local MechanicService = require(script.Parent.Services.MechanicService)
 
@@ -37,6 +38,8 @@ world.onDeposit = function(player, base) carry:deposit(player, base) end
 items:start()
 local rareBoxes=RareBoxService.new(world,items,inventory,Remotes.Action)
 local admin=AdminService.new(economy,carry,rareBoxes,Remotes.Action)
+local index=RobotIndexService.new(economy,carry,Remotes.Action)
+economy.onIndexChange=function(player) index:send(player) end
 
 -- Client requests contain intent only; prices, cash, effects, positions and
 -- ownership are resolved and validated on the server.
@@ -45,6 +48,9 @@ Remotes.Action.OnServerEvent:Connect(function(player, action, ...)
     if action == "Drop" and count == 0 then
         carry:drop(player)
     elseif action=="SetCarryStyle" and count==1 then carry:setStyle(player,...)
+    elseif action=="RequestIndex" and count==0 then index:request(player)
+    elseif action=="SelectBlueprint" and count==2 then index:select(player,...)
+    elseif action=="RetireRobot" and count==1 then index:retire(player,...)
     elseif action=="Admin" and count==2 then admin:run(player,...)
     elseif action == "BuyUpgrade" and count == 2 then
         mechanic:buy(player, ...)
@@ -52,6 +58,7 @@ Remotes.Action.OnServerEvent:Connect(function(player, action, ...)
 end)
 Players.PlayerAdded:Connect(function(player) carry:addPlayer(player);admin:addPlayer(player);rareBoxes:announceTo(player) end)
 Players.PlayerRemoving:Connect(function(player)
+    index:removePlayer(player)
     admin:removePlayer(player)
     mechanic:removePlayer(player)
     carry:removePlayer(player)

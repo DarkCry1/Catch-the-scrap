@@ -1,13 +1,14 @@
 --!strict
+local RarityStyle=require("./RarityStyle")
 -- Prototype values: adjust after Studio playtests, not final game balance.
 local recipes: {[string]: { Parts: number, Income: number, Name: string, Color: {number} }} = {
-            Common = { Parts = 5, Income = 5, Name = "Common Scrap Bot", Color = { 255, 181, 61 } },
-            Uncommon = { Parts = 7, Income = 10, Name = "Uncommon Scrap Bot", Color = { 80, 215, 145 } },
-            Rare = { Parts = 10, Income = 20, Name = "Rare Scrap Bot", Color = { 90, 160, 255 } },
-            Epic = { Parts = 12, Income = 45, Name = "Epic Turbine Bot", Color = { 183, 110, 255 } },
-            Legendary = { Parts = 15, Income = 100, Name = "Legendary Fusion Bot", Color = { 255, 199, 65 } },
-            Mythic = { Parts = 18, Income = 225, Name = "Mythic Singularity Bot", Color = { 255, 90, 138 } },
-            Celestial = { Parts = 20, Income = 500, Name = "Celestial Starforge Bot", Color = { 105, 245, 255 } },
+            Common = { Parts = 5, Income = 5, Name = "Common Scrap Bot", Color = RarityStyle.get("Common").Color },
+            Uncommon = { Parts = 7, Income = 10, Name = "Uncommon Scrap Bot", Color = RarityStyle.get("Uncommon").Color },
+            Rare = { Parts = 10, Income = 20, Name = "Rare Scrap Bot", Color = RarityStyle.get("Rare").Color },
+            Epic = { Parts = 12, Income = 45, Name = "Epic Turbine Bot", Color = RarityStyle.get("Epic").Color },
+            Legendary = { Parts = 15, Income = 100, Name = "Legendary Fusion Bot", Color = RarityStyle.get("Legendary").Color },
+            Mythic = { Parts = 18, Income = 225, Name = "Mythic Singularity Bot", Color = RarityStyle.get("Mythic").Color },
+            Celestial = { Parts = 20, Income = 500, Name = "Celestial Starforge Bot", Color = RarityStyle.get("Celestial").Color },
         }
 
 local upgrades: {[string]: { Label: string, Description: string, BaseCost: number, CostMultiplier: number, PerLevel: number, MaxLevel: number }} = {
@@ -36,7 +37,7 @@ return table.freeze({
     Strength = 30,
     MinimumSpeed = 7,
     PickupClearance = 2.2,
-    Visuals = { EffectDistance = 160, EffectInterval = 0.4, YardPartBudget = 3800, PickupDistance = 110, PickupInterval = 0.2, PickupPartBudget = 64 },
+    Visuals = { EffectDistance = 160, EffectInterval = 0.4, YardPartBudget = 3800, PickupDistance = 110, PickupInterval = 0.2, PickupPartBudget = 84, CratePartBudget = 112, CinematicBudget = 3 },
     InteractionDistance = 12,
     ActionCooldown = 0.2,
     RespawnSeconds = 8,
@@ -55,8 +56,8 @@ return table.freeze({
     },
     BaseAccents = { { 78, 222, 205 }, { 110, 169, 255 }, { 241, 157, 82 }, { 185, 150, 255 } },
     Items = {
-        { id = "gear", name = "Common Gear", rarity = "Common", weight = 10, color = { 165, 180, 195 }, shape = "Cylinder" },
-        { id = "motor", name = "Uncommon Motor", rarity = "Uncommon", weight = 35, color = { 70, 215, 150 }, shape = "Block" },
+        { id = "gear", name = "Common Gear", rarity = "Common", weight = 10, color = recipes.Common.Color, shape = "Cylinder" },
+        { id = "motor", name = "Uncommon Motor", rarity = "Uncommon", weight = 35, color = recipes.Uncommon.Color, shape = "Block" },
         { id = "core", name = "Rare Core", rarity = "Rare", weight = 65, color = recipes.Rare.Color, shape = "Ball" },
         { id = "turbine", name = "Epic Turbine", rarity = "Epic", weight = 85, color = recipes.Epic.Color, shape = "Cylinder" },
         { id = "fusion", name = "Legendary Fusion Cell", rarity = "Legendary", weight = 110, color = recipes.Legendary.Color, shape = "Cylinder" },

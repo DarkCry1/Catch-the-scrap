@@ -1,24 +1,26 @@
 # Catch-the-scrap
 
-Current build **v0.9** reworks carrying around native Roblox IK/Tool controls,
-with a body-mounted harness fallback and player-selectable carry methods. The
-large left HUD is replaced by a compact wallet and one contextual objective;
-recipes/statistics are available through Details.
+Current build **v1.0** adds a consistent seven-rarity palette, glowing Epic and
+Legendary loot, and animated Celestial rainbow frames. Higher-tier box openings
+have 3D energy rings, orbiting crystals, holograms and a skippable owner camera.
 
-Scrap now spawns at randomized safe positions in its rarity district, including
-initial spawns and replacements. Replacement positions are at least 12 studs
-from the previous position and avoid scenery, other ground items and event pads.
+The **Robot Index** (**I**, or **Details → Robot Index**) contains ten chassis in
+each rarity: **70 collection entries**. Rare and above have build-only,
+box-only and shared chassis. Select your next blueprint, finish a robot to
+discover it, and retire completed robots at your workshop to free a platform.
+Common/Uncommon offer all ten as builds because their tiers have no box events.
 
-A server-authorized **F4 / Admin** menu can set/add personal cash, set speed and
-strength, reset stat overrides, return home and trigger existing box events.
-Admin access includes UserId **11824623188**, local Studio tests and the personal
-experience owner. Ordinary clients cannot grant themselves access.
+[Download v1.0](downloads/Catch-the-scrap-v1.0.rbxl) · [Rarity and collection details](docs/RARITY_COLLECTION_V10.md) · [Windows guide (Swedish)](docs/STUDIO_START_SV.md) · [Development](docs/DEVELOPMENT.md)
 
-[Download v0.9](downloads/Catch-the-scrap-v0.9.rbxl) · [Rework details and HUD review](docs/REWORK_V09.md) · [Windows guide (Swedish)](docs/STUDIO_START_SV.md) · [Development](docs/DEVELOPMENT.md)
+Native IK/Tool/harness carrying, compact HUD, randomized scrap spawns and the
+server-authorized **F4 / Admin** menu from v0.9 remain available. Admin includes
+UserId **11824623188**, local Studio tests and the personal experience owner.
 
-All game text is English. Progress is session-only. Build/check with
-`python3 scripts/check.py`. Native avatar fitting and actual UI/performance still
-need Roblox Studio playtests. The original design brief follows below.
+All game text is English. **Cash, robots and discoveries last only for the
+current server visit.** Build/check with `python3 scripts/check.py`. Automated
+checks and both place builds pass; actual cinematic, avatar, GUI and device
+behavior still need Roblox Studio playtests. Gallery images are Blender asset
+renders, not Studio screenshots. The original design brief follows below.
 
 CATCH THE SCRAP — Project Brief / Game Design Document
 

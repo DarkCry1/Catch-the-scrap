@@ -1,4 +1,4 @@
-# Development: native carrying, admin tools, compact HUD and randomized salvage
+# Development: rarity cinematics and the robot collection
 
 All custom game UI, prompts, signs, feedback and leaderboard columns are English.
 Beginner-facing instructions in chat and STUDIO_START_SV.md remain Swedish.
@@ -12,7 +12,7 @@ Beginner-facing instructions in chat and STUDIO_START_SV.md remain Swedish.
 - Legendary: **15 Legendary parts**, $100/sec.
 - Mythic: **18 Mythic parts**, $225/sec.
 - Celestial: **20 Celestial parts**, $500/sec. New values are provisional balance.
-- Recovered robot boxes contain one whole robot and need one free platform. They reserve the slot immediately and complete after 5.6 seconds; partial scrap projects are not merged or consumed.
+- Recovered robot boxes contain one whole robot and need one free platform. They reserve the slot immediately and complete after the rarity-specific RarityStyle duration (Rare 5.6s through Celestial 10.5s); partial scrap projects are not merged or consumed.
 - Four platforms per player. The first part reserves a platform for its rarity.
   Matching parts continue the unfinished project. Capacity is checked before
   inventory consumption, and reserved projects can still finish when no slots
@@ -121,7 +121,7 @@ camera differ from Roblox. There are no imported Toolbox models or asset IDs.
 
 Workspace streams at min/target radii 128/256. The yard is Nonatomic; small pickups and the mechanic stand are Atomic. Workshop models use PersistentPerPlayer and are pinned/unpinned by WorldService on assignment/release. Client ambient tags activate lights/particles within Config.Visuals.EffectDistance and clean up on stream-out. Reactor tweens restart safely when instances return. These behaviors need actual Studio and device testing.
 
-PickupBlueprint supplies both welded visual geometry and ground clearance. Item roots are invisible, anchored when resting, and welded to the character when carried. PlacementRules rejects ground outside the new perimeter before placing a dropped item. Existing three recipes and mechanic upgrade prices are retained; four new recipes are configured in Config. All districts are open, with four total robot slots; replacement/recycling is not implemented.
+PickupBlueprint supplies both welded visual geometry and ground clearance. Item roots are invisible, anchored when resting, and welded to the character when carried. PlacementRules rejects ground outside the new perimeter before placing a dropped item. Existing three recipes and mechanic upgrade prices are retained; four new recipes are configured in Config. All districts are open, with four total robot slots. Completed robots can now be retired at the owner’s workshop through Robot Index; incomplete/opening projects cannot.
 
 ## Camera and salvage presentation (v0.6)
 
@@ -178,15 +178,17 @@ Consuming/expiring a crate does not schedule an ordinary item replacement.
 
 Event tiers: Rare 70%, Epic 22%, Legendary 6%, Mythic 1.8%, Celestial 0.2%.
 CrateRules.definition publishes the actual tier. ItemService stores the exact
-variant only in its server record. RobotCatalog selects among six weighted
-models, excluding the immediately previous server box's model. Dropping/resetting
+variant only in its server record. RobotCatalog now contains ten chassis; box rolls filter to the six box-eligible
+chassis for Rare and above, excluding the immediately previous server box's model. Dropping/resetting
 never rerolls. The actual tier promised by an event is always the reward tier.
 
 Recovered projects reserve a free slot, preserve partial scrap builds and earn
-nothing during their 5.6-second opening. The completion timer checks the same
-account/project/base owner before settling old income and completing exactly
-once. Recovered income is round(recipe income × 4 × variant multiplier). Crafted
-robots use their original recipe income. RobotVariants supplies distinct model
+nothing during their rarity-specific opening. The completion timer finds the
+same project object at its current slot and checks account/base ownership before
+settling old income and completing exactly once. Retiring another robot cannot
+strand a pending opening when array slots shift. Recovered income is
+round(recipe income × 4 × chassis multiplier); crafted income is
+round(recipe income × chassis multiplier). RobotVariants supplies distinct model
 geometry used by RobotBuilder, unboxing holograms and the optional Blender gallery.
 Full robot name, Variant and Income are exposed only on the final built model.
 
@@ -199,8 +201,9 @@ Client requests include Drop, BuyUpgrade, SetCarryStyle and the server-authorize
 UnboxingEffects renders charging, hinged flaps, cycling holograms, energy arcs,
 launched carton panels, a particle burst and the actual robot reveal. Preview
 holograms are cosmetic and do not choose the reward. All temporary effects are
-local, distance-limited and cleaned on stream-out. No camera takeover or uploaded
-assets are required. Model pivots are explicitly replicated through attributes.
+local, distance-limited and cleaned on stream-out. Epic and above use a
+skippable owner-only camera; other players keep their camera. No uploaded assets
+are required. Model pivots are explicitly replicated through attributes.
 
 Checks execute the real schedule, item lifecycle, finance/recovery services and
 native carry configuration across mocked engine boundaries. Tests cover event intervals,
@@ -260,3 +263,67 @@ strength reset, forced event parameters and occupancy. Randomized placement
 checks fill all seven zones, then repeatedly replace points while checking all
 obstacles and spacing. Actual ItemService tests verify replacement movement.
 The full place build still checks every embedded source and exactly two remotes.
+
+
+## Rarity, collection and cinematics (v1.0)
+
+`RarityStyle` owns colors, reveal duration and effect counts; Config recipes,
+items and stages use the same profiles. `RarityFrame` supplies 20 clockwise
+segments on the box face. `RarityDecor` marks Celestial frames, lights, particles,
+labels and assembled trim for client spectrum animation. `RarityWorldEffects`
+updates nearby colors at 30Hz using server time, with eight nearby aura lights
+and twelve emitters at most; boxes have priority. Disabling emitters leaves
+existing short-lived particles to expire. `RarityVisuals` animates Celestial UI
+stroke gradients and cleans destroyed widgets.
+
+The index has ten chassis × seven rarities. Rare+ sources are four Build-only,
+four Box-only and two Both; Common and Uncommon expose all ten as Build. Their
+absence from event pools therefore does not make collection entries impossible.
+`RobotCatalog.canAcquire` is checked server-side by selection, reservation and
+box rolls. A chassis chosen in the index is a blueprint, not an awarded robot.
+The first deposited part locks the chassis for that project. Only completed
+builds or completed openings add a rarity/chassis key to session discoveries.
+
+Accounts keep `selected`, `unlocked` and a monotonic `nextId`; every project has
+a stable id. RobotIndexService snapshots the owner’s 70 entries and four slots,
+without exposing a pending box’s chassis or income. Source-specific incomes
+are visible in the catalog, but the actual reserved result stays private.
+The first part, completion, reservation and reveal refresh the index; every
+intermediate part does not resend all 70 rows. Retiring settles accrued income
+before removing a completed project, requires a living owner near their deposit
+machine and gives no refund. It preserves discoveries and frees a platform.
+No DataStore or cross-session collection persistence is implemented.
+
+Additional Action requests (still two remotes):
+
+- `RequestIndex`: zero arguments; throttled owner snapshot.
+- `SelectBlueprint`, rarity, chassisId: validates recipe and Build source.
+- `RetireRobot`, stableProjectId: validates completed ownership and proximity.
+
+Index requests share a 0.35-second per-player throttle. Client confirmation is
+two taps within five seconds; the server does not trust that UI for eligibility.
+
+`UnboxingEffects` scales its presentation timeline to the server rarity duration.
+It uses only box-eligible holograms, up to six tilted segmented energy rings and
+20 orbiting crystals. At most three local box stages run; the owner can replace
+a spectator stage. `OpeningCamera` activates only for the owner’s Epic+ box,
+uses shared CameraBounds and scenery raycasts, and restores the prior camera,
+FOV, HUD and prompt state on skip, death, departure or completion. Skipping only
+ends the camera: server rewards and their timing are unchanged. Prompts are
+hidden during the camera/index to avoid overlapping purchase/deposit dialogs.
+The index provides a responsive 3D ViewportFrame, source filters via rarity
+cycling, and a platform tab. All collection/cinematic copy is English.
+
+Checks cover all 70 legitimate discoveries and retained retirements; source
+exclusions; pending result privacy; stale ids; shifted-slot reveal completion;
+aura budgets and cleanup; RGB phase changes; owner-only camera, skip, timeout,
+death and state restoration. Engine API boundaries are mocked. Roblox Studio
+must still verify native lighting/particles, streaming, GUI sizes, input and FPS.
+See [current test guide](STUDIO_START_SV.md) and [source table](RARITY_COLLECTION_V10.md).
+
+Additional optional geometry renders:
+
+```sh
+blender -b -t 4 --python scripts/render-rarities.py
+blender -b -t 4 --python scripts/render-variants.py
+```

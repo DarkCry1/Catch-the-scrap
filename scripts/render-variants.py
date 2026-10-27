@@ -51,19 +51,19 @@ def part(d):
 fontfile=Path('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf')
 font=bpy.data.fonts.load(str(fontfile)) if fontfile.is_file() else None
 for index,v in enumerate(DATA['variants']):
- cx=(index%3-1)*12;cz=(index//3-.5)*13
+ cx=(index%5-2)*12;cz=(index//5-.5)*13
  for d in v['parts']:
   p=d['position'];rgb=DATA['stages'][2]['Color'] if d['palette'] in ('amber','energy') else DATA['palette'][d['palette']]
   part(dict(d,position=[cx+p[0],p[1]+.3,cz+p[2]],color=rgb,material='Neon' if d['palette']=='energy' else 'Metal'))
  part(dict(name='DisplayPad',size=[10,.3,9],position=[cx,.1,cz],color=[29,39,47],material='DiamondPlate'))
  bpy.ops.object.text_add(location=(cx,cz+5.2,.32));o=bpy.context.object;o.rotation_euler=(0,0,math.pi)
- o.data.body=v['name'].upper()+' / $'+str(v['income'])+'/SEC';o.data.align_x='CENTER';o.data.size=.43
+ o.data.body=v['name'].upper()+' / '+v['source'].upper();o.data.align_x='CENTER';o.data.size=.43
  if font:o.data.font=font
  o.data.materials.append(material(DATA['stages'][2]['Color'],'Neon'))
-part(dict(name='Ground',size=[43,.5,33],position=[0,-.3,0],color=[67,77,83],material='Concrete'))
+part(dict(name='Ground',size=[67,.5,33],position=[0,-.3,0],color=[67,77,83],material='Concrete'))
 bpy.ops.object.light_add(type='SUN',location=(0,0,30));bpy.context.object.data.energy=2.8;bpy.context.object.rotation_euler=(.35,-.2,-.4)
 bpy.ops.object.light_add(type='AREA',location=(0,8,25));bpy.context.object.data.energy=3500;bpy.context.object.data.size=20
-bpy.ops.object.camera_add(location=(20,40,29));cam=bpy.context.object;cam.rotation_euler=(Vector((0,0,3.7))-cam.location).to_track_quat('-Z','Y').to_euler()
-cam.data.type='ORTHO';cam.data.ortho_scale=48;scene.camera=cam
-scene.render.resolution_x=1600;scene.render.resolution_y=1100;scene.cycles.samples=32
-scene.render.filepath=str(ROOT/'build/robot-variants-v0.8.png');bpy.ops.render.render(write_still=True)
+bpy.ops.object.camera_add(location=(22,55,34));cam=bpy.context.object;cam.rotation_euler=(Vector((0,0,3.7))-cam.location).to_track_quat('-Z','Y').to_euler()
+cam.data.type='ORTHO';cam.data.ortho_scale=74;scene.camera=cam
+scene.render.resolution_x=2200;scene.render.resolution_y=1300;scene.cycles.samples=32
+scene.render.filepath=str(ROOT/'build/robot-variants-v1.0.png');bpy.ops.render.render(write_still=True)

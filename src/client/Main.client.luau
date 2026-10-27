@@ -13,7 +13,7 @@ local remotes=ReplicatedStorage:WaitForChild("CatchTheScrapRemotes")
 local actionRemote=remotes:WaitForChild("Action")
 local feedbackRemote=remotes:WaitForChild("Feedback")
 -- Each presentation module starts independently so a cosmetic failure cannot stop the HUD.
-for _,name in {"CarryAssist","RobotAnimator","EnvironmentEffects","CameraGuard","PickupAnimator","RareBoxAnnouncements","WorkshopEffects","UnboxingEffects"} do
+for _,name in {"RarityWorldEffects","CarryAssist","RobotAnimator","EnvironmentEffects","CameraGuard","PickupAnimator","RareBoxAnnouncements","WorkshopEffects","UnboxingEffects"} do
     task.spawn(function()
         local ok,err=pcall(function() require(script.Parent:WaitForChild(name)).start(player,actionRemote) end)
         if not ok then warn("[Catch the Scrap] "..name..": "..tostring(err)) end
@@ -51,7 +51,7 @@ local hint=text(context,"Hint",12,Color3.fromRGB(165,191,206));hint.Position=UDi
 local progress=Instance.new("Frame");progress.Position=UDim2.new(0,14,1,-7);progress.Size=UDim2.new(1,-28,0,2);progress.BackgroundColor3=Color3.fromRGB(51,74,87);progress.BorderSizePixel=0;progress.Parent=context
 local fill=Instance.new("Frame");fill.Size=UDim2.fromScale(0,1);fill.BackgroundColor3=Color3.fromRGB(255,193,76);fill.BorderSizePixel=0;fill.Parent=progress
 local drop=button(context,"Drop",if UserInputService.KeyboardEnabled then "DROP [Q]" else "DROP",Color3.fromRGB(255,201,90));drop.AnchorPoint=Vector2.new(1,.5);drop.Position=UDim2.new(1,-12,.5,-2);drop.Size=UDim2.fromOffset(84,36)
-local details=card(gui,"DetailsPanel","ScrollingFrame");details.CanvasSize=UDim2.fromOffset(0,330);details.ScrollBarThickness=3;details.BorderSizePixel=0;details.ClipsDescendants=true;details.Position=UDim2.fromOffset(14,102);details.Size=UDim2.fromOffset(290,330);details.Visible=false
+local details=card(gui,"DetailsPanel","ScrollingFrame");details.CanvasSize=UDim2.fromOffset(0,370);details.ScrollBarThickness=3;details.BorderSizePixel=0;details.ClipsDescendants=true;details.Position=UDim2.fromOffset(14,102);details.Size=UDim2.fromOffset(290,330);details.Visible=false
 local detailsTitle=text(details,"Heading",15);detailsTitle.Text="YOUR WORKSHOP";detailsTitle.Font=Enum.Font.GothamBold;detailsTitle.Position=UDim2.fromOffset(14,10);detailsTitle.Size=UDim2.new(1,-60,0,24)
 local close=button(details,"Close","X");close.Position=UDim2.new(1,-42,0,9);close.Size=UDim2.fromOffset(28,26)
 local stats=text(details,"Stats",12,Color3.fromRGB(174,202,216));stats.Position=UDim2.fromOffset(14,42);stats.Size=UDim2.new(1,-28,0,35)
@@ -59,13 +59,13 @@ local rows={}
 for i,stage in Config.Stages do
     local l=text(details,stage.Rarity,12,Color3.fromRGB(unpack(stage.Color)));l.Position=UDim2.fromOffset(14,82+(i-1)*22);l.Size=UDim2.new(1,-28,0,20);rows[stage.Rarity]=l
 end
-local carryLabel=text(details,"CarryStyle",11);carryLabel.Text="CARRY METHOD";carryLabel.Position=UDim2.fromOffset(14,244);carryLabel.Size=UDim2.new(1,-28,0,18)
+local carryLabel=text(details,"CarryStyle",11);carryLabel.Text="CARRY METHOD";carryLabel.Position=UDim2.fromOffset(14,282);carryLabel.Size=UDim2.new(1,-28,0,18)
 local methods={}
 for i,style in {"Auto","Handheld","Harness"} do
-    local b=button(details,"Carry"..style,style:upper());b.Position=UDim2.fromOffset(14+(i-1)*89,267);b.Size=UDim2.fromOffset(82,28);methods[style]=b
+    local b=button(details,"Carry"..style,style:upper());b.Position=UDim2.fromOffset(14+(i-1)*89,305);b.Size=UDim2.fromOffset(82,28);methods[style]=b
     b.Activated:Connect(function() actionRemote:FireServer("SetCarryStyle",style) end)
 end
-local note=text(details,"SessionNote",10,Color3.fromRGB(143,166,181));note.Text="Progress lasts for this server visit.";note.Position=UDim2.fromOffset(14,303);note.Size=UDim2.new(1,-28,0,18)
+local note=text(details,"SessionNote",10,Color3.fromRGB(143,166,181));note.Text="Progress lasts for this server visit.";note.Position=UDim2.fromOffset(14,341);note.Size=UDim2.new(1,-28,0,18)
 local toast=card(gui,"Feedback");toast.AnchorPoint=Vector2.new(.5,1);toast.Position=UDim2.new(.5,0,1,-99);toast.Size=UDim2.fromOffset(420,48);toast.Visible=false
 local message=text(toast,"Message",13);message.Position=UDim2.fromOffset(12,4);message.Size=UDim2.new(1,-24,1,-8);message.TextXAlignment=Enum.TextXAlignment.Center;message.TextScaled=true
 local messageSize=Instance.new("UITextSizeConstraint");messageSize.MinTextSize=11;messageSize.MaxTextSize=13;messageSize.Parent=message
@@ -127,3 +127,8 @@ end)
 render()
 require(script.Parent:WaitForChild("MechanicShop")).start(player,actionRemote,gui)
 require(script.Parent:WaitForChild("AdminMenu")).start(player,actionRemote,gui)
+
+local openIndex=require(script.Parent:WaitForChild("RobotIndex")).start(player,actionRemote,gui)
+local indexButton=button(details,"RobotIndex","ROBOT INDEX [I]")
+indexButton.Position=UDim2.fromOffset(14,243);indexButton.Size=UDim2.new(1,-28,0,28)
+indexButton.Activated:Connect(function() details.Visible=false;openIndex() end)

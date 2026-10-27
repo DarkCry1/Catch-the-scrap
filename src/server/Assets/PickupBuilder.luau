@@ -3,6 +3,7 @@ local CollectionService=game:GetService("CollectionService")
 local Shared=game:GetService("ReplicatedStorage").CatchTheScrapShared
 local Blueprint=require(Shared.PickupBlueprint)
 local CrateBlueprint=require(Shared.CrateBlueprint)
+local Decor=require(script.Parent.RarityDecor)
 local PickupBuilder={}
 function PickupBuilder.build(model,root,definition)
     local pivot=Instance.new("Part")
@@ -12,7 +13,7 @@ function PickupBuilder.build(model,root,definition)
     joint.Name="IdleJoint";joint.Part0=root;joint.Part1=pivot;joint.Parent=root
     local isBox=definition.kind=="RobotCrate"
     local details=if isBox then CrateBlueprint.build() else Blueprint.build(definition.rarity,definition.color)
-    for _,detail in details do
+    for index,detail in details do
         local part=Instance.new("Part")
         part.Name=detail.name;part.Size=Vector3.new(unpack(detail.size))
         part.CFrame=root.CFrame*CFrame.new(unpack(detail.position))*CFrame.Angles(0,math.rad(detail.yaw),math.rad(detail.roll))
@@ -22,7 +23,10 @@ function PickupBuilder.build(model,root,definition)
         part.CanCollide=false;part.CanTouch=false;part.CanQuery=false;part.Massless=true
         part.TopSurface=Enum.SurfaceType.Smooth;part.BottomSurface=Enum.SurfaceType.Smooth;part.Parent=model
         local weld=Instance.new("WeldConstraint");weld.Part0=pivot;weld.Part1=part;weld.Parent=part
+        if definition.rarity=="Celestial" and (detail.material=="Neon" or detail.name=="OrbitalCage" or detail.name=="EnergyOrbit") then Decor.spectrum(part,index/#details) end
     end
+    if isBox then Decor.frame(model,root.CFrame,definition.rarity,pivot) end
+    Decor.aura(model,pivot,definition.rarity,isBox)
     local halo=Instance.new("Folder");halo.Name="GroundHalo";halo.Parent=model
     local height=-(if isBox then CrateBlueprint.clearance() else Blueprint.clearance(definition.rarity,definition.color))+.08
     for i=0,11 do
@@ -42,6 +46,7 @@ function PickupBuilder.build(model,root,definition)
         beam.Color=ColorSequence.new(Color3.fromRGB(unpack(definition.color)));beam.Width0=1.6;beam.Width1=.3
         beam.FaceCamera=true;beam.LightEmission=1;beam.Transparency=NumberSequence.new(.55);beam.Parent=root
     end
+    if definition.rarity=="Celestial" then local beam=root:FindFirstChild("EventBeacon");if beam then Decor.spectrum(beam,0) end end
     CollectionService:AddTag(model,"AnimatedScrap")
 end
 return PickupBuilder

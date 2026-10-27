@@ -21,10 +21,12 @@ end
 local variants={}
 local Catalog=require("../src/shared/RobotCatalog")
 for _,v in Catalog.List do
-    table.insert(variants,{id=v.Id,name=v.Name,income=Catalog.income(20,v.Id),parts=require("../src/shared/RobotVariants").build(v.Id)})
+    table.insert(variants,{id=v.Id,name=v.Name,source=Catalog.source("Rare",v.Id),income=Catalog.income(20,v.Id),parts=require("../src/shared/RobotVariants").build(v.Id)})
 end
 print(json({
     variants=variants,
+    rarityFrames=require("../src/shared/RarityFrame").build(),
+    rarityStyles={Epic=require("../src/shared/RarityStyle").get("Epic"),Legendary=require("../src/shared/RarityStyle").get("Legendary"),Celestial=require("../src/shared/RarityStyle").get("Celestial")},
     crate=require("../src/shared/CrateBlueprint").build(),
     crusher=require("../src/shared/CrusherBlueprint").build(),
     stages=Config.Stages,

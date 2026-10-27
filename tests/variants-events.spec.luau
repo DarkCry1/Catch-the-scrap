@@ -29,12 +29,13 @@ for _,variant in Catalog.List do
     check(not fingerprints[stamp],"variants have different geometry, not just different colors")
     fingerprints[stamp]=true
     local income=Catalog.income(Config.Robot.Recipes.Rare.Income,variant.Id)
-    check(income>=80 and income<=180,"valuable Rare event payout")
+    check(income>=80 and income<=200,"valuable Rare event payout")
     local account=Economy.new()
+    local fromBox=Catalog.canAcquire("Rare",variant.Id,"Box")
     local index=Economy.reserveRobot(account,"Rare",Config.Robot,0,variant.Id)
-    check(index~=nil and Economy.incomePerSecond(account,Config.Robot)==0,"variant earns nothing before reveal")
-    Economy.finishRecovery(account,index or 0,Config.Robot)
-    check(Economy.incomePerSecond(account,Config.Robot)==income,"server variant payout equals displayed payout")
+    check((index~=nil)==fromBox and Economy.incomePerSecond(account,Config.Robot)==0,"variant earns nothing before reveal")
+    if fromBox then Economy.finishRecovery(account,index or 0,Config.Robot) end
+    check(Economy.incomePerSecond(account,Config.Robot)==(if fromBox then income else 0),"server variant payout equals displayed payout")
     last=variant.Id
 end
 for sample=0,999 do

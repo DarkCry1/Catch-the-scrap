@@ -38,6 +38,7 @@ def main():
     run(shutil.which('python3') or 'python', 'scripts/check-services.py')
     run(shutil.which('python3') or 'python', 'scripts/check-presentation.py')
     run(shutil.which('python3') or 'python', 'scripts/check-items.py')
+    run(shutil.which('python3') or 'python', 'scripts/check-opening.py')
     # The standalone analyzer has no Roblox engine globals/types. The compiler
     # still checks every engine-facing script; runtime checks need Studio.
     run(tool('luau-compile'), '--null', *sources, *tests)

@@ -2,6 +2,7 @@
 local TweenService=game:GetService("TweenService")
 local RunService=game:GetService("RunService")
 local Config=require(game:GetService("ReplicatedStorage").CatchTheScrapShared.Config)
+local Visuals=require(script.Parent.RarityVisuals)
 local Announcements={}
 function Announcements.start(player,remote)
     local gui=Instance.new("ScreenGui");gui.Name="RareRobotEvents";gui.ResetOnSpawn=false;gui.DisplayOrder=30;gui.Parent=player:WaitForChild("PlayerGui")
@@ -24,14 +25,16 @@ function Announcements.start(player,remote)
     ticker.TextStrokeTransparency=.35
     local serial=0;local seen={}
     local function receive(channel,packet)
-        if (channel~="RareBoxSpawned" and channel~="RobotUnboxed") or type(packet)~="table" then return end
+        if (channel~="RareBoxSpawned" and channel~="RobotUnboxed" and channel~="RobotBuilt") or type(packet)~="table" then return end
         if channel=="RareBoxSpawned" and seen[packet.id] then return end
         local recipe=Config.Robot.Recipes[packet.rarity]
         if not recipe then return end
         if channel=="RareBoxSpawned" then seen[packet.id]=true end;serial+=1;local version=serial
+        Visuals.apply(banner,packet.rarity)
+        banner:SetAttribute("ActiveRarity",packet.rarity)
         local tint=Color3.fromRGB(unpack(recipe.Color));title.Text=(if packet.rarity=="Epic" then "An " else "A ")..packet.rarity.." Robot Box has spawned!"
         title.TextColor3=tint;stroke.Color=tint;sub.Text=string.format("STAGE %02d / %s — Find the beacon and bring it home!",packet.stage or 0,(packet.district or ""):upper())
-        if channel=="RobotUnboxed" then tag.Text="ROBOT RECOVERED!";title.Text=packet.name;sub.Text=packet.rarity:upper().." / +$"..packet.income.." PER SECOND" else tag.Text="SERVER EVENT / ROBOT RECOVERY" end
+        if channel=="RobotUnboxed" or channel=="RobotBuilt" then tag.Text=if channel=="RobotBuilt" then "ROBOT ASSEMBLED!" else "ROBOT RECOVERED!";title.Text=packet.name;sub.Text=packet.rarity:upper().." / +$"..packet.income.." PER SECOND" else tag.Text="SERVER EVENT / ROBOT RECOVERY" end
         banner.Visible=true;banner.GroupTransparency=0;banner.Position=UDim2.new(.5,0,0,-140);scale.Scale=.85
         TweenService:Create(banner,TweenInfo.new(.5,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Position=UDim2.new(.5,0,0,34)}):Play()
         TweenService:Create(scale,TweenInfo.new(.4,Enum.EasingStyle.Back),{Scale=1}):Play()
@@ -52,6 +55,9 @@ function Announcements.start(player,remote)
         remote:GetAttributeChangedSignal(prefix.."Id"):Connect(function() task.defer(current) end)
         current()
     end
+    RunService.RenderStepped:Connect(function()
+        if banner.Visible and banner:GetAttribute("ActiveRarity")=="Celestial" then title.TextColor3=Visuals.color("Celestial",os.clock()) end
+    end)
     local elapsed=0
     RunService.Heartbeat:Connect(function(dt)
         elapsed+=dt;if elapsed<1 then return end;elapsed=0

@@ -18,6 +18,8 @@ local modules={
     Economy=nativeRequire("../src/shared/Economy"),
     Inventory=nativeRequire("../src/shared/Inventory"),
     Movement=nativeRequire("../src/shared/Movement"),
+    RarityStyle=nativeRequire("../src/shared/RarityStyle"),
+    RobotCatalog=nativeRequire("../src/shared/RobotCatalog"),
     AdminRules=nativeRequire("../src/shared/AdminRules"),
     AdminConfig=nativeRequire("../src/server/AdminConfig"),
     PlacementRules=nativeRequire("../src/shared/PlacementRules"),
@@ -29,7 +31,7 @@ local deferred={}
 local task={delay=function(seconds,fn) table.insert(deferred,{seconds=seconds,fn=fn}) end}
 local workspace={GetServerTimeNow=function() return clock end}
 local services={
-    ReplicatedStorage={CatchTheScrapShared={Config="Config",Economy="Economy",Inventory="Inventory",Movement="Movement",PlacementRules="PlacementRules",UpgradeRules="UpgradeRules",AdminRules="AdminRules"}},
+    ReplicatedStorage={CatchTheScrapShared={Config="Config",RarityStyle="RarityStyle",RobotCatalog="RobotCatalog",Economy="Economy",Inventory="Inventory",Movement="Movement",PlacementRules="PlacementRules",UpgradeRules="UpgradeRules",AdminRules="AdminRules"}},
     RunService={IsStudio=function() return false end,Heartbeat={Connect=function(_,fn) heartbeat=fn;return{} end}},
     Players={},
 }
@@ -56,8 +58,8 @@ local Enum={CreatorType={User="User",Group="Group"},Font={GothamBold="GothamBold
 local require=function(name) assert(modules[name],name);return modules[name] end
 '''
 body=''
-for name in ('EconomyService','CarryService','FloatingText','MechanicService','RobotAnimator','EnvironmentEffects','AdminService'):
-    source=(ROOT/(f'src/client/{name}.luau' if name in ('RobotAnimator','EnvironmentEffects') else f"src/server/{'Assets' if name=='FloatingText' else 'Services'}/{name}.luau")).read_text()
+for name in ('EconomyService','CarryService','FloatingText','MechanicService','RobotAnimator','EnvironmentEffects','AdminService','RobotIndexService','RarityWorldEffects'):
+    source=(ROOT/(f'src/client/{name}.luau' if name in ('RobotAnimator','EnvironmentEffects','RarityWorldEffects') else f"src/server/{'Assets' if name=='FloatingText' else 'Services'}/{name}.luau")).read_text()
     body+=f'local {name}=(function()\n{source}\nend)()\n'
 checks=r'''
 local checks=0
@@ -227,7 +229,7 @@ carry.players[owner]={base=boxBase,counter={Value=0},lastAction=-math.huge}
 local recovered=0
 economy.onRecovered=function(p,rarity) check(p==owner and rarity=="Epic","server reveals its fixed contents");recovered+=1 end
 local function holdBox(id)
- items.records[id]={id=id,definition={kind="RobotCrate",rarity="Mystery",name="Sealed Robot Box",weight=32},rewardRarity="Epic"}
+ items.records[id]={id=id,definition={kind="RobotCrate",rarity="Mystery",name="Sealed Robot Box",weight=32},rewardRarity="Epic",rewardVariant="Orbital"}
  modules.Inventory.registerItem(inventory,id)
  assert(modules.Inventory.pickup(inventory,21,id,{alive=true,hasBase=true,distance=1}))
 end
@@ -246,12 +248,12 @@ clock+=.3;carry:deposit(owner,boxBase)
 check(consumed==deliveryBefore+1 and inventory.carrying[21]==nil,"delivering a box consumes it once")
 check(crushes==crushesBefore,"robot boxes bypass the shredder")
 check(attrs3.UsedPlatforms==1 and attrs3.RobotCount==0 and attrs3.IncomePerSecond==0,"whole robot platform reserved, not prematurely paid")
-check(#deferred==1 and deferred[1].seconds==modules.Config.Crates.OpenSeconds,"unboxing completion waits for the presentation window")
-clock+=modules.Config.Crates.OpenSeconds
+check(#deferred==1 and deferred[1].seconds==modules.RarityStyle.get("Epic").Duration,"unboxing completion waits for the presentation window")
+clock+=modules.RarityStyle.get("Epic").Duration
 local finish=deferred[1].fn;finish()
-check(attrs3.RobotCount==1 and attrs3.IncomePerSecond==180 and attrs3.Cash==0,"Epic robot starts producing only at reveal")
+check(attrs3.RobotCount==1 and attrs3.IncomePerSecond==324 and attrs3.Cash==0,"Epic robot starts producing only at reveal")
 finish();check(recovered==1 and attrs3.RobotCount==1,"duplicate callback cannot award twice")
-clock+=1;heartbeat();check(attrs3.Cash==180,"recovered robot produces normal passive income")
+clock+=1;heartbeat();check(attrs3.Cash==324,"recovered robot produces normal passive income")
 -- Reserve three more slots; the fifth box is preserved, including the case of an active partial build.
 for n=1,3 do holdBox("box-"..n);clock+=.3;carry:deposit(owner,boxBase) end
 holdBox("box-full");clock+=.3
@@ -313,6 +315,49 @@ clock+=1;admin:run(authorized,"AddCash",1)
 check(adminAttrs.Cash==1000000000,"addition cannot overflow administrative cash ceiling")
 admin:removePlayer(authorized);check(admin.last[authorized]==nil,"disconnect clears admin throttles")
 economy:removePlayer(authorized)
+-- Execute real collection selection, privacy and retirement through the service.
+local indexAttrs={}
+local collector={UserId=70,leaderstats={},SetAttribute=function(_,name,value) indexAttrs[name]=value end,GetAttribute=function(_,name) return indexAttrs[name] end}
+local collectorBase={owner=70,deposit={Position=0}}
+economy:addPlayer(collector,collectorBase)
+carry.players[collector]={base=collectorBase,counter={Value=0},lastAction=-math.huge}
+local indexPackets={}
+local indexRemote={FireClient=function(_,p,channel,packet) check(p==collector and channel=="RobotIndex","index state only sent to its owner");table.insert(indexPackets,packet) end}
+local index=RobotIndexService.new(economy,carry,indexRemote)
+economy.onIndexChange=function(p) index:send(p) end
+economy.onRecovered=nil
+clock+=1;index:request(collector)
+check(#indexPackets[#indexPackets].rows==70,"server collection has ten entries for all seven rarities")
+clock+=1;index:select(collector,"Rare","Orbital")
+check(economy.players[collector].account.selected.Rare==nil,"box-exclusive selection cannot mutate build choice")
+clock+=1;index:select(collector,"Rare","Driller")
+for _=1,10 do clock+=.1;economy:addPart(collector,"Rare") end
+local collectionAccount=economy.players[collector].account
+local builtId=collectionAccount.projects[1].id
+check(indexAttrs.IncomePerSecond==27 and collectionAccount.unlocked["Rare:Driller"],"selected crafted chassis grants the correct income and discovery")
+local properContext=carry.context
+function carry:context() return{alive=true,hasBase=true,distance=999} end
+clock+=1;index:retire(collector,builtId)
+check(#collectionAccount.projects==1,"retirement from far away is rejected")
+function carry:context() return{alive=true,hasBase=true,distance=0/0} end
+clock+=1;index:retire(collector,builtId)
+check(#collectionAccount.projects==1,"NaN distance cannot bypass workshop proximity")
+carry.context=properContext
+clock+=1;index:retire(collector,builtId)
+check(#collectionAccount.projects==0 and collectionAccount.unlocked["Rare:Driller"] and indexAttrs.IncomePerSecond==0,"retirement frees platform but preserves discovery")
+for _=1,5 do clock+=.1;economy:addPart(collector,"Common") end
+local commonId=collectionAccount.projects[1].id
+clock+=1;economy:recoverRobot(collector,"Epic","Orbital")
+local completeShifted=deferred[#deferred].fn
+local opening=indexPackets[#indexPackets].projects[2]
+check(opening.name:find("opening")~=nil and opening.variant==nil and opening.income==0,"pending box does not disclose its selected robot")
+clock+=1;index:retire(collector,commonId)
+check(#collectionAccount.projects==1 and collectionAccount.projects[1].opening,"retirement can shift an opening project without losing it")
+clock+=modules.RarityStyle.get("Epic").Duration;completeShifted()
+check(indexAttrs.RobotCount==1 and indexAttrs.IncomePerSecond==324 and collectionAccount.unlocked["Epic:Orbital"],"shifted opening still reveals and discovers the correct robot once")
+completeShifted();check(indexAttrs.RobotCount==1,"shifted callback replay never duplicates the robot")
+index:removePlayer(collector);economy:removePlayer(collector)
+economy.onIndexChange=nil
 -- Exercise actual client streaming cleanup and distance activation, not GPU output.
 RobotAnimator.start()
 local reactor={Transparency=.3,IsA=function(_,kind) return kind=="BasePart" end,Destroying={Connect=function() return{Disconnect=function() end} end}}
@@ -332,7 +377,27 @@ effectDistance=500;heartbeat(.5)
 check(not lamp.Enabled,"distant ambient light is disabled")
 removed.YardAmbientEffect(lamp);effectDistance=30;heartbeat(.5)
 check(not lamp.Enabled,"removed ambient instances are not reactivated")
-print(string.format("Actual deposit/income/mechanic services passed %d simulated-boundary checks; Studio remains required",checks))
+RarityWorldEffects.start(player)
+effectDistance=30
+local ambient={}
+for i=1,28 do
+ local kind=if i<=12 then "Light" else "ParticleEmitter"
+ local object={Parent={IsA=function(_,class) return class=="BasePart" end,Position={}},Enabled=false,IsA=function(_,class) return class==kind end,GetAttribute=function() return false end}
+ table.insert(ambient,object);added.RarityAmbient(object)
+end
+heartbeat(.25)
+local lightCount,emitterCount=0,0
+for i,o in ambient do if o.Enabled then if i<=12 then lightCount+=1 else emitterCount+=1 end end end
+check(lightCount==8 and emitterCount==12,"rarity effects enforce near-light and particle budgets")
+local rainbow={Parent=true,Position={},IsA=function(_,class) return class=="BasePart" end,GetAttribute=function() return .25 end}
+added.RaritySpectrum(rainbow);heartbeat(.25);local oldColor=rainbow.Color
+clock+=1;heartbeat(.25)
+check(rainbow.Color[1]~=oldColor[1] or rainbow.Color[2]~=oldColor[2] or rainbow.Color[3]~=oldColor[3],"actual spectrum adapter moves RGB colors over time")
+effectDistance=500;heartbeat(.25)
+for _,o in ambient do check(not o.Enabled,"distant rarity effects are disabled") end
+removed.RaritySpectrum(rainbow)
+for _,o in ambient do removed.RarityAmbient(o) end
+print(string.format("Actual deposit/income/index/admin/rarity services passed %d simulated-boundary checks; Studio remains required",checks))
 '''
 fixture=BUILD/'service-integration.spec.luau'
 fixture.write_text(header+body+checks)

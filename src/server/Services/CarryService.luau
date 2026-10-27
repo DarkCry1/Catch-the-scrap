@@ -6,6 +6,7 @@ local Config = require(Shared.Config)
 local Inventory = require(Shared.Inventory)
 local Movement = require(Shared.Movement)
 local PlacementRules = require(Shared.PlacementRules)
+local Catalog=require(Shared.RobotCatalog)
 local CarryService = {}
 CarryService.__index = CarryService
 
@@ -197,13 +198,13 @@ function CarryService:deposit(player, base)
         self:notify(player,"Delivery secured! Your mystery robot is unboxing on its platform...")
         return
     end
-    local built, scrap = self.economy:addPart(player, rarity)
+    local built, scrap,variant = self.economy:addPart(player, rarity)
     if self.onCrush then self.onCrush(base,record) end
     self.items:consume(record)
     self:writeState(player)
     if built then
         local recipe = Config.Robot.Recipes[rarity]
-        self:notify(player, recipe.Name .. " complete! +$" .. recipe.Income .. " per second.")
+        self:notify(player, Catalog.name(rarity,variant or "Bastion") .. " complete! +$" .. Catalog.income(recipe.Income,variant,"Build") .. " per second.")
     else
         self:notify(player, string.format("%s deposited! %s robot: %d / %d parts.", name, rarity, scrap, Config.Robot.Recipes[rarity].Parts))
     end

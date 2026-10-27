@@ -61,7 +61,7 @@ function Variants.build(id:string): {Part}
             add("IonJet",{.85,.8,.85},{s*2.5,2.6,-1},"energy","Ball")
         end
         add("CrownCore",{.8,.8,.8},{0,8.4,0},"energy","Ball")
-    else
+    elseif id=="Sunforge" then
         for _,s in {-1,1} do
             add("SolarWing",{1.6,3,.22},{s*3.6,5.4,-.7},"dark","Block",0,s*15)
             for bar=0,3 do add("SolarCircuit",{1.4,.13,.08},{s*3.6,4.4+bar*.6,-.53},"energy") end
@@ -70,6 +70,39 @@ function Variants.build(id:string): {Part}
             add("CrownProng",{.25,1.3,.3},{s*.7,8.3,0},"copper","Block",0,-s*20)
         end
         add("CrownLight",{.6,.6,.6},{0,8.9,0},"energy","Ball")
+    elseif id=="Weldsmith" then
+        add("WeldingMask",{2.65,2,.35},{0,6.85,1.1},"dark")
+        add("WeldingWindow",{1.65,.42,.12},{0,7.05,1.35},"energy")
+        for _,side in {-1,1} do
+            add("GasCylinder",{2.3,.9,.9},{side*.8,4.6,-1.5},"copper","Cylinder",0,90)
+            add("ForearmCuff",{1.35,1.15,1.4},{side*2.3,3.3,0},"steel")
+        end
+        add("PlasmaTorch",{.4,1.7,.4},{2.8,2.8,.8},"copper","Cylinder",0,90)
+        add("TorchTip",{.32,.65,.32},{2.8,3.85,.8},"energy","Ball")
+    elseif id=="Hauler" then
+        add("CargoRack",{4.6,2.7,1.8},{0,4.6,-1.6},"copper")
+        for _,side in {-1,1} do
+            add("LoaderFork",{.55,.4,3.8},{side*1.3,1.3,2.4},"steel")
+            add("ForkArm",{.55,2.3,.5},{side*1.3,2.4,1.2},"dark")
+            add("WarningBeacon",{.5,.6,.5},{side*2.1,6,-1.6},"energy","Ball")
+        end
+    elseif id=="Prism" then
+        add("PrismMantle",{4.5,.5,2.5},{0,5.6,0},"copper")
+        for i=0,5 do
+            local a=i*math.pi/3
+            add("FloatingCrystal",{.42,1.5,.42},{math.cos(a)*2.8,6.6+math.sin(a)*1.4,0},"energy","Block",0,math.deg(a)+35)
+        end
+        add("OracleEye",{1.2,.8,.4},{0,6.95,1.4},"energy","Ball")
+    else
+        add("ChronoCrest",{.3,1.5,1.6},{0,8.25,0},"copper")
+        for i=0,11 do
+            local a=i*math.pi/6
+            add("ClockDial",{.16,.42,.18},{math.cos(a)*1.05,4.6+math.sin(a)*1.05,1.65},"energy","Block",0,math.deg(a))
+        end
+        for _,side in {-1,1} do
+            add("TimeShield",{1.2,2.1,.4},{side*2.8,3.3,1},"copper")
+            add("ClockSpire",{.3,1.8,.3},{side*1.4,7.5,-.3},"steel","Block",0,-side*12)
+        end
     end
     return parts
 end

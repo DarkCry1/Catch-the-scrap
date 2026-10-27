@@ -9,6 +9,7 @@ local FloatingText = require(script.Parent.FloatingText)
 local CrusherBuilder=require(script.Parent.CrusherBuilder)
 local CrateBuilder=require(script.Parent.CrateBuilder)
 local Catalog=require(Shared.RobotCatalog)
+local Style=require(Shared.RarityStyle)
 local BaseBuilder = {}
 
 local function color(name, accent)
@@ -134,7 +135,7 @@ function BaseBuilder.update(base, displayName, account)
     base.progressLabel.Text = if #active>0 then "ASSEMBLY / "..table.concat(active," | ") else "DEPOSIT MATCHING PARTS\n7 RARITIES / 4 ROBOT PLATFORMS"
     for slot, pad in base.pads do
         local project = account.projects[slot]
-        local key = if project then project.rarity..":"..project.parts..(if project.opening then ":opening" else ":ready") else "empty"
+        local key = if project then tostring(project.id)..":"..tostring(project.variant)..":"..project.rarity..":"..project.parts..(if project.opening then ":opening" else ":ready") else "empty"
         if key == pad.key then continue end
         pad.key=key
         if pad.model then pad.model:Destroy(); pad.model=nil end
@@ -146,14 +147,15 @@ function BaseBuilder.update(base, displayName, account)
                 continue
             end
             local stage=if project.complete then 5 else math.floor(project.parts/recipe.Parts*5)
-            pad.model=RobotBuilder.build(base.robots,pad.origin,stage,project.complete,project.rarity,nil,project.variant)
+            pad.model=RobotBuilder.build(base.robots,pad.origin,stage,project.complete,project.rarity,nil,project.variant,if project.recovered then "Box" else "Build")
             if project.recovered then
                 pad.model.WorldPivot=pad.origin
-                pad.model:SetAttribute("RevealAt",project.startedAt+Config.Crates.OpenSeconds)
+                pad.model:SetAttribute("OwnerUserId",base.owner)
+                pad.model:SetAttribute("RevealAt",project.startedAt+Style.get(project.rarity).Duration)
                 pad.model:SetAttribute("RevealOrigin",pad.origin)
                 game:GetService("CollectionService"):AddTag(pad.model,"RecoveredRobotReveal")
             end
-            pad.label.Text=if project.complete then (if project.variant then Catalog.get(project.variant).Name:upper() else project.rarity:upper()).." / $"..Catalog.income(recipe.Income,project.variant).." PER SEC" else string.format("%s / %d OF %d",project.rarity:upper(),project.parts,recipe.Parts)
+            pad.label.Text=if project.complete then (if project.variant then Catalog.get(project.variant).Name:upper() else project.rarity:upper()).." / $"..Catalog.income(recipe.Income,project.variant,if project.recovered then "Box" else "Build").." PER SEC" else string.format("%s / %d OF %d",project.rarity:upper(),project.parts,recipe.Parts)
             pad.label.TextColor3=Color3.fromRGB(unpack(recipe.Color))
         else
             pad.label.Text="SLOT "..slot.." / AVAILABLE"

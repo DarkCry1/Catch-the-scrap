@@ -5,6 +5,7 @@ local Shared = ReplicatedStorage.CatchTheScrapShared
 local Config = require(Shared.Config)
 local Economy = require(Shared.Economy)
 local UpgradeRules = require(Shared.UpgradeRules)
+local Style=require(Shared.RarityStyle)
 local EconomyService = {}
 EconomyService.__index = EconomyService
 
@@ -69,7 +70,8 @@ function EconomyService:addPart(player, rarity)
     assert(ok, "Scrap capacity must be checked before consuming carried loot")
     self:publish(player, entry)
     self.world:updateEconomy(entry.base, player, entry.account)
-    return built, entry.account.projects[index].parts
+    if self.onIndexChange and (built or entry.account.projects[index].parts==1) then self.onIndexChange(player) end
+    return built, entry.account.projects[index].parts,entry.account.projects[index].variant
 end
 
 function EconomyService:canRecoverRobot(player)
@@ -85,13 +87,15 @@ function EconomyService:recoverRobot(player,rarity,variant)
     local project=entry.account.projects[index]
     self:publish(player,entry)
     self.world:updateEconomy(entry.base,player,entry.account)
-    task.delay(Config.Crates.OpenSeconds,function()
+    if self.onIndexChange then self.onIndexChange(player) end
+    task.delay(Style.get(rarity).Duration,function()
         -- A delayed reveal cannot award a departed account or a new workshop owner.
-        if self.players[player]~=entry or entry.base.owner~=player.UserId or entry.account.projects[index]~=project then return end
+        if self.players[player]~=entry or entry.base.owner~=player.UserId or not table.find(entry.account.projects,project) then return end
         self:settle(player,entry,os.clock())
-        if not Economy.finishRecovery(entry.account,index,Config.Robot) then return end
+        if not Economy.finishRecovery(entry.account,table.find(entry.account.projects,project),Config.Robot) then return end
         self:publish(player,entry)
         self.world:updateEconomy(entry.base,player,entry.account)
+        if self.onIndexChange then self.onIndexChange(player) end
         if self.onRecovered then self.onRecovered(player,rarity,project.variant) end
     end)
     return index

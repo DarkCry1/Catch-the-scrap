@@ -83,10 +83,11 @@ function ItemService:spawn(slot)
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 8)
     corner.Parent = label
+    if definition.rarity=="Celestial" then label:SetAttribute("HuePhase",0);game:GetService("CollectionService"):AddTag(label,"RaritySpectrum") end
     local record = { id = id, model = model, root = root, prompt = prompt, billboard = billboard, definition = definition, slot = slot, clearance = slot.clearance, weld = nil }
     if slot.crateStage then
         record.rewardRarity=definition.rarity
-        record.rewardVariant=Catalog.roll(self.random:NextNumber(),self.lastVariant)
+        record.rewardVariant=Catalog.roll(self.random:NextNumber(),self.lastVariant,definition.rarity)
         self.lastVariant=record.rewardVariant
     end
     self.records[id] = record
