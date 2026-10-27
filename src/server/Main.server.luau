@@ -11,6 +11,7 @@ local CarryService = require(script.Parent.Services.CarryService)
 local EconomyService = require(script.Parent.Services.EconomyService)
 local RareBoxService=require(script.Parent.Services.RareBoxService)
 local Catalog=require(Shared.RobotCatalog)
+local AdminService=require(script.Parent.Services.AdminService)
 local MechanicService = require(script.Parent.Services.MechanicService)
 
 local inventory = Inventory.new(Config.InteractionDistance)
@@ -35,6 +36,7 @@ items.onPickup = function(player, record) carry:pickup(player, record) end
 world.onDeposit = function(player, base) carry:deposit(player, base) end
 items:start()
 local rareBoxes=RareBoxService.new(world,items,inventory,Remotes.Action)
+local admin=AdminService.new(economy,carry,rareBoxes,Remotes.Action)
 
 -- Client requests contain intent only; prices, cash, effects, positions and
 -- ownership are resolved and validated on the server.
@@ -42,15 +44,18 @@ Remotes.Action.OnServerEvent:Connect(function(player, action, ...)
     local count = select("#", ...)
     if action == "Drop" and count == 0 then
         carry:drop(player)
+    elseif action=="SetCarryStyle" and count==1 then carry:setStyle(player,...)
+    elseif action=="Admin" and count==2 then admin:run(player,...)
     elseif action == "BuyUpgrade" and count == 2 then
         mechanic:buy(player, ...)
     end
 end)
-Players.PlayerAdded:Connect(function(player) carry:addPlayer(player);rareBoxes:announceTo(player) end)
+Players.PlayerAdded:Connect(function(player) carry:addPlayer(player);admin:addPlayer(player);rareBoxes:announceTo(player) end)
 Players.PlayerRemoving:Connect(function(player)
+    admin:removePlayer(player)
     mechanic:removePlayer(player)
     carry:removePlayer(player)
 end)
-for _, player in Players:GetPlayers() do carry:addPlayer(player) end
+for _, player in Players:GetPlayers() do carry:addPlayer(player);admin:addPlayer(player) end
 Remotes:SetAttribute("Ready", true)
 print("[Catch the Scrap] Scrapyard ready. Recover sealed robot boxes, shred scrap and visit Milo for upgrades. Session-only progress.")

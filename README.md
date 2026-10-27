@@ -1,21 +1,24 @@
 # Catch-the-scrap
 
-Current build **v0.8** replaces ordinary robot crates with scarce server events.
-Everyone sees “A Rare Robot Box has spawned!” (or its actual higher tier), plus
-its district. The announced tier is guaranteed; one of six distinct robot models
-is hidden inside. Rare event robots generate **$80–$180/sec**, depending on model.
+Current build **v0.9** reworks carrying around native Roblox IK/Tool controls,
+with a body-mounted harness fallback and player-selectable carry methods. The
+large left HUD is replaced by a compact wallet and one contextual objective;
+recipes/statistics are available through Details.
 
-The overhead carry pose now uses persistent shoulder joint offsets so ordinary
-Animator updates cannot lower the arms. Unboxing lasts 5.6 seconds, with charging,
-opening flaps, hologram scanning, energy arcs, flying carton panels and a named
-robot reveal. Four total robot slots; progress is session-only. All custom game
-text is English.
+Scrap now spawns at randomized safe positions in its rarity district, including
+initial spawns and replacements. Replacement positions are at least 12 studs
+from the previous position and avoid scenery, other ground items and event pads.
 
-[Download v0.8](downloads/Catch-the-scrap-v0.8.rbxl) · [Rare events and six robot variants](docs/RARE_EVENTS_V08.md) · [Windows test guide (Swedish)](docs/STUDIO_START_SV.md) · [Development](docs/DEVELOPMENT.md)
+A server-authorized **F4 / Admin** menu can set/add personal cash, set speed and
+strength, reset stat overrides, return home and trigger existing box events.
+Admin access includes UserId **11824623188**, local Studio tests and the personal
+experience owner. Ordinary clients cannot grant themselves access.
 
-Build with `python3 scripts/check.py`. Automated checks and geometry renders do
-not replace real Roblox Studio testing of avatars, effects and performance.
-The original design brief follows; current implementation rules are above.
+[Download v0.9](downloads/Catch-the-scrap-v0.9.rbxl) · [Rework details and HUD review](docs/REWORK_V09.md) · [Windows guide (Swedish)](docs/STUDIO_START_SV.md) · [Development](docs/DEVELOPMENT.md)
+
+All game text is English. Progress is session-only. Build/check with
+`python3 scripts/check.py`. Native avatar fitting and actual UI/performance still
+need Roblox Studio playtests. The original design brief follows below.
 
 CATCH THE SCRAP — Project Brief / Game Design Document
 

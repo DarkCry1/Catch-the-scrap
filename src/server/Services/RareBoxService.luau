@@ -37,6 +37,38 @@ function Service:announceTo(player)
         if state and state.owner==nil then self.remote:FireClient(player,"RareBoxSpawned",entry.packet) end
     end
 end
+function Service:spawnEvent(now,forcedTier,forcedStage)
+    if #self.live>=Config.Crates.LiveLimit then return false,"Two boxes are already active. Deliver one first." end
+    local slots={}
+    for _,slot in self.world.crateSpawns do
+        local free=true
+        for id,record in self.items.records do
+            local state=self.inventory.items[id]
+            if state and state.owner==nil then
+                local p=record.root.CFrame.Position
+                if (p.X-slot.position.X)^2+(p.Z-slot.position.Z)^2<36 then free=false;break end
+            end
+        end
+        if free and not slot.current and (if forcedStage then slot.crateStage==forcedStage else self.serial>0 or slot.crateStage<=3) then table.insert(slots,slot) end
+    end
+    if #slots==0 then return false,"No free event position in that stage." end
+    local slot=slots[self.random:NextInteger(1,#slots)]
+    local rarity=forcedTier or Rules.roll(self.random:NextNumber())
+    slot.definition=Rules.definition(rarity)
+    local record=self.items:spawn(slot)
+    self.serial+=1
+    local stage=Config.Stages[slot.crateStage]
+    local packet={id=record.id,rarity=rarity,stage=slot.crateStage,district=stage.Name,time=now}
+    table.insert(self.live,{record=record,expires=now+Config.Crates.GroundLifetime,packet=packet})
+    self.remote:FireAllClients("RareBoxSpawned",packet)
+    self.nextAt=now+self.random:NextInteger(Config.Crates.SpawnMin,Config.Crates.SpawnMax)
+    return true,rarity.." box spawned in "..stage.Name.."."
+end
+function Service:forceSpawn(rarity,stage)
+    local ok,message=self:spawnEvent(workspace:GetServerTimeNow(),rarity,stage)
+    self:publish();return ok,message
+end
+
 function Service:tick(now)
     for i=#self.live,1,-1 do
         local entry=self.live[i]
@@ -45,24 +77,7 @@ function Service:tick(now)
         elseif state and state.owner~=nil then entry.expires=now+Config.Crates.GroundLifetime
         elseif now>=entry.expires and self.items:despawn(entry.record) then table.remove(self.live,i) end
     end
-    if now>=self.nextAt and #self.live<Config.Crates.LiveLimit then
-        local slots={}
-        for _,slot in self.world.crateSpawns do
-            if not slot.current and (self.serial>0 or slot.crateStage<=3) then table.insert(slots,slot) end
-        end
-        if #slots>0 then
-            local slot=slots[self.random:NextInteger(1,#slots)]
-            local rarity=Rules.roll(self.random:NextNumber())
-            slot.definition=Rules.definition(rarity)
-            local record=self.items:spawn(slot)
-            self.serial+=1
-            local stage=Config.Stages[slot.crateStage]
-            local packet={id=record.id,rarity=rarity,stage=slot.crateStage,district=stage.Name,time=now}
-            table.insert(self.live,{record=record,expires=now+Config.Crates.GroundLifetime,packet=packet})
-            self.remote:FireAllClients("RareBoxSpawned",packet)
-            self.nextAt=now+self.random:NextInteger(Config.Crates.SpawnMin,Config.Crates.SpawnMax)
-        end
-    end
+    if now>=self.nextAt then self:spawnEvent(now,nil,nil) end
     self:publish()
 end
 return Service

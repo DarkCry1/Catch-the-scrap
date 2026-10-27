@@ -35,7 +35,7 @@ function EconomyService:publish(player, entry)
     attribute(player, "SpeedLevel", account.upgrades.Speed)
     attribute(player, "StrengthLevel", account.upgrades.Strength)
     attribute(player, "BaseSpeed", UpgradeRules.value("Speed", account.upgrades.Speed, Config))
-    attribute(player, "CarryStrength", UpgradeRules.value("Strength", account.upgrades.Strength, Config))
+    attribute(player, "CarryStrength", entry.adminStrength or UpgradeRules.value("Strength", account.upgrades.Strength, Config))
     entry.cashCounter.Value = account.cash
 end
 
@@ -104,7 +104,7 @@ end
 function EconomyService:movementStats(player)
     local entry = self.players[player]
     if not entry then return Config.BaseSpeed, Config.Strength end
-    return UpgradeRules.value("Speed",entry.account.upgrades.Speed,Config), UpgradeRules.value("Strength",entry.account.upgrades.Strength,Config)
+    return UpgradeRules.value("Speed",entry.account.upgrades.Speed,Config), entry.adminStrength or UpgradeRules.value("Strength",entry.account.upgrades.Strength,Config)
 end
 
 return EconomyService

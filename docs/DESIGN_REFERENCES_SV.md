@@ -54,3 +54,8 @@ Bärposen är procedurbyggd för R6/R15. Kvarn, sågblad och kartonger är egen 
 ## Uppdatering v0.8
 
 De sex robotvarianterna är byggda av projektets egen geometri: Iron Bastion, Volt Runner, Drillmaster, Magnetron, Orbital Warden och Sunforge Sentinel. Ingen ny extern modell eller animation har kopierats. Rare-boxar är nu tidsstyrda serverevent med garanterad annonserad rarity. Bärposen har bytt till C0-styrning efter användarens Studio-bild som visade att v0.7:s Transform-metod inte lyfte armarna.
+
+
+## Uppdatering v0.9
+
+Bärandet är ersatt med Roblox inbyggda IKControl/Tool och en fysisk lastsele som alternativ. Den gamla C0-klientposen används inte längre. HUD:en är en egen kompakt layout med detaljer på begäran. Förhandsbilden visar layouten, inte ett genomfört Studio-test. Inga externa spelmodeller eller animationer har importerats.

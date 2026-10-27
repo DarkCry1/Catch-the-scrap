@@ -1,4 +1,4 @@
-# Development: rare box events, robot variants and reliable overhead carrying
+# Development: native carrying, admin tools, compact HUD and randomized salvage
 
 All custom game UI, prompts, signs, feedback and leaderboard columns are English.
 Beginner-facing instructions in chat and STUDIO_START_SV.md remain Swedish.
@@ -153,14 +153,17 @@ camera feel, GUI clipping or GPU performance; test those in Windows Studio.
 
 ## Carrying, shredder and rare recovery (v0.8)
 
-CarryPose uses per-character original Motor6D C0 values and shoulder-axis
-conjugation for R6/R15. Its blended C0 offsets survive Animator replacing
-Transform, which caused the v0.7 failure reported in a real Studio screenshot.
-PreSimulation and a Character+1 render binding neutralize arm Transform while
-carrying; PreAnimation restores baseline transforms for Animator evaluation.
-Dropping/removal/respawn restores the original C0 and current animation baseline.
-Nearby observers run the same controller locally. Unusual avatar packages still
-need an actual playtest. ItemService retains head-relative overhead item placement.
+CarryRig is server-built and uses native IKControl chains for R15. It welds
+cargo in front of the torso and targets both hands at grip attachments. R6 and
+explicit Handheld mode use a real Roblox Tool/Handle and native tool hold.
+A body-mounted harness is the independent fallback. Style switching clears old
+IK, attachments, welds, tools and straps before attaching again. Drop, deposit,
+reset and death use the same cleanup. No uploaded animation is needed.
+CarryAssist observes actual client hand/target distance; an Auto IK pose that
+fails for two seconds requests Handheld once for that item. Players can also
+choose any mode in Details. The old CarryPose module and its synthetic pose math
+check were removed after real Studio reports showed the approach did not work.
+Native solver/tool fitting still needs actual avatar tests.
 
 CrusherBlueprint/CrusherBuilder and WorkshopEffects handle accepted scrap
 intake, press, counter-rotating blades, sparks and offcuts. The server awards
@@ -191,8 +194,7 @@ RareBoxSpawned is broadcast on Action and includes event id, actual tier,
 district and time. NextRareBoxAt and two active-event snapshots are replicated as
 attributes so late clients can recover announcements. Clients deduplicate ids.
 RobotUnboxed is owner-only and carries the final model name and actual income.
-Client-to-server requests remain Drop/BuyUpgrade; clients cannot request spawns,
-rerolls or rewards. There are still only two remotes.
+Client requests include Drop, BuyUpgrade, SetCarryStyle and the server-authorized Admin command. Only admins may request existing events or personal stat/cash changes. There are still only two remotes.
 
 UnboxingEffects renders charging, hinged flaps, cycling holograms, energy arcs,
 launched carton panels, a particle burst and the actual robot reveal. Preview
@@ -201,11 +203,10 @@ local, distance-limited and cleaned on stream-out. No camera takeover or uploade
 assets are required. Model pivots are explicitly replicated through attributes.
 
 Checks execute the real schedule, item lifecycle, finance/recovery services and
-pose adapter across mocked engine boundaries. Tests cover event intervals,
+native carry configuration across mocked engine boundaries. Tests cover event intervals,
 exact announced tiers, live caps, expiry, late-join state, no ordinary respawn,
 variant incomes, no immediate model repetition, separate reservations, duplicate
-callbacks and ownership/disconnect guards. Shoulder matrix tests cover R6/R15
-native axes, and adapter checks verify C0 survives Animator Transform restoration.
+callbacks and ownership/disconnect guards. Native carry tests cover R15 IK, R6 Tool hold, forced engine failures, harness fallback and cleanup. CarryAssist tests distinguish successful hand targeting from failed poses.
 These do not replace the real avatar/graphics/device tests listed in STUDIO_START_SV.md.
 
 Optional current model gallery:
@@ -214,3 +215,48 @@ Optional current model gallery:
 luau scripts/export-blueprints.luau > build/blueprints.json
 blender -b -t 4 --python scripts/render-variants.py
 ```
+
+## Admin and randomized spawns (v0.9)
+
+AdminConfig is server-only. It includes UserId 11824623188 and local Studio
+allowance; personal experience creators are also allowed. AdminService rechecks
+the server policy on every request and never trusts CanAdmin or any client role
+attribute. Commands are whitelisted and finite/integer/range checked, with a
+0.3-second per-player throttle. Cash changes settle accrued income and publish
+server account/leaderstats together. Test speed overrides the final carry speed;
+strength overrides feed normal weight calculations. ResetStats clears both.
+No player target or arbitrary instance/path is accepted. Event requests specify
+only a configured rarity and stage and retain normal occupancy/live-box limits.
+
+Action client protocol additions:
+
+- SetCarryStyle(style): exactly one argument, Auto/Handheld/Harness only.
+- Admin(command, value): exactly two arguments. SetCash/AddCash accept integer
+  0..1e9; SetSpeed 7..120; SetStrength 1..10000; ResetStats/Home require 0;
+  Event requires a validated {rarity, stage} table.
+- AdminResult is a server-to-client status packet. CanAdmin controls UI visibility
+  only; authorization uses server configuration each time.
+
+SpawnRules converts collidable scenery near pickup height to conservative X/Z
+obstacles. Reserved crate pads are added. ItemService samples initial and
+replacement points in the original rarity district, outside the 28-stud road,
+with geometry margins, seven-stud ground-item spacing and 12-stud distance from
+that slot's previous spawn. A validated grid fallback is used only if random
+attempts fail; if no point exists, spawning retries later rather than using an
+unsafe point. Ground positions use per-model clearance. Held items are excluded
+from ground occupancy. RareBoxService separately avoids occupied candidate pads.
+Drops do not reroll or duplicate items; replacement timers remain authoritative.
+
+Main.client now starts cosmetic modules independently and keeps the compact HUD
+available even if a presentation module errors. The always-visible wallet is
+244x82 rather than 400x306. A contextual bottom card shows one current goal;
+Details contains the seven recipes, stats and carry choices and scrolls on small
+screens. Typed admin inputs do not trigger Q/Drop. Mechanic modal integration
+continues hiding/restoring the main HUD. UI layout review images are not engine
+screenshots.
+
+Tests cover authorization/forged attributes, cash mutations, throttles, speed/
+strength reset, forced event parameters and occupancy. Randomized placement
+checks fill all seven zones, then repeatedly replace points while checking all
+obstacles and spacing. Actual ItemService tests verify replacement movement.
+The full place build still checks every embedded source and exactly two remotes.

@@ -53,7 +53,8 @@ function CarryService:writeState(player)
     local definition = if record then record.definition else nil
     local weight = if definition then definition.weight else 0
     local baseSpeed, strength = self.economy:movementStats(player)
-    local speed = Movement.effectiveSpeed(baseSpeed, strength, weight, Config.MinimumSpeed)
+    local speed = entry.adminSpeed or Movement.effectiveSpeed(baseSpeed, strength, weight, Config.MinimumSpeed)
+    if not record then player:SetAttribute("CarryMode","") end
     player:SetAttribute("CarriedName", if definition then definition.name else "")
     player:SetAttribute("CarriedKind", if definition then definition.kind or "Scrap" else "")
     player:SetAttribute("CarriedRarity", if definition then definition.rarity else "")
@@ -129,10 +130,21 @@ function CarryService:pickup(player, record)
     if not ok then self:notify(player, reason); return end
     -- All validation and ownership changes above are synchronous.
     local _, root = actor(player)
-    self.items:attach(record, root)
+    local mode=self.items:attach(record, root,self.players[player].style or "Auto")
+    player:SetAttribute("CarryMode",mode or "")
     record.model:SetAttribute("CarrierUserId", player.UserId)
     self:writeState(player)
     self:notify(player, "Carrying " .. record.definition.name .. ". Return to Workshop " .. self.players[player].base.index .. "!")
+end
+
+function CarryService:setStyle(player,style)
+    if style~="Auto" and style~="Handheld" and style~="Harness" then return end
+    if not self:allowAction(player) then return end
+    local entry=self.players[player];entry.style=style
+    player:SetAttribute("CarryStyle",style)
+    local id=self.inventory.carrying[player.UserId]
+    local _,root=actor(player)
+    if id and root then player:SetAttribute("CarryMode",self.items:attach(self.items.records[id],root,style)) end
 end
 
 function CarryService:drop(player)

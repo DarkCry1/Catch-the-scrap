@@ -1,10 +1,10 @@
-# Testa v0.8 på Windows
+# Testa v0.9 på Windows
 
 Alla spelets egna texter är nu på **engelska**. Vi använder svenska för instruktioner och samtal.
 
 ## Öppna rätt platsfil
 
-1. Hämta **Catch-the-scrap-v0.8.rbxl** från `downloads` på GitHub-grenen `codex/rare-box-events-robot-variants`. Klicka **Download raw file**, nedåtpilen vid filen.
+1. Hämta **Catch-the-scrap-v0.9.rbxl** från `downloads` på GitHub-grenen `codex/carry-admin-hud-random-spawns`. Klicka **Download raw file**, nedåtpilen vid filen.
 2. Stoppa pågående Play i Roblox Studio. Öppna den **nya** filen via **File → Open from File… / Ctrl+O**.
 3. Tryck **Play / F5**. Världen skapas vid spelstart; en tom editor före Play är normalt.
 4. Öppna **Output** via View/Window om du behöver se felmeddelanden.
@@ -17,11 +17,55 @@ Alla spelets egna texter är nu på **engelska**. Vi använder svenska för inst
 - **Q / Drop [Q]** släpper delen och återställer farten.
 - Gå in i din egen verkstad och håll **E / Deliver scrap or box** vid maskinen med orange kant.
 
-Skrotgården är **160 studs bred och 3 360 studs lång**, med sju områden och 32 upphämtningsplatser i varje. Områdena heter **Sorting Yard**, **Machine Graveyard**, **Reactor Wrecks**, **Turbine Foundry**, **Golden Furnace**, **Void Salvage** och **Starforge Ruins**. Föremål återkommer åtta sekunder efter inlämning. Släppta delar dupliceras inte.
+Skrotgården är **160 studs bred och 3 360 studs lång**, med sju områden och 32 upphämtningsplatser i varje. Områdena heter **Sorting Yard**, **Machine Graveyard**, **Reactor Wrecks**, **Turbine Foundry**, **Golden Furnace**, **Void Salvage** och **Starforge Ruins**. Vanliga skrotdelar återkommer efter åtta sekunder på nya slumpade positioner. Släppta delar dupliceras inte.
 
-## Nytt i v0.8: bärpose, sällsynta boxevent och robotvarianter
+## Nytt i v0.9: välj bärsätt, admin, mindre HUD och slumpat skrot
 
-Bärposen är ombyggd. Den håller axelledernas ursprungliga fästen i en höjd pose och neutraliserar armarnas vanliga animation under bärandet. Detta ersätter v0.7:s metod som inte fungerade för avataren på din bild. Posen tonas in och ut; händerna ska synas över huvudet. Prova först samma avatar och en Common Gear, sedan R6 och R15, gång/hopp, Q, inlämning och Reset Character. Molnmiljön kan inte verifiera din riktiga avatar i Studio.
+### Bärandet är ombyggt
+
+Den gamla klientposen med upplyfta armar är borttagen. Fyndet bärs nu framför kroppen eller i en sele bakom ryggen.
+
+Öppna **Details** i den lilla pengapanelen och välj:
+
+- **Auto:** R15 använder Roblox tvåhands-IK. R6 använder vanlig Tool-hållning. Om IK misslyckas används Tool som reserv; klienten kontrollerar även om händerna faktiskt når målen och kan byta till Handheld.
+- **Handheld:** vanlig Roblox Tool-hållning direkt.
+- **Harness:** fyndet fästs i en lastsele bakom ryggen och kräver ingen arm-animation.
+
+Du kan byta medan du bär utan att tappa fyndet eller ändra dess innehåll. **Q / Drop** och inlämning fungerar som tidigare. Rätt bärsätt och handplacering måste fortfarande provas med din avatar i Studio; Harness finns som ett oberoende alternativ.
+
+### Adminmenyn
+
+**Ditt UserId 11824623188 är tillagt.** Tryck **F4** eller klicka **ADMIN** uppe till höger.
+
+- **Cash / Set:** sätter ditt saldo. **Add:** lägger till beloppet.
+- **Speed:** sätter din faktiska gångfart, även när du bär. Tillåtet 7–120.
+- **Strength:** sätter din bärstyrka. Tillåtet 1–10 000.
+- **Reset stats:** tar bort adminvärden och återgår till vanliga/köpta stats.
+- **Return to base:** flyttar dig till din verkstad.
+- **Spawn robot box event:** välj Rare/Epic/Legendary/Mythic/Celestial genom att klicka rarity-knappen. Ange område **1–7** och tryck **Trigger event**. Område 1 är Common-området, även om själva boxen är Rare.
+
+Pengar och stats ändras bara för dig. Eventet är servergemensamt. Högst två boxar får finnas; menyn raderar inte någon annans buren box för att skapa plats. Maxsaldo är $1 000 000 000. Alla adminvärden gäller bara serverbesöket.
+
+I **Studio** tillåts lokala testspelare så menyn fungerar direkt. I det **publicerade spelet** gäller det angivna UserId:t och spelets personliga ägare. Att visa en falsk admin-knapp i en modifierad klient ger ingen serverbehörighet.
+
+### Ny HUD
+
+Pengapanelen visar bara **saldo, inkomst och bas**. Det lilla målfältet visar en aktuell robotprogress eller vad du bär och vart det ska lämnas. **Drop** visas när du bär. Alla recept, robotantal, stats och bäralternativ ligger under **Details**. Meddelanden visas kort och försvinner.
+
+### Slumpmässiga skrotpositioner
+
+Vanligt skrot får en ny, slumpad position vid serverstart och efter inlämning/respawn. Det stannar i rätt rarity-område. En ersättningsdel hamnar minst **12 studs** från den förra positionen och undviker mittvägen, hinder, andra markfynd och reserverade boxplatser. Normal respawntid är fortfarande åtta sekunder efter godkänd inlämning. Släpp/död skapar inte extra delar.
+
+### Testa detta bygge
+
+1. Öppna den nya platsfilen. Den lilla pengapanelen visar att v0.9 laddats.
+2. Plocka upp en Common-del. Prova **Auto**, **Handheld** och **Harness** under Details. Spring, hoppa, släpp, plocka upp igen och lämna in.
+3. Öppna **F4 / Admin**, sätt exempelvis cash till 10 000 och speed till 60. Kontrollera direkt effekt och prova Reset stats.
+4. Trigga **Rare / Stage 1**. Hämta boxen, testa bärsätten och lämna in på en ledig robotplattform.
+5. Samla och lämna in flera skrotdelar. Återkom efter åtta sekunder: ersättningarna ska dyka upp på andra fria platser i området.
+6. Testa R6/R15, Reset Character, två spelare, mobilvy och gång genom streaminggränser. Kontrollera att gamla IK-kontroller, Tools eller selremmar försvinner när de inte används.
+
+[HUD-layout och tekniska detaljer](REWORK_V09.md). Förhandsbilden är en UI-illustration, inte en Studio-skärmbild.
 
 ### Sällsynta robotboxar
 

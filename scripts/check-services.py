@@ -18,6 +18,8 @@ local modules={
     Economy=nativeRequire("../src/shared/Economy"),
     Inventory=nativeRequire("../src/shared/Inventory"),
     Movement=nativeRequire("../src/shared/Movement"),
+    AdminRules=nativeRequire("../src/shared/AdminRules"),
+    AdminConfig=nativeRequire("../src/server/AdminConfig"),
     PlacementRules=nativeRequire("../src/shared/PlacementRules"),
 }
 local clock=0
@@ -27,8 +29,8 @@ local deferred={}
 local task={delay=function(seconds,fn) table.insert(deferred,{seconds=seconds,fn=fn}) end}
 local workspace={GetServerTimeNow=function() return clock end}
 local services={
-    ReplicatedStorage={CatchTheScrapShared={Config="Config",Economy="Economy",Inventory="Inventory",Movement="Movement",PlacementRules="PlacementRules",UpgradeRules="UpgradeRules"}},
-    RunService={Heartbeat={Connect=function(_,fn) heartbeat=fn;return{} end}},
+    ReplicatedStorage={CatchTheScrapShared={Config="Config",Economy="Economy",Inventory="Inventory",Movement="Movement",PlacementRules="PlacementRules",UpgradeRules="UpgradeRules",AdminRules="AdminRules"}},
+    RunService={IsStudio=function() return false end,Heartbeat={Connect=function(_,fn) heartbeat=fn;return{} end}},
     Players={},
 }
 local added,removed={},{}
@@ -43,17 +45,18 @@ services.TweenService={Create=function(_,part)
  table.insert(tweenCalls,tween);return tween
 end}
 local TweenInfo={new=function() return{} end}
-local game={GetService=function(_,name) return services[name] end}
+local script={Parent={Parent={AdminConfig="AdminConfig"}}}
+local game={CreatorType="User",CreatorId=9999,GetService=function(_,name) return services[name] end}
 local made={}
 local Instance={new=function(class) local obj={ClassName=class};table.insert(made,obj);return obj end}
 local Color3={fromRGB=function(r,g,b) return{r,g,b} end}
 local Vector3={new=function(x,y,z) return{x,y,z} end}
 local UDim2={fromScale=function(x,y) return{x,y} end}
-local Enum={Font={GothamBold="GothamBold"},EasingStyle={Sine="Sine"},EasingDirection={InOut="InOut"}}
+local Enum={CreatorType={User="User",Group="Group"},Font={GothamBold="GothamBold"},EasingStyle={Sine="Sine"},EasingDirection={InOut="InOut"}}
 local require=function(name) assert(modules[name],name);return modules[name] end
 '''
 body=''
-for name in ('EconomyService','CarryService','FloatingText','MechanicService','RobotAnimator','EnvironmentEffects'):
+for name in ('EconomyService','CarryService','FloatingText','MechanicService','RobotAnimator','EnvironmentEffects','AdminService'):
     source=(ROOT/(f'src/client/{name}.luau' if name in ('RobotAnimator','EnvironmentEffects') else f"src/server/{'Assets' if name=='FloatingText' else 'Services'}/{name}.luau")).read_text()
     body+=f'local {name}=(function()\n{source}\nend)()\n'
 checks=r'''
@@ -274,6 +277,42 @@ local beforeDisconnect=recovered
 for _,pending in deferred do pending.fn() end
 check(recovered==beforeDisconnect,"disconnect invalidates every delayed box completion")
 economy:removePlayer(outsider)
+-- Exercise the actual admin service, including forged client permission attributes.
+local adminReplies,eventCalls={},0
+local eventService={forceSpawn=function(_,tier,stage) eventCalls+=1;check(tier=="Rare" and stage==1,"admin uses a validated tier and district");return true,"Spawned" end}
+local adminRemote={FireClient=function(_,p,channel,packet) check(channel=="AdminResult","admin response channel");table.insert(adminReplies,packet) end}
+local admin=AdminService.new(economy,carry,eventService,adminRemote)
+local adminAttrs={}
+local authorized={UserId=11824623188,leaderstats={},SetAttribute=function(_,name,value) adminAttrs[name]=value end,GetAttribute=function(_,name) return adminAttrs[name] end}
+local adminHumanoid={Health=100,WalkSpeed=24}
+authorized.Character={FindFirstChildOfClass=function() return adminHumanoid end,FindFirstChild=function() return root end}
+economy:addPlayer(authorized,base);carry.players[authorized]={base=base,counter={Value=0},lastAction=-math.huge}
+admin:addPlayer(authorized)
+check(adminAttrs.CanAdmin==true,"requested user id receives admin access")
+clock+=1;admin:run(authorized,"SetCash",10000)
+check(adminAttrs.Cash==10000,"admin cash applied through authoritative finance publication")
+clock+=1;admin:run(authorized,"AddCash",250)
+admin:run(authorized,"AddCash",250)
+check(adminAttrs.Cash==10250,"server cooldown rejects same-frame repeated grants")
+clock+=1;admin:run(authorized,"SetSpeed",60)
+check(adminHumanoid.WalkSpeed==60 and adminAttrs.CarrySpeed==60,"debug speed applies to real humanoid and carry state")
+clock+=1;admin:run(authorized,"SetStrength",150)
+check(adminAttrs.CarryStrength==150,"debug strength published from server")
+clock+=1;admin:run(authorized,"ResetStats",0)
+check(adminHumanoid.WalkSpeed==24 and adminAttrs.CarryStrength==30,"reset restores actual purchased/base stats")
+clock+=1;admin:run(authorized,"Event",{rarity="Rare",stage=1})
+check(eventCalls==1,"authorized event request invokes the real event service interface")
+local beforeInvalid=adminAttrs.Cash
+for _,bad in {0/0,math.huge,-1,"99999",{value=10000,target=22}} do clock+=1;admin:run(authorized,"SetCash",bad) end
+check(adminAttrs.Cash==beforeInvalid,"malformed or targeted cash requests never mutate account")
+local impostor={UserId=123,SetAttribute=function() end,GetAttribute=function() return true end}
+clock+=1;admin:run(impostor,"Event",{rarity="Rare",stage=1});admin:run(impostor,"SetCash",999999)
+check(eventCalls==1 and adminAttrs.Cash==beforeInvalid,"forged client admin attribute cannot run any command")
+clock+=1;admin:run(authorized,"SetCash",1000000000)
+clock+=1;admin:run(authorized,"AddCash",1)
+check(adminAttrs.Cash==1000000000,"addition cannot overflow administrative cash ceiling")
+admin:removePlayer(authorized);check(admin.last[authorized]==nil,"disconnect clears admin throttles")
+economy:removePlayer(authorized)
 -- Exercise actual client streaming cleanup and distance activation, not GPU output.
 RobotAnimator.start()
 local reactor={Transparency=.3,IsA=function(_,kind) return kind=="BasePart" end,Destroying={Connect=function() return{Disconnect=function() end} end}}

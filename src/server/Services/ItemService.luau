@@ -5,6 +5,8 @@ local Config = require(Shared.Config)
 local Inventory = require(Shared.Inventory)
 local Catalog=require(Shared.RobotCatalog)
 local PickupBuilder=require(script.Parent.Parent.Assets.PickupBuilder)
+local CarryRig=require(script.Parent.Parent.Assets.CarryRig)
+local SpawnRules=require(Shared.SpawnRules)
 local ItemService = {}
 ItemService.__index = ItemService
 
@@ -14,6 +16,19 @@ end
 
 function ItemService:spawn(slot)
     assert(slot.current == nil, "Spawn slot already occupied")
+    if slot.zone and self.world.spawnObstacles then
+        local occupied={}
+        for id,record in self.records do
+            local state=self.inventory.items[id]
+            if state and state.owner==nil then local p=record.root.Position;table.insert(occupied,{x=p.X,z=p.Z}) end
+        end
+        local chosen=SpawnRules.choose(Config.TrackWidth,Config.TrackStart+(slot.zone-1)*Config.ZoneLength,Config.ZoneLength,self.world.spawnObstacles,occupied,slot.lastPosition,function() return self.random:NextNumber() end)
+        if not chosen then
+            task.delay(1,function() if self.world.root.Parent and not slot.current then self:spawn(slot) end end)
+            return nil
+        end
+        slot.lastPosition=chosen;slot.position=Vector3.new(chosen.x,slot.clearance,chosen.z)
+    end
     self.serial += 1
     local id = "scrap-" .. self.serial
     local definition = slot.definition
@@ -89,26 +104,16 @@ function ItemService:start()
     for _, slot in self.world.spawns do self:spawn(slot) end
 end
 
-function ItemService:attach(record, characterRoot)
+function ItemService:attach(record, characterRoot,style)
     for _,part in record.model.GroundHalo:GetChildren() do part.Transparency=1 end
     local beacon=record.root:FindFirstChild("EventBeacon");if beacon then beacon.Enabled=false end
     record.prompt.Enabled = false
     record.billboard.Enabled = false
-    local head=characterRoot.Parent:FindFirstChild("Head")
-    local top=if head then characterRoot.CFrame:PointToObjectSpace(head.Position).Y+head.Size.Y/2 else 2
-    local halfHeight=if record.definition.kind=="RobotCrate" then 2.1 else math.max(1,record.clearance or 1.8)-.3
-    record.model:PivotTo(characterRoot.CFrame * CFrame.new(0,top+halfHeight+.2,-.65))
-    record.root.Anchored = false
-    local weld = Instance.new("WeldConstraint")
-    weld.Name = "CarryWeld"
-    weld.Part0 = characterRoot
-    weld.Part1 = record.root
-    weld.Parent = record.root
-    record.weld = weld
+    return CarryRig.attach(record,characterRoot,style or "Auto")
 end
 
 function ItemService:place(record, position)
-    if record.weld then record.weld:Destroy(); record.weld = nil end
+    CarryRig.clear(record)
     record.root.Anchored = true
     record.model:PivotTo(CFrame.new(position))
     record.model:SetAttribute("CarrierUserId", nil)
@@ -130,6 +135,7 @@ function ItemService:despawn(record)
 end
 
 function ItemService:consume(record)
+    CarryRig.clear(record)
     self.records[record.id] = nil
     record.slot.current = nil
     record.model:Destroy()

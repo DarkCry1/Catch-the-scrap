@@ -65,8 +65,4 @@ for frame=0,380 do
     local shake,angle,glow=Motion.unbox(frame/100)
     check(math.abs(shake)<=.055 and angle>=0 and angle<=math.rad(130)+1e-6 and glow>=0 and glow<=1,"bounded box shake/lid/light")
 end
-for _,side in {-1,1} do
-    local angle=Motion.arm(10,side)
-    check(angle>math.pi/2 and angle<math.pi,"shoulders lift hands above head and toward the load")
-end
 print(string.format("Robot recovery, crate accessibility and workshop motion passed; %d assertions",checks))

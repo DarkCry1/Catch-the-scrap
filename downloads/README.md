@@ -1,22 +1,23 @@
-# Catch the Scrap v0.8
+# Catch the Scrap v0.9
 
-1. Download [Catch-the-scrap-v0.8.rbxl](Catch-the-scrap-v0.8.rbxl) with GitHub's **Download raw file** button.
-2. Stop the old Studio test and open the new file with **Ctrl+O**.
-3. Press **Play / F5**. The world is generated at startup.
+1. Download [Catch-the-scrap-v0.9.rbxl](Catch-the-scrap-v0.9.rbxl) with **Download raw file**.
+2. Stop the old Studio test. Open this file with **Ctrl+O**, then **Play / F5**.
+3. Use **Details** for carry choices and recipes. Use **F4 / Admin** for test tools.
 
-The overhead pose now drives persistent shoulder joint offsets. Robot boxes
-spawn as server events: first at 60 seconds, then every 4–7 minutes, with a large
-announcement and colored beacon. An announced Rare box contains a Rare robot,
-with one of six distinct models and $80–$180/sec income. Higher box tiers exist.
+Carrying is rebuilt around native two-hand IK/Tool hold, with a body-mounted
+harness alternative. The large left panel is replaced by a compact wallet and
+one current goal. Initial and replacement scrap positions are randomized safely
+inside each rarity district, away from the previous position and obstacles.
 
-Unboxing now includes charging, holograms, energy arcs, flying carton panels,
-particles and a named model reveal. It needs one free platform and takes 5.6
-seconds. Four platforms total; progress is session-only. All game text is English.
+Admin is configured for **11824623188**, local Studio testing and the personal
+experience owner. It can set/add personal cash, set speed/strength, reset test
+stats, return home and trigger existing box events. Server validation protects
+all commands. Gameplay, cash and admin changes remain session-only.
 
-[Windows test guide (Swedish)](../docs/STUDIO_START_SV.md) · [Event details and model table](../docs/RARE_EVENTS_V08.md) · [Editable source ZIP](Catch-the-scrap-v0.8-source.zip)
+[Windows guide (Swedish)](../docs/STUDIO_START_SV.md) · [Rework details](../docs/REWORK_V09.md) · [Editable source ZIP](Catch-the-scrap-v0.9-source.zip)
 
-![Six recovered robot models](robot-variants-v0.8.png)
+![Compact HUD layout illustration](hud-layout-v0.9.png)
 
-The image is a Blender geometry render, **not a Studio screenshot**. Automated
-checks/builds pass; the reported avatar pose and actual unboxing/GUI/performance
-still need a Studio playtest. Older downloads are archived builds.
+The image is a layout review, **not a Studio screenshot**. Automated checks and
+builds pass; actual avatars, native carry/GUI behavior and device performance
+still need Studio testing. Older downloads are archived builds.

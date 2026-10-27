@@ -6,9 +6,9 @@ local Blueprint = require(Shared.ScrapyardBlueprint)
 local FloatingText = require(script.Parent.FloatingText)
 local NavigationRenderer = require(script.Parent.NavigationRenderer)
 local PickupBlueprint=require(Shared.PickupBlueprint)
-local CrateRules=require(Shared.CrateRules)
 local CrateBlueprint=require(Shared.CrateBlueprint)
 local EnvironmentBuilder=require(script.Parent.EnvironmentBuilder)
+local SpawnRules=require(Shared.SpawnRules)
 local ScrapyardBuilder = {}
 function ScrapyardBuilder.build(world)
     local yard = Instance.new("Model")
@@ -16,6 +16,7 @@ function ScrapyardBuilder.build(world)
     yard.ModelStreamingMode = Enum.ModelStreamingMode.Nonatomic
     yard.Parent = world.root
     local layout = Blueprint.build(Config.TrackWidth, Config.ZoneLength, Config.TrackStart)
+    world.spawnObstacles=SpawnRules.obstacles(layout.parts)
     for _, definition in layout.parts do
         local part = Instance.new("Part")
         part.Name = definition.name
@@ -46,12 +47,13 @@ function ScrapyardBuilder.build(world)
     for _, item in Config.Items do definitions[item.rarity]=item end
     world.crateSpawns={}
     for _,crate in layout.crates do
+        table.insert(world.spawnObstacles,{x=crate.position[1],z=crate.position[3],halfX=2.3,halfZ=2.3})
         table.insert(world.crateSpawns,{position=Vector3.new(unpack(crate.position)),clearance=CrateBlueprint.clearance(),crateStage=crate.stage})
     end
     for _, spawn in layout.spawns do
         local definition=definitions[spawn.rarity]
         local height=PickupBlueprint.clearance(definition.rarity,definition.color)
-        table.insert(world.spawns,{position=Vector3.new(spawn.position[1],height,spawn.position[3]),definition=definition,clearance=height})
+        table.insert(world.spawns,{position=Vector3.new(spawn.position[1],height,spawn.position[3]),definition=definition,clearance=height,zone=math.floor((spawn.position[3]-Config.TrackStart)/Config.ZoneLength)+1})
     end
 end
 return ScrapyardBuilder

@@ -11,7 +11,4 @@ function Motion.unbox(t:number): (number,number,number)
     local glow=math.clamp((t-1.1)/.6,0,1)
     return shake,(1-(1-open)^3)*math.rad(130),glow
 end
-function Motion.arm(time:number,side:number): (number,number,number)
-    return math.rad(148)+math.sin(time*3)*.025,math.rad(side*6),math.rad(-side*10)
-end
 return Motion

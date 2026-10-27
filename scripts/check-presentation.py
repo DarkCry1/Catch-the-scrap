@@ -29,9 +29,10 @@ cfMeta.__index={Lerp=function(self,target,alpha) local result=CFrame.new(self.Po
 CFrame.identity=CFrame.new(0,0,0)
 local render=signal()
 local preAnimation,preSimulation=signal(),signal()
+local assistBeat=signal()
 local bound,priority
 local added,removed={},{}
-local services={Players={},RunService={PreAnimation=preAnimation,PreSimulation=preSimulation,RenderStepped=render,BindToRenderStep=function(_,name,p,fn) bound=fn;priority=p end}}
+local services={Players={},RunService={Heartbeat=assistBeat,PreAnimation=preAnimation,PreSimulation=preSimulation,RenderStepped=render,BindToRenderStep=function(_,name,p,fn) bound=fn;priority=p end}}
 services.CollectionService={
  GetInstanceAddedSignal=function(_,tag) added[tag]=signal();return added[tag] end,
  GetInstanceRemovedSignal=function(_,tag) removed[tag]=signal();return removed[tag] end,
@@ -50,7 +51,7 @@ local checks=0
 local function check(ok,message) checks+=1;assert(ok,message) end
 '''
 body=''
-for name in ('CameraGuard','PickupAnimator','CarryPose'):
+for name in ('CameraGuard','PickupAnimator','CarryAssist'):
     body+=f'local {name}=(function()\n'+(ROOT/f'src/client/{name}.luau').read_text()+'\nend)()\n'
 checks=r'''
 CameraGuard.start(player)
@@ -94,40 +95,28 @@ added.AnimatedScrap:Fire(model);render:Fire(.3)
 check(joint.C0.Position.Y>=.35,"stream-in reattaches cleanly")
 player.Character=nil;render:Fire(.3)
 check(joint.C0==CFrame.identity,"character removal suspends animations safely")
--- Drive the real R6 and R15 pose controller across animation/simulation boundaries.
-local playersAdded,playersRemoved=signal(),signal()
-local function rig(names,id)
- local list={}
- for _,name in names do
-  local baseline=CFrame.new(0,0,0)
-  local joint={Name=name,Parent=true,Transform=baseline,C0=CFrame.new(0,0,0),baseline=baseline,IsA=function(_,class) return class=="Motor6D" end}
-  joint.C0.Rotation.Inverse=function() return CFrame.new(0,0,0) end
-  joint.originalC0=joint.C0
-  table.insert(list,joint)
- end
- local actor={UserId=id,carrying="Scrap"}
- function actor:GetAttribute() return self.carrying end
- actor.Character={FindFirstChild=function() return characterRoot end,FindFirstChildOfClass=function() return{Health=100} end,GetDescendants=function() return list end}
- return actor,list
-end
-local r6,r6Joints=rig({"Left Shoulder","Right Shoulder"},1)
-local r15,r15Joints=rig({"LeftShoulder","RightShoulder","LeftElbow","RightElbow","LeftWrist","RightWrist"},2)
-services.Players.GetPlayers=function() return{r6,r15} end
-services.Players.PlayerAdded=playersAdded;services.Players.PlayerRemoving=playersRemoved
-player.Character=r6.Character
-CarryPose.start(player)
-bound(.3);preSimulation:Fire(.3)
-check(r6Joints[1].C0.poseAlpha>.9 and r15Joints[1].C0.poseAlpha>.9 and r6Joints[1].Transform==CFrame.identity,"both native rig name sets lift their shoulders")
-for _,joint in r15Joints do check(joint.C0.poseAlpha>.9,"R15 elbows/wrists blend into the carry pose") end
-preAnimation:Fire()
-check(r6Joints[1].Transform==r6Joints[1].baseline and r15Joints[1].Transform==r15Joints[1].baseline,"overrides restore before Animator evaluates the next frame")
-check(r6Joints[1].C0~=r6Joints[1].originalC0 and r15Joints[1].C0~=r15Joints[1].originalC0,"Animator can reset Transform without lowering the held C0 pose")
-bound(.016);preSimulation:Fire(.016);playersRemoved:Fire(r6)
-check(r6Joints[1].Transform==r6Joints[1].baseline and r6Joints[1].C0==r6Joints[1].originalC0,"player removal releases any active joint override")
-r15.carrying=""
-for _=1,20 do preAnimation:Fire();bound(.1);preSimulation:Fire(.1) end
-check(r15Joints[1].Transform==r15Joints[1].baseline and r15Joints[1].C0==r15Joints[1].originalC0,"dropping fades back to normal animation without frozen arms")
-print(string.format("Actual camera/pickup/carry-pose adapters passed %d simulated-boundary checks; Studio remains required",checks))
+local mode,style,itemId="Two-hand IK","Auto","cargo-1"
+local hand={Position=vector(0,4,0)}
+local target={WorldPosition=vector(0,4,0)}
+local cargo={GetAttribute=function(_,name) return if name=="CarrierUserId" then 11 else itemId end,FindFirstChild=function() return{FindFirstChild=function() return target end} end}
+local world={FindFirstChild=function() return{GetChildren=function() return{cargo} end} end}
+function workspace:FindFirstChild() return world end
+local actor={UserId=11,Character={FindFirstChild=function() return hand end},GetAttribute=function(_,name) return if name=="CarryMode" then mode else style end}
+local switches=0
+CarryAssist.start(actor,{FireServer=function(_,action,value) check(action=="SetCarryStyle" and value=="Handheld","visual fallback requests only an allowed own-carry style");switches+=1 end})
+for _=1,12 do assistBeat:Fire(.25) end
+check(switches==0,"hands reaching targets do not trigger unnecessary fallbacks")
+hand.Position=vector(0,1,0)
+for _=1,7 do assistBeat:Fire(.25) end
+check(switches==0,"native solver receives a grace period")
+assistBeat:Fire(.25)
+check(switches==1,"visibly failed IK automatically selects standard Tool carry")
+for _=1,12 do assistBeat:Fire(.25) end
+check(switches==1,"fallback cannot flood the server with repeated requests")
+itemId="cargo-2";style="Harness"
+for _=1,12 do assistBeat:Fire(.25) end
+check(switches==1,"explicit carry choice is respected")
+print(string.format("Actual camera/pickup/carry-assist adapters passed %d simulated-boundary checks; Studio remains required",checks))
 '''
 fixture=ROOT/'build/presentation-integration.spec.luau'
 fixture.parent.mkdir(exist_ok=True)

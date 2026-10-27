@@ -3,204 +3,127 @@ local Players=game:GetService("Players")
 local ReplicatedStorage=game:GetService("ReplicatedStorage")
 local ContextActionService=game:GetService("ContextActionService")
 local UserInputService=game:GetService("UserInputService")
+local RunService=game:GetService("RunService")
+local StarterGui=game:GetService("StarterGui")
 local player=Players.LocalPlayer
-local Config=require(ReplicatedStorage:WaitForChild("CatchTheScrapShared"):WaitForChild("Config"))
-require(script.Parent:WaitForChild("RobotAnimator")).start()
-require(script.Parent:WaitForChild("EnvironmentEffects")).start(player)
-require(script.Parent:WaitForChild("CameraGuard")).start(player)
-require(script.Parent:WaitForChild("PickupAnimator")).start(player)
+local Shared=ReplicatedStorage:WaitForChild("CatchTheScrapShared")
+local Config=require(Shared:WaitForChild("Config"))
+local Model=require(Shared:WaitForChild("HudModel"))
 local remotes=ReplicatedStorage:WaitForChild("CatchTheScrapRemotes")
 local actionRemote=remotes:WaitForChild("Action")
 local feedbackRemote=remotes:WaitForChild("Feedback")
-require(script.Parent:WaitForChild("RareBoxAnnouncements")).start(player,actionRemote)
-require(script.Parent:WaitForChild("CarryPose")).start(player)
-require(script.Parent:WaitForChild("WorkshopEffects")).start(player,actionRemote)
-require(script.Parent:WaitForChild("UnboxingEffects")).start(player)
-local gui=Instance.new("ScreenGui")
-gui.Name="CatchTheScrapHUD"
-gui.ResetOnSpawn=false
-gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
-gui.Parent=player:WaitForChild("PlayerGui")
-local function round(object,radius)
-    local corner=Instance.new("UICorner")
-    corner.CornerRadius=UDim.new(0,radius)
-    corner.Parent=object
+-- Each presentation module starts independently so a cosmetic failure cannot stop the HUD.
+for _,name in {"CarryAssist","RobotAnimator","EnvironmentEffects","CameraGuard","PickupAnimator","RareBoxAnnouncements","WorkshopEffects","UnboxingEffects"} do
+    task.spawn(function()
+        local ok,err=pcall(function() require(script.Parent:WaitForChild(name)).start(player,actionRemote) end)
+        if not ok then warn("[Catch the Scrap] "..name..": "..tostring(err)) end
+    end)
 end
-local panel=Instance.new("Frame")
-panel.BackgroundColor3=Color3.fromRGB(18,26,35)
-panel.BackgroundTransparency=.06
-panel.Parent=gui
-round(panel,12)
-panel.BackgroundColor3=Color3.new(1,1,1)
-local gradient=Instance.new("UIGradient")
-gradient.Color=ColorSequence.new(Color3.fromRGB(34,48,57),Color3.fromRGB(16,25,34));gradient.Rotation=90;gradient.Parent=panel
-local constraint=Instance.new("UISizeConstraint")
-constraint.Parent=panel
-local stroke=Instance.new("UIStroke")
-stroke.Color=Color3.fromRGB(74,94,108)
-stroke.Parent=panel
-local function text(parent,name,size,color)
-    local label=Instance.new("TextLabel")
-    label.Name=name
-    label.BackgroundTransparency=1
-    label.TextColor3=color or Color3.fromRGB(231,238,242)
-    label.Font=Enum.Font.Gotham
-    label.TextSize=size
-    label.TextXAlignment=Enum.TextXAlignment.Left
-    label.TextWrapped=true
-    label.AutoLocalize=false
-    label.Parent=parent
-    return label
-end
-local title=text(panel,"Title",20,Color3.fromRGB(255,198,80))
-title.Font=Enum.Font.GothamBold
-title.Text="CATCH THE SCRAP"
-local home=text(panel,"Home",13)
-local money=text(panel,"Money",23,Color3.fromRGB(110,240,180))
-money.Font=Enum.Font.GothamBold
-local recipeList=Instance.new("ScrollingFrame")
-recipeList.Name="RobotRecipes";recipeList.BackgroundTransparency=1;recipeList.BorderSizePixel=0
-recipeList.ScrollBarThickness=3;recipeList.ScrollBarImageColor3=Color3.fromRGB(115,145,162)
-recipeList.CanvasSize=UDim2.fromOffset(0,#Config.Stages*25);recipeList.ScrollingDirection=Enum.ScrollingDirection.Y
-recipeList.Parent=panel
-local recipes={}
-for _,stage in Config.Stages do
-    local rarity=stage.Rarity
-    local color=Color3.fromRGB(unpack(Config.Robot.Recipes[rarity].Color))
-    local label=text(recipeList,rarity.."Recipe",13,color)
-    local background=Instance.new("Frame")
-    background.BackgroundColor3=Color3.fromRGB(43,57,69)
-    background.BorderSizePixel=0
-    background.Parent=recipeList
-    local fill=Instance.new("Frame")
-    fill.Size=UDim2.fromScale(0,1)
-    fill.BackgroundColor3=color
-    fill.BorderSizePixel=0
-    fill.Parent=background
-    round(background,2);round(fill,2)
-    recipes[rarity]={label=label,background=background,fill=fill}
-end
-local carrying=text(panel,"Carrying",14)
-local stats=text(panel,"Stats",12,Color3.fromRGB(150,208,214))
-local message=text(panel,"Message",13,Color3.fromRGB(190,205,218))
-local drop=Instance.new("TextButton")
-drop.Name="Drop"
-drop.AnchorPoint=Vector2.new(.5,1)
-drop.Position=UDim2.new(.5,0,1,-26)
-drop.BackgroundColor3=Color3.fromRGB(255,193,70)
-drop.TextColor3=Color3.fromRGB(20,28,40)
-drop.Font=Enum.Font.GothamBold
-drop.TextSize=18
-drop.Text=if UserInputService.KeyboardEnabled then "Drop [Q]" else "Drop part"
-drop.AutoLocalize=false
-drop.Visible=false
-drop.Parent=gui
-round(drop,12)
-local note=text(gui,"SessionNote",11,Color3.fromRGB(210,220,230))
-note.AnchorPoint=Vector2.new(.5,1)
-note.Position=UDim2.new(.5,0,1,-4)
-note.Size=UDim2.new(1,-32,0,18)
-note.TextXAlignment=Enum.TextXAlignment.Center
-note.Text="Session-only progress: parts, robots, cash and upgrades."
-local function place(label,y,height,size)
-    label.Position=UDim2.fromOffset(14,y)
-    label.Size=UDim2.new(1,-28,0,height)
-    label.TextSize=size
-end
-local function layout()
-    local compact=workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize.Y<500
-    local height=if compact then 218 else 306
-    panel.AnchorPoint=Vector2.new(if compact then 1 else 0,0)
-    panel.Position=if compact then UDim2.new(1,-16,0,8) else UDim2.fromOffset(16,12)
-    panel.Size=UDim2.new(1,-32,0,height)
-    constraint.MaxSize=Vector2.new(if compact then 360 else 400,height)
-    place(title,if compact then 6 else 10,24,if compact then 16 else 20)
-    place(home,if compact then 29 else 39,18,if compact then 11 else 13)
-    place(money,if compact then 49 else 65,27,if compact then 19 else 23)
-    recipeList.Position=UDim2.fromOffset(0,if compact then 78 else 103)
-    recipeList.Size=UDim2.new(1,-4,0,if compact then 54 else 76)
-    for index,stage in Config.Stages do
-        local rarity=stage.Rarity
-        local row=recipes[rarity]
-        local y=(index-1)*25
-        place(row.label,y,16,if compact then 11 else 13)
-        row.background.Position=UDim2.fromOffset(14,y+16)
-        row.background.Size=UDim2.new(1,-28,0,2)
+task.spawn(function()
+    for _=1,5 do
+        if pcall(function() StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack,false) end) then break end
+        task.wait(.5)
     end
-    place(carrying,if compact then 136 else 184,24,if compact then 12 else 14)
-    place(stats,if compact then 159 else 215,18,11)
-    place(message,if compact then 180 else 242,if compact then 31 else 52,if compact then 11 else 13)
-    drop.Size=UDim2.fromOffset(if compact then 180 else 200,if compact then 44 else 52)
+end)
+local gui=Instance.new("ScreenGui");gui.Name="CatchTheScrapHUD";gui.ResetOnSpawn=false;gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling;gui.Parent=player:WaitForChild("PlayerGui")
+local function round(o,r) local c=Instance.new("UICorner");c.CornerRadius=UDim.new(0,r);c.Parent=o end
+local function card(parent,name,class)
+    local f=Instance.new(class or "Frame");f.Name=name;f.BackgroundColor3=Color3.fromRGB(18,29,40);f.BackgroundTransparency=.06;f.Parent=parent;round(f,12)
+    local edge=Instance.new("UIStroke");edge.Color=Color3.fromRGB(67,90,107);edge.Transparency=.35;edge.Parent=f;return f
 end
-local viewportConnection
-local function watchCamera()
-    if viewportConnection then viewportConnection:Disconnect() end
-    if workspace.CurrentCamera then viewportConnection=workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(layout) end
-    layout()
+local function text(parent,name,size,tint)
+    local l=Instance.new("TextLabel");l.Name=name;l.BackgroundTransparency=1;l.TextColor3=tint or Color3.fromRGB(227,237,243);l.Font=Enum.Font.Gotham
+    l.TextSize=size;l.TextXAlignment=Enum.TextXAlignment.Left;l.TextWrapped=true;l.AutoLocalize=false;l.Parent=parent;return l
 end
-workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(watchCamera)
-watchCamera()
-local feedbackVersion=0
-local function defaultMessage()
-    if not remotes:GetAttribute("Ready") then return "Waiting for the scrapyard..." end
-    if (player:GetAttribute("BaseIndex") or 0)==0 then return "All workshops are occupied. Try another server." end
-    if (player:GetAttribute("CarriedName") or "")~="" then return if player:GetAttribute("CarriedKind")=="RobotCrate" then "Sealed robot inside! Deliver the box at your workshop to unbox it." else "Return to your workshop. Hold E at the orange deposit machine." end
-    if (player:GetAttribute("UsedPlatforms") or 0)>=Config.Robot.Slots then return "Platforms reserved. Finish existing robots with matching parts." end
-    return "Collect matching parts to build robots. Visit Milo for Speed and Strength upgrades."
+local function button(parent,name,title,tint)
+    local b=Instance.new("TextButton");b.Name=name;b.Text=title;b.TextColor3=tint or Color3.fromRGB(224,237,245);b.BackgroundColor3=Color3.fromRGB(36,53,68)
+    b.Font=Enum.Font.GothamBold;b.TextSize=12;b.AutoLocalize=false;b.Parent=parent;round(b,8);return b
 end
+local wallet=card(gui,"Wallet");wallet.Position=UDim2.fromOffset(14,12);wallet.Size=UDim2.fromOffset(244,82)
+local money=text(wallet,"Cash",28,Color3.fromRGB(112,240,182));money.Font=Enum.Font.GothamBold;money.Position=UDim2.fromOffset(14,8);money.Size=UDim2.new(1,-94,0,34)
+local income=text(wallet,"Income",13,Color3.fromRGB(160,187,201));income.Position=UDim2.fromOffset(15,48);income.Size=UDim2.new(1,-96,0,20)
+local base=button(wallet,"Base","BASE 01");base.Position=UDim2.new(1,-80,0,12);base.Size=UDim2.fromOffset(68,26)
+local detailsButton=button(wallet,"Details","DETAILS");detailsButton.Position=UDim2.new(1,-80,0,46);detailsButton.Size=UDim2.fromOffset(68,23)
+local context=card(gui,"CurrentGoal");context.AnchorPoint=Vector2.new(.5,1);context.Position=UDim2.new(.5,0,1,-20);context.Size=UDim2.fromOffset(400,70)
+local limit=Instance.new("UISizeConstraint");limit.MaxSize=Vector2.new(400,70);limit.Parent=context
+local title=text(context,"Goal",15);title.Font=Enum.Font.GothamBold;title.Position=UDim2.fromOffset(14,9);title.Size=UDim2.new(1,-112,0,23)
+local hint=text(context,"Hint",12,Color3.fromRGB(165,191,206));hint.Position=UDim2.fromOffset(14,34);hint.Size=UDim2.new(1,-112,0,19)
+local progress=Instance.new("Frame");progress.Position=UDim2.new(0,14,1,-7);progress.Size=UDim2.new(1,-28,0,2);progress.BackgroundColor3=Color3.fromRGB(51,74,87);progress.BorderSizePixel=0;progress.Parent=context
+local fill=Instance.new("Frame");fill.Size=UDim2.fromScale(0,1);fill.BackgroundColor3=Color3.fromRGB(255,193,76);fill.BorderSizePixel=0;fill.Parent=progress
+local drop=button(context,"Drop",if UserInputService.KeyboardEnabled then "DROP [Q]" else "DROP",Color3.fromRGB(255,201,90));drop.AnchorPoint=Vector2.new(1,.5);drop.Position=UDim2.new(1,-12,.5,-2);drop.Size=UDim2.fromOffset(84,36)
+local details=card(gui,"DetailsPanel","ScrollingFrame");details.CanvasSize=UDim2.fromOffset(0,330);details.ScrollBarThickness=3;details.BorderSizePixel=0;details.ClipsDescendants=true;details.Position=UDim2.fromOffset(14,102);details.Size=UDim2.fromOffset(290,330);details.Visible=false
+local detailsTitle=text(details,"Heading",15);detailsTitle.Text="YOUR WORKSHOP";detailsTitle.Font=Enum.Font.GothamBold;detailsTitle.Position=UDim2.fromOffset(14,10);detailsTitle.Size=UDim2.new(1,-60,0,24)
+local close=button(details,"Close","X");close.Position=UDim2.new(1,-42,0,9);close.Size=UDim2.fromOffset(28,26)
+local stats=text(details,"Stats",12,Color3.fromRGB(174,202,216));stats.Position=UDim2.fromOffset(14,42);stats.Size=UDim2.new(1,-28,0,35)
+local rows={}
+for i,stage in Config.Stages do
+    local l=text(details,stage.Rarity,12,Color3.fromRGB(unpack(stage.Color)));l.Position=UDim2.fromOffset(14,82+(i-1)*22);l.Size=UDim2.new(1,-28,0,20);rows[stage.Rarity]=l
+end
+local carryLabel=text(details,"CarryStyle",11);carryLabel.Text="CARRY METHOD";carryLabel.Position=UDim2.fromOffset(14,244);carryLabel.Size=UDim2.new(1,-28,0,18)
+local methods={}
+for i,style in {"Auto","Handheld","Harness"} do
+    local b=button(details,"Carry"..style,style:upper());b.Position=UDim2.fromOffset(14+(i-1)*89,267);b.Size=UDim2.fromOffset(82,28);methods[style]=b
+    b.Activated:Connect(function() actionRemote:FireServer("SetCarryStyle",style) end)
+end
+local note=text(details,"SessionNote",10,Color3.fromRGB(143,166,181));note.Text="Progress lasts for this server visit.";note.Position=UDim2.fromOffset(14,303);note.Size=UDim2.new(1,-28,0,18)
+local toast=card(gui,"Feedback");toast.AnchorPoint=Vector2.new(.5,1);toast.Position=UDim2.new(.5,0,1,-99);toast.Size=UDim2.fromOffset(420,48);toast.Visible=false
+local message=text(toast,"Message",13);message.Position=UDim2.fromOffset(12,4);message.Size=UDim2.new(1,-24,1,-8);message.TextXAlignment=Enum.TextXAlignment.Center;message.TextScaled=true
+local messageSize=Instance.new("UITextSizeConstraint");messageSize.MinTextSize=11;messageSize.MaxTextSize=13;messageSize.Parent=message
+local zone=1
 local function render()
+    local carried=player:GetAttribute("CarriedName") or ""
     local index=player:GetAttribute("BaseIndex") or 0
-    home.Text=string.format("WORKSHOP %02d  |  ROBOTS %d/%d",index,player:GetAttribute("RobotCount") or 0,Config.Robot.Slots)
-    money.Text=string.format("$%d   +$%d / SEC",player:GetAttribute("Cash") or 0,player:GetAttribute("IncomePerSecond") or 0)
-    for rarity,row in recipes do
-        local recipe=Config.Robot.Recipes[rarity]
-        local count=player:GetAttribute(rarity.."Parts") or 0
-        row.label.Text=string.format("%s  %d/%d PARTS  |  $%d/sec",rarity:upper(),count,recipe.Parts,recipe.Income)
-        row.fill.Size=UDim2.fromScale(count/recipe.Parts,1)
+    money.Text=Model.money(player:GetAttribute("Cash") or 0);income.Text="+"..Model.money(player:GetAttribute("IncomePerSecond") or 0).." / SEC"
+    base.Text=string.format("BASE %02d",index)
+    local counts={}
+    for _,stage in Config.Stages do
+        local count=player:GetAttribute(stage.Rarity.."Parts") or 0;counts[stage.Rarity]=count
+        local recipe=Config.Robot.Recipes[stage.Rarity]
+        rows[stage.Rarity].Text=string.format("%s   %d / %d    $%d/sec",stage.Rarity,count,recipe.Parts,recipe.Income)
     end
-    local name=player:GetAttribute("CarriedName") or ""
-    carrying.Text=if name=="" then "Hands free. Ready to collect." else name.." | "..(player:GetAttribute("CarriedRarity") or "")
-    stats.Text=string.format("Weight: %d  |  Speed: %.1f  |  Strength: %d",player:GetAttribute("CarriedWeight") or 0,player:GetAttribute("CarrySpeed") or Config.BaseSpeed,player:GetAttribute("CarryStrength") or Config.Strength)
-    drop.Visible=name~=""
-    drop.Text=if UserInputService.KeyboardEnabled then "Drop [Q]" elseif player:GetAttribute("CarriedKind")=="RobotCrate" then "Drop box" else "Drop part"
-    if feedbackVersion==0 then message.Text=defaultMessage() end
+    local heading,sub,ratio=Model.context(remotes:GetAttribute("Ready")==true,index,carried,player:GetAttribute("CarriedKind") or "",player:GetAttribute("CarriedRarity") or "",player:GetAttribute("UsedPlatforms") or 0,counts,zone)
+    title.Text=heading;hint.Text=sub;fill.Size=UDim2.fromScale(ratio,1);drop.Visible=carried~=""
+    local space=if drop.Visible then -112 else -28;title.Size=UDim2.new(1,space,0,23);hint.Size=UDim2.new(1,space,0,19)
+    stats.Text=string.format("Robots: %d/%d  |  Speed: %.1f\nStrength: %d  |  Carrying: %d weight",player:GetAttribute("RobotCount") or 0,Config.Robot.Slots,player:GetAttribute("CarrySpeed") or Config.BaseSpeed,player:GetAttribute("CarryStrength") or Config.Strength,player:GetAttribute("CarriedWeight") or 0)
+    carryLabel.Text="CARRY METHOD"..(if carried~="" then " / "..string.upper((player:GetAttribute("CarryMode") or ""):gsub(" IK","")) else "")
+    for style,b in methods do b.BackgroundColor3=if (player:GetAttribute("CarryStyle") or "Auto")==style then Color3.fromRGB(48,114,113) else Color3.fromRGB(36,53,68) end
 end
 local function requestDrop()
-    if not gui.Enabled then return end
-    if (player:GetAttribute("CarriedName") or "")~="" then actionRemote:FireServer("Drop") end
+    if gui.Enabled and not UserInputService:GetFocusedTextBox() and (player:GetAttribute("CarriedName") or "")~="" then actionRemote:FireServer("Drop") end
 end
 drop.Activated:Connect(requestDrop)
 ContextActionService:BindAction("CatchTheScrapDrop",function(_,state)
-    if state==Enum.UserInputState.Begin then requestDrop() end
-    return Enum.ContextActionResult.Pass
+    if state==Enum.UserInputState.Begin then requestDrop() end;return Enum.ContextActionResult.Pass
 end,false,Enum.KeyCode.Q,Enum.KeyCode.ButtonB)
+local function toggle() details.Visible=not details.Visible end
+detailsButton.Activated:Connect(toggle);base.Activated:Connect(toggle);close.Activated:Connect(function() details.Visible=false end)
+local version=0
 feedbackRemote.OnClientEvent:Connect(function(value)
-    if typeof(value)~="string" then return end
-    feedbackVersion+=1
-    local version=feedbackVersion
-    message.Text=value
-    task.delay(5,function()
-        if feedbackVersion==version then feedbackVersion=0;message.Text=defaultMessage() end
-    end)
+    if type(value)~="string" then return end
+    version+=1;local current=version;message.Text=value;toast.Visible=true
+    task.delay(4,function() if version==current then toast.Visible=false end end)
 end)
-for _,attribute in {"BaseIndex","DeliveredCount","CarriedName","CarriedKind","CarriedRarity","CarriedWeight","CarrySpeed","CarryStrength","Cash","IncomePerSecond","RobotCount","UsedPlatforms","CommonParts","UncommonParts","RareParts","EpicParts","LegendaryParts","MythicParts","CelestialParts"} do
-    player:GetAttributeChangedSignal(attribute):Connect(render)
+local function layout()
+    local camera=workspace.CurrentCamera;local width=if camera then camera.ViewportSize.X else 800
+    wallet.Size=UDim2.fromOffset(math.min(244,width-(if player:GetAttribute("CanAdmin") then 130 else 28)),82)
+    context.Size=UDim2.fromOffset(math.min(400,width-28),70);toast.Size=UDim2.fromOffset(math.min(420,width-28),48)
+    details.Size=UDim2.fromOffset(math.min(290,width-28),math.min(330,math.max(100,(if camera then camera.ViewportSize.Y else 800)-206)))
 end
+local viewport
+local function watchCamera()
+    if viewport then viewport:Disconnect() end
+    if workspace.CurrentCamera then viewport=workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(layout) end;layout()
+end
+workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(watchCamera);watchCamera()
+for _,attribute in {"BaseIndex","Cash","IncomePerSecond","RobotCount","UsedPlatforms","CarriedName","CarriedKind","CarriedRarity","CarriedWeight","CarrySpeed","CarryStrength","CarryStyle","CarryMode","CommonParts","UncommonParts","RareParts","EpicParts","LegendaryParts","MythicParts","CelestialParts"} do player:GetAttributeChangedSignal(attribute):Connect(render) end
+player:GetAttributeChangedSignal("CanAdmin"):Connect(layout)
 remotes:GetAttributeChangedSignal("Ready"):Connect(render)
+local elapsed=0
+RunService.Heartbeat:Connect(function(dt)
+    elapsed+=dt;if elapsed<.4 then return end;elapsed=0
+    local root=player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if root then local current=math.clamp(math.floor((root.Position.Z-Config.TrackStart)/Config.ZoneLength)+1,1,#Config.Stages);if current~=zone then zone=current;render() end end
+end)
 render()
 require(script.Parent:WaitForChild("MechanicShop")).start(player,actionRemote,gui)
-
--- Follow the current district once on entry; players may still scroll recipes manually.
-local currentStage,elapsed=0,0
-local function focusRecipe()
-    local root=player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-    if not root then return end
-    local stage=math.clamp(math.floor((root.Position.Z-Config.TrackStart)/Config.ZoneLength)+1,1,#Config.Stages)
-    if stage~=currentStage then
-        currentStage=stage
-        recipeList.CanvasPosition=Vector2.new(0,math.min((stage-1)*25,math.max(0,#Config.Stages*25-recipeList.AbsoluteSize.Y)))
-    end
-end
-game:GetService("RunService").Heartbeat:Connect(function(dt)
-    elapsed+=dt;if elapsed<.4 then return end;elapsed=0;focusRecipe()
-end)
+require(script.Parent:WaitForChild("AdminMenu")).start(player,actionRemote,gui)
