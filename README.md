@@ -8,6 +8,9 @@ confiscate only the carried loot.
 
 [Download v1.5](downloads/Catch-the-scrap-v1.5.rbxl) · [Guardian rules and size preview](docs/STAGE_GUARDIANS_V15.md) · [Windows guide (Swedish)](docs/STUDIO_START_SV.md) · [Development](docs/DEVELOPMENT.md)
 
+Future gears/equipment ideas: [backlog and EMP reminder](docs/BACKLOG.md). Revisit
+this list when equipment development begins.
+
 Retained v1.4 systems include **61 Robotdex species**, random builds/box results,
 six initial/eight maximum platforms, persistent progress with offline fallback,
 rebirth, Gold/Rainbow mutations, daily quests, guide, two-hand carrying and
