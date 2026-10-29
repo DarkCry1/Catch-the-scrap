@@ -1,51 +1,50 @@
-# Development — v1.5 stage guardians
+# Development — v1.12 original background music
 
-The current baseline is the **user-uploaded v1.4 place**, recovered as 84 source
-files with their embedded instance hierarchy. See [import record](IMPORTED_V14.md).
-The current release adds seven stage guardians; it does not revert the game to
-v1.0. The older release documents are historical.
+This release starts from the user's **v1.11 uploaded place**, recovered as 87
+exact script sources. See [import record](IMPORTED_V111.md). It supersedes the
+earlier Codex v1.5 snapshot. The active task adds original background audio;
+no progression, mutation, enemy or economic balance changes are included.
 
-Read [guardian design and verification](STAGE_GUARDIANS_V15.md) for the current
-speed/size table, source mechanics, navigation and testing limits, and the
-[Windows Studio guide](STUDIO_START_SV.md) for manual checks.
+## Background audio
 
-## Retained v1.4 game
+Read [Swedish music setup](BACKGROUND_MUSIC_SV.md). `assets/music` contains the
+original 80-second stereo loop, provenance, measured levels and CC0 dedication.
+`scripts/compose-background.py` synthesizes every voice from oscillators/noise;
+there are no third-party recordings or samples. It uses NumPy/SciPy and optional
+ffmpeg for the MP3 copy. The game does not run Python or synthesize the audio.
 
-- 61 Robotdex species, each belonging to a rarity and a Build or Box source.
-  Completed builds roll species rather than selecting a blueprint in advance.
-- Six starting platforms, maximum eight through rebirth. Rebirth retains the
-  collection and permanent rewards; resets workshop robots, cash and upgrades.
-- Gold ×2 and Rainbow ×4 mutations, collection milestones, cosmetics/titles,
-  three daily quests and new-player guidance.
-- Matching recipes: Common 5, Uncommon 7, Rare 10, Epic 12, Legendary 15,
-  Mythic 18, Celestial 20. Base incomes 5/10/20/45/100/225/500; species,
-  mutation, collection perks and rebirth determine final production.
-- Persistent SaveService/SaveSchema using UpdateAsync and session locks,
-  autosave, leave/shutdown handlers and session-only fallback if unavailable.
-  DataStore keyspace/schema were not changed in this release.
-- v1.4 two-hand carrying implementation, larger alternating workshops, rare
-  box events, rarity cinematics, sound/mute, button effects and TopStack.
-- Admin UserId 11824623188, local Studio test allowance and personal owner;
-  all permissions, cash, upgrades, ownership and rewards checked on server.
+**A Roblox audio upload and experience permission are still required.** The
+shipped SoundId is empty because this workspace has no authenticated Roblox
+asset-upload connection. The place does not yet contain a playable music ID.
+A local waveform cannot be embedded directly into a Roblox SoundId.
 
-## Structure
+`SoundService.ScrapyardMusic` is the prepared editor template. Set its SoundId
+after upload, or set Config.Music.SoundId. For source sync, also preserve that
+ID in default.project.json or Config; a later Rojo sync can reset an editor-only
+property. The configured ID takes precedence over the template.
 
-`src/shared` holds pure rules, layouts, palettes and native-part geometry.
-`src/shared/Engine/CarryRigMath` is an engine-dependent shared helper, preserved
-at its original embedded path. `src/server/Assets` builds models;
-`src/server/Services` owns gameplay. `src/client` contains presentation and input.
+Client BackgroundMusic preloads a single local looping Sound, routes it through
+a dedicated Music SoundGroup under the existing Audio master, fades it in and
+ducks it for either GuardChase/DroneChase or a Scriptable cinematic camera.
+M uses the existing Audio.setMuted flow; the loop pauses and resumes at its
+previous position. Source changes replace the loop; late loads cannot start old
+sounds. Failures warn without stopping other presentation or gameplay. Invalid,
+missing, foreign URL and data-URI IDs are not played. The module is idempotent
+and survives ordinary character resets without another music instance.
 
-There is one server Script, one LocalScript, 87 ModuleScripts and two
-RemoteEvents (Action and Feedback). Guardians add no new client attack remote.
-Models and scenery are generated at Play time. Eight players can own workshops.
-The yard is 160 × 3360 studs, seven zones, with 64-stud perimeter walls. Main
-HUD, game copy and prompts are English; user guidance is Swedish.
+## Retained v1.11 systems
 
-SecurityService now manages the seven walking guardians instead of the old
-Epic+ drone groups. Existing Drone* packet/attribute names remain compatible
-with retained Feel/audio/quest code, but visible text refers to guardians.
-Generated world geometry is passed to static navigation grids. Motors animate
-nearby on clients; server state alone decides catches and escaped-loot credit.
+61 species and six collection versions (Normal plus five mutations), 2–8×
+mutation income, auras, six initial/eight maximum platforms, Robotdex entry
+rewards and milestones, persistent saving with offline fallback, rebirth, daily
+quests, guide, giant guards, existing drones, carrying and the simpler v1.11
+sound set remain. M still mutes the whole game. Both guard controllers are
+retained as in the upload; consolidating them is a separate gameplay task.
+
+The SoundId and music mix are local presentation. No remotes were added. There
+is one server Script, one LocalScript, 87 ModuleScripts and two RemoteEvents.
+DataStore namespace/schema, prices and monster speed values are unchanged.
+All game copy remains English; beginner instructions are Swedish.
 
 ## Check and build
 
@@ -54,30 +53,27 @@ source /workspace/.catch-the-scrap-tools/activate.sh
 python3 scripts/check.py
 ```
 
-Requires Python 3, Rojo 7.7.1 and Luau CLI 0.744. Shared pure modules and current
-portable tests are analyzed; every application source compiles. Engine-facing
-code is not claimed as engine-typechecked. Actual service code is exercised
-with simulated engine boundaries, including the new rig builder/animator and
-SaveService. Real Studio tests remain required.
+Python 3, Rojo 7.7.1 and Luau CLI 0.744 are required. For waveform checks the
+original assets/music WAV must be present. To regenerate it, install NumPy and
+SciPy, then run the composer. ffmpeg creates the MP3 listening copy.
 
-Current tests live directly under `tests/`. Seven suites with obsolete v1.0
-contracts were moved to `tests/legacy-v1.0`. Three old service harnesses are
-preserved in `scripts/legacy-v1.0`. These archives are not run or counted as
-passing by the current check command. The original Claude test files were not
-embedded in the uploaded place; new regression coverage verifies the imported
-progression rules and source/model availability.
+Current tests live directly under tests. They cover music ID/mix rules,
+actual Audio/BackgroundMusic against simulated audio boundaries, PCM format/
+levels/loop boundary, the imported 61-species progression and five mutation
+pools, saving rules, compatible inventory/upgrade/yard rules and cinematic
+camera lifecycle. All application Luau compiles; pure root shared modules and
+current tests are analyzed. Engine/CarryRigMath uses native Roblox types and
+is compiled, not claimed as CLI engine-typechecked.
 
-Checks build `build/Catch-the-scrap.rbxl` and `.rbxlx`, verify every source is
-included exactly once, then bundle editable sources. Current release copies
-are versioned in `downloads`. The original v1.4 attachment is archived there too.
+Historical tests/helpers for superseded v1.0 and the earlier Codex v1.5 live in
+legacy-v1.0 and legacy-v1.5 directories. They are not run or counted as passing
+against v1.11. The original Claude tests were not included in the place upload.
 
-Optional asset gallery (Blender, not Studio):
+Checks build both .rbxl and .rbxlx, verify all 89 sources appear exactly once and
+bundle editable sources, docs, composer, license and MP3. The larger WAV is a
+separate download and is omitted from the source ZIP. Rendered places do not
+contain audio bytes. All files in downloads are explicit release snapshots.
 
-```sh
-luau scripts/export-blueprints.luau > build/blueprints.json
-blender -b -t 4 --python scripts/render-guardians.py
-```
-
-A full movement/teleport anti-cheat is not implemented. New guardian balance,
-actual native motor/network interpolation, startup cost, DataStore API behavior
-and mobile FPS need measurement in Roblox Studio/on devices.
+Native audio approval, permission, playback, loop audibility and device mix
+need Roblox Studio testing after the owner's upload. No native Studio test or
+Roblox asset publication was performed here.

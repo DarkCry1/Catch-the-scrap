@@ -1,0 +1,12 @@
+{
+  "title": "Scrapyard Afterglow",
+  "duration_seconds": 80.0,
+  "bpm": 96,
+  "sample_rate": 44100,
+  "channels": 2,
+  "peak_dbfs": -4.225222106897494,
+  "rms_dbfs": -20.000264600711212,
+  "loop_boundary_step": 80,
+  "source": "Original additive/noise synthesis; no third-party samples",
+  "license": "CC0-1.0"
+}

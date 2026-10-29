@@ -1,29 +1,27 @@
 # Catch-the-scrap
 
-Current build **v1.5** continues from the user-uploaded **v1.4** and adds one
-walking scrap guardian per rarity district. Their bodies and chase speeds scale
-from Common (8.4 studs tall, 15 studs/sec) to Celestial (17.9 studs, 31 studs/sec).
-They warn before chasing, navigate around scenery, stay in their district and
-confiscate only the carried loot.
+Current build **v1.12** continues from the user's uploaded **v1.11** and adds an
+original 80-second background loop, **Scrapyard Afterglow**, supplied under CC0.
+Music fades in quietly, ducks under chase/cinematic audio and pauses/resumes
+with the existing **M** mute control. No third-party samples were used.
 
-[Download v1.5](downloads/Catch-the-scrap-v1.5.rbxl) · [Guardian rules and size preview](docs/STAGE_GUARDIANS_V15.md) · [Windows guide (Swedish)](docs/STUDIO_START_SV.md) · [Development](docs/DEVELOPMENT.md)
+**Roblox upload/setup remains required:** the audio ID is empty. Upload the
+supplied WAV under the correct owner, grant the experience access and set
+`SoundService.ScrapyardMusic.SoundId`. The place is prepared for that ID; it does
+not contain embedded playable audio. [Swedish setup](docs/BACKGROUND_MUSIC_SV.md).
 
-Future gears/equipment ideas: [backlog and EMP reminder](docs/BACKLOG.md). Revisit
-this list when equipment development begins.
+[Listen: MP3](downloads/Scrapyard-Afterglow.mp3) · [Upload master: WAV](downloads/Scrapyard-Afterglow.wav) · [Prepared v1.12 place](downloads/Catch-the-scrap-v1.12.rbxl) · [Development](docs/DEVELOPMENT.md)
 
-Retained v1.4 systems include **61 Robotdex species**, random builds/box results,
-six initial/eight maximum platforms, persistent progress with offline fallback,
-rebirth, Gold/Rainbow mutations, daily quests, guide, two-hand carrying and
-cinematic/audio/UI effects. Admin includes UserId **11824623188**.
+Retained v1.11 features include 61 species, six Robotdex versions, five mutation
+types, auras, giant guards plus existing drones, persistent progress with offline
+fallback, six/eight platforms, rebirth, daily quests and the simpler sound set.
+Game balance and enemy systems are unchanged by this music task. The exact v1.11
+upload is archived and recovered in its own commit.
 
-All game text is English. Build/check: `python3 scripts/check.py`. Automated
-checks and both place formats pass; native Studio behavior, DataStore saving and
-device performance still require playtests. The size/speed values are our own
-provisional balance, not measured values from the reference Steal An Egg.
-
-The uploaded v1.4 place is archived in downloads and its recovered source is
-committed separately. Older release documents describe earlier rules. The
-original planning brief follows below and is not the current implementation.
+Future ideas: [EMP and robot selling backlog](docs/BACKLOG.md). All game copy is
+English. Check/build with `python3 scripts/check.py`; native audio upload,
+permission and listening tests still require Roblox Studio. Historical release
+documents describe earlier versions. The original planning brief follows below.
 
 CATCH THE SCRAP — Project Brief / Game Design Document
 

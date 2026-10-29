@@ -103,6 +103,9 @@ return table.freeze({
     -- Rainbow, Lava, Galaxy, Discover, Alarm, Catch, Escape, Guide, Rebirth,
     -- GuardAlert, Zap, Stomp.
     Audio = { Master = 0.8, Overrides = {} :: {[string]: string}, OverrideVolume = {} :: {[string]: number} },
+    -- Original background loop. Upload the supplied audio, then set the ID on
+    -- SoundService.ScrapyardMusic (or override it here). M mutes all game audio.
+    Music = { Enabled = true, SoundId = "", Volume = 0.32, DuckChase = 0.35, DuckCinematic = 0.45, FadeInSeconds = 3, FadeSeconds = 0.5 },
     -- Security drones patrol Epic and higher zones and chase players carrying loot.
     Drones = {
         Stages = { [4] = 2, [5] = 2, [6] = 3, [7] = 3 },

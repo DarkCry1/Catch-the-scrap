@@ -4,7 +4,7 @@ No Studio physics, graphics or real DataStore access is claimed by these checks.
 """
 from pathlib import Path
 import subprocess, shutil
-ROOT=Path(__file__).resolve().parents[1]
+ROOT=Path(__file__).resolve().parents[2]
 header=r'''
 --!nonstrict
 local nativeRequire=require

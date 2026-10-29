@@ -1,5 +1,5 @@
 --!strict
--- Regression coverage for the uploaded v1.4 systems retained by the guardian release.
+-- Regression coverage for the uploaded v1.11 systems retained by the background music release.
 local Config=require("../src/shared/Config")
 local Catalog=require("../src/shared/RobotCatalog")
 local Economy=require("../src/shared/Economy")
@@ -48,8 +48,8 @@ for _,stage in Config.Stages do
     end
 end
 check(Economy.discovered(all)==61,"all sixty-one species remain legitimately reachable")
-check(Mutations.roll(0)=="Rainbow" and Mutations.roll(.02)=="Gold" and Mutations.roll(.9)==nil,"mutation odds retained")
-check(Mutations.multiplier("Gold")==2 and Mutations.multiplier("Rainbow")==4,"mutation payouts retained")
+check(Mutations.roll(0)=="Galaxy" and Mutations.roll(.004)=="Lava" and Mutations.roll(.012)=="Rainbow" and Mutations.roll(.025)=="Diamond" and Mutations.roll(.07)=="Gold" and Mutations.roll(.9)==nil,"all five mutation pools retained")
+check(Mutations.multiplier("Gold")==2 and Mutations.multiplier("Diamond")==3 and Mutations.multiplier("Rainbow")==4 and Mutations.multiplier("Lava")==5 and Mutations.multiplier("Galaxy")==8,"all mutation payouts retained")
 for rebirths=0,4 do
     local account=Schema.deserialize(Schema.serialize(all));account.rebirths=rebirths;account.cash=Rebirth.cost(rebirths)
     account.upgrades.Speed=3;account.upgrades.Strength=2

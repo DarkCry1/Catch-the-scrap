@@ -1,9 +1,9 @@
 --!strict
-local Config=require("../src/shared/Config")
-local Rules=require("../src/shared/GuardianRules")
-local Nav=require("../src/shared/GuardianNavigation")
-local Blueprint=require("../src/shared/GuardianBlueprint")
-local Yard=require("../src/shared/ScrapyardBlueprint")
+local Config=require("../../src/shared/Config")
+local Rules=require("../../src/shared/GuardianRules")
+local Nav=require("../../src/shared/GuardianNavigation")
+local Blueprint=require("../../src/shared/GuardianBlueprint")
+local Yard=require("../../src/shared/ScrapyardBlueprint")
 local n=0
 local function check(ok:boolean,message:string) n+=1;assert(ok,message) end
 check(#Config.Guardians.Profiles==#Config.Stages and #Config.Stages==7,"one profile per district")

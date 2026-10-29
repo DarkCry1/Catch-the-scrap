@@ -111,6 +111,19 @@
     "SoundService": {
       "$properties": {
         "RespectFilteringEnabled": true
+      },
+      "ScrapyardMusic": {
+        "$className": "Sound",
+        "$properties": {
+          "SoundId": "",
+          "Looped": true,
+          "Volume": 0
+        },
+        "$attributes": {
+          "TrackTitle": "Scrapyard Afterglow",
+          "License": "CC0-1.0",
+          "Setup": "Upload the supplied original loop; paste the audio asset ID into SoundId."
+        }
       }
     }
   }

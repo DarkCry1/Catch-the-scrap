@@ -35,7 +35,7 @@ def main():
     run(tool('luau-analyze'), *sorted((ROOT / 'src/shared').glob('*.luau')), *tests)
     for test in tests:
         run(tool('luau'), test)
-    run(shutil.which('python3') or 'python', 'scripts/check-guardians.py')
+    run(shutil.which('python3') or 'python', 'scripts/check-music.py')
     run(shutil.which('python3') or 'python', 'scripts/check-opening.py')
     # The standalone analyzer has no Roblox engine globals/types. The compiler
     # still checks every engine-facing script; runtime checks need Studio.
@@ -57,9 +57,9 @@ def main():
     assert binary.read_bytes().startswith(b'<roblox!'), 'Expected a binary Roblox place'
     print(f'Build verified: {len(scripts)} scripts/modules and 2 remotes; both place formats generated.', flush=True)
     with zipfile.ZipFile(build / 'Catch-the-scrap-source.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
-        for folder in ('src', 'tests', 'scripts', 'docs'):
+        for folder in ('src', 'tests', 'scripts', 'docs', 'assets'):
             for path in sorted((ROOT / folder).rglob('*')):
-                if path.is_file() and '__pycache__' not in path.parts:
+                if path.is_file() and '__pycache__' not in path.parts and path.suffix != '.wav':
                     archive.write(path, Path('Catch-the-scrap') / path.relative_to(ROOT))
         for name in ('README.md', '.gitignore', 'default.project.json'):
             archive.write(ROOT / name, Path('Catch-the-scrap') / name)

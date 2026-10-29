@@ -89,6 +89,8 @@ function Audio.start()
     end
     -- No EQ on UI sounds any more: cutting the lows made clicks sound thin.
     make("Ui",.9)
+    make("Music",.85)
+    Audio.musicGroup=groups.Music
     make("Fx",1,function(g) local r=Instance.new("ReverbSoundEffect");r.DecayTime=.9;r.Density=.8;r.Diffusion=.9;r.DryLevel=0;r.WetLevel=-14;r.Parent=g end)
     make("Big",1,function(g) local r=Instance.new("ReverbSoundEffect");r.DecayTime=2.4;r.Density=1;r.Diffusion=1;r.DryLevel=-1;r.WetLevel=-6;r.Parent=g
         local c=Instance.new("ChorusSoundEffect");c.Depth=.12;c.Mix=.35;c.Rate=.8;c.Parent=g end)
