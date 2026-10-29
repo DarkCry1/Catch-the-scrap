@@ -24,7 +24,10 @@ function Announcements.start(player,remote)
     title.TextScaled=true
     local fontSize=Instance.new("UITextSizeConstraint");fontSize.MinTextSize=16;fontSize.MaxTextSize=28;fontSize.Parent=title
     local sub=text(banner,14,81,25)
-    local ticker=text(gui,13,0,20);ticker.AnchorPoint=Vector2.new(.5,0);ticker.Position=UDim2.new(.5,0,0,8);ticker.Size=UDim2.new(.65,0,0,20)
+    -- The countdown lives in its own low ScreenGui so open panels (Robotdex,
+    -- Daily, Rebirth) cover it instead of it drawing over their tabs.
+    local tickerGui=Instance.new("ScreenGui");tickerGui.Name="RareRobotTicker";tickerGui.ResetOnSpawn=false;tickerGui.DisplayOrder=4;tickerGui.Parent=gui.Parent
+    local ticker=text(tickerGui,13,0,20);ticker.AnchorPoint=Vector2.new(.5,0);ticker.Position=UDim2.new(.5,0,0,8);ticker.Size=UDim2.new(.65,0,0,20)
     ticker.TextStrokeTransparency=.35
     local serial=0;local seen={}
     local function receive(channel,packet)

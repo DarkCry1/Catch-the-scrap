@@ -4,6 +4,7 @@
 -- player saw; the server decides everything else.
 local Prompts=game:GetService("ProximityPromptService")
 local Kit=require(script.Parent.UiKit)
+local Audio=require(script.Parent.Audio)
 local Panel={}
 
 function Panel.start(player,remote,hud)
@@ -25,7 +26,7 @@ function Panel.start(player,remote,hud)
         line(string.format("Income multiplier  x%.1f  →  x%.1f",data.currentMultiplier,data.nextMultiplier),15,Kit.GREEN,Enum.Font.GothamBold,20)
         line(string.format("Robot platforms  %d  →  %d",data.slots,data.nextSlots),15,Kit.GREEN,Enum.Font.GothamBold,20)
         line("RESETS: cash, every robot on your platforms, Speed and Strength upgrades.",13,Kit.RED,Enum.Font.GothamBold,34)
-        line("KEEPS: your Robotdex, Gold/Rainbow collection, claimed rewards, income bonuses, titles, skins and daily quests.",13,Kit.MUTED,Enum.Font.Gotham,52)
+        line("KEEPS: your Robotdex, every mutation version, claimed rewards, income bonuses, titles, skins and daily quests.",13,Kit.MUTED,Enum.Font.Gotham,52)
         line(string.format("Cost: %s   ·   You have: %s",Kit.money(data.cost),Kit.money(player:GetAttribute("Cash") or data.cash)),15,Kit.INK,Enum.Font.GothamBold,20)
         local ready=data.reason=="" and data.rebirths<data.max and (player:GetAttribute("Cash") or 0)>=data.cost
         shownReady=ready
@@ -42,13 +43,13 @@ function Panel.start(player,remote,hud)
     local hudEnabled,promptEnabled=true,true
     local function hide()
         if not gui.Enabled then return end
-        gui.Enabled=false;armed=false;hud.Enabled=hudEnabled;Prompts.Enabled=promptEnabled
+        Audio.play("Close");gui.Enabled=false;armed=false;hud.Enabled=hudEnabled;Prompts.Enabled=promptEnabled
     end
     local function open()
         if gui.Enabled then hide();return end
         if not hud.Enabled then return end
         hudEnabled,promptEnabled=hud.Enabled,Prompts.Enabled;hud.Enabled=false;Prompts.Enabled=false
-        gui.Enabled=true;status.Text="";render();remote:FireServer("RequestRebirth")
+        Audio.play("Open");gui.Enabled=true;status.Text="";render();remote:FireServer("RequestRebirth")
     end
     launcher.Activated:Connect(open);close.Activated:Connect(hide)
     local function updateLauncher()

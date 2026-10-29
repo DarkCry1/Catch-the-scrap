@@ -3,7 +3,7 @@
 export type Part = { name: string, size: {number}, position: {number}, color: {number}, material: string,
     shape: string, yaw: number, pitch: number, roll: number, collidable: boolean, transparency: number, reflectance: number }
 export type Spawn = { position: {number}, rarity: string }
-export type Sign = { position: {number}, text: string, color: {number} }
+export type Sign = { position: {number}, text: string, color: {number}, size: number? }
 export type Bounds = { x: number, z: number, width: number, depth: number }
 export type Effect = {kind: string, position: {number}, color: {number}}
 export type Layout = { parts: {Part}, spawns: {Spawn}, signs: {Sign}, bounds: {Bounds}, effects: {Effect}, crates: {{position: {number},stage: number}} }
@@ -162,6 +162,7 @@ function Blueprint.build(width: number, zoneLength: number, start: number): Layo
 
         end
         table.insert(layout.signs, {position={0, 14, first + 15},text=string.format("STAGE %02d / %s / %s",zone,stage.Rarity:upper(),stage.Name:upper()),color=tint})
+        table.insert(layout.signs, {position={0, 10.5, first + 15},text=string.format("GUARD ROBOTS: SPEED %g",Config.Guards.Speed[zone]),color={255,110,90},size=.45})
         for row = 0, 7 do
             for _, x in {-55, -22, 22, 55} do
                 table.insert(layout.spawns,{ position={x, 2.2, first + (row + .5) * zoneLength / 8}, rarity=stage.Rarity })

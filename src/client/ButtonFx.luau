@@ -35,13 +35,14 @@ function Fx.attach(button)
     end
     button.MouseEnter:Connect(function()
         hovering=true;settle(Fx.In)
-        if live() then Audio.play("Hover") end
+        if live() and Audio.Cues.Hover and #Audio.Cues.Hover>0 then Audio.play("Hover") end
     end)
     button.MouseLeave:Connect(function() hovering=false;pressed=false;settle(Fx.Out) end)
     button.MouseButton1Down:Connect(function() pressed=true;settle(Fx.Press) end)
     button.MouseButton1Up:Connect(function() pressed=false;settle(Fx.Release) end)
     button.Activated:Connect(function()
-        Audio.play(if live() then "Click" else "Deny")
+        local label=if button:IsA("TextButton") then string.upper(button.Text) else ""
+        Audio.play(if not live() then "Deny" elseif string.sub(label,1,5)=="CLAIM" then "ClaimPress" else "Click")
         if not hovering then
             -- Touch/gamepad: a quick pop instead of a hover state.
             scale.Scale=Fx.PressScale;TweenService:Create(scale,Fx.Release,{Scale=1}):Play()

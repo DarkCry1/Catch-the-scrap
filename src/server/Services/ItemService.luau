@@ -60,7 +60,7 @@ function ItemService:spawn(slot)
     prompt.AutoLocalize = false
     prompt.ObjectText = string.format("%s · %s · weight %d", definition.name, definition.rarity, definition.weight)
     prompt.KeyboardKeyCode = Enum.KeyCode.E
-    prompt.HoldDuration = 0.15
+    prompt.HoldDuration = 0
     prompt.MaxActivationDistance = Config.InteractionDistance
     prompt.RequiresLineOfSight = false
     prompt.Parent = root

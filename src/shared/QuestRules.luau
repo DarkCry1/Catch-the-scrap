@@ -15,7 +15,7 @@ local templates: {Template} = {
     { Id = "Unbox", Text = "Open %d robot boxes", Event = "Unbox", Targets = { 1, 1, 2 } },
     { Id = "Discover", Text = "Discover %d new Robotdex entries", Event = "Discover", Targets = { 1, 2, 3 } },
     { Id = "Upgrade", Text = "Buy %d upgrades from Milo", Event = "Upgrade", Targets = { 1, 2, 3 } },
-    { Id = "Escape", Text = "Escape %d scrap guardian chases with loot", Event = "Escape", Targets = { 1, 2, 4 } },
+    { Id = "Escape", Text = "Escape %d guard or drone chases with loot", Event = "Escape", Targets = { 1, 2, 4 } },
 }
 Rules.Templates = templates
 

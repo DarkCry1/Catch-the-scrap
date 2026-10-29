@@ -20,6 +20,7 @@ local MechanicService = require(script.Parent.Services.MechanicService)
 local RebirthService=require(script.Parent.Services.RebirthService)
 local ProgressService=require(script.Parent.Services.ProgressService)
 local SecurityService=require(script.Parent.Services.SecurityService)
+local GuardService=require(script.Parent.Services.GuardService)
 local Mutations=require(Shared.Mutations)
 
 local inventory = Inventory.new(Config.InteractionDistance)
@@ -52,6 +53,7 @@ economy.onIndexChange=function(player) index:send(player) end
 local progress=ProgressService.new(economy,Remotes.Action)
 local rebirth=RebirthService.new(economy,carry,Remotes.Action)
 local security=SecurityService.new(world,carry,Remotes.Action)
+local guards=GuardService.new(world,carry,Remotes.Action)
 economy.onDiscovery=function(player,id,new,source,mutation,slot)
     local entry=economy.players[player]
     local key=if mutation then Mutations.key(mutation,id) else nil
@@ -64,6 +66,7 @@ economy.onDiscovery=function(player,id,new,source,mutation,slot)
 end
 carry.onEvent=function(player,kind,amount,rarity,count)
     progress:event(player,kind,amount,rarity)
+    if kind=="Pickup" then guards:theft(player) end
     if kind=="Deposit" then
         local entry=economy.players[player]
         local recipe=Config.Robot.Recipes[rarity]
@@ -75,6 +78,8 @@ end
 mechanic.onEvent=function(player,kind,amount) progress:event(player,kind,amount) end
 security.onEscape=function(player) progress:event(player,"Escape",1) end
 security:start()
+guards.onEscape=function(player) progress:event(player,"Escape",1) end
+guards:start()
 
 -- DataStore access throws in Studio unless "Enable Studio Access to API
 -- Services" is on; SaveService then runs session-only.
@@ -141,6 +146,7 @@ Remotes.Action.OnServerEvent:Connect(function(player, action, ...)
     elseif action=="Rebirth" and count==1 then rebirth:request(player,...)
     elseif action=="RetireRobot" and count==1 then index:retire(player,...)
     elseif action=="ClaimReward" and count==1 then index:claim(player,...)
+    elseif action=="ClaimEntries" and count==0 then index:claimEntries(player)
     elseif action=="EquipCosmetic" and count==2 then index:equip(player,...)
     elseif action=="Admin" and count==2 then admin:run(player,...)
     elseif action == "BuyUpgrade" and count == 2 then
@@ -162,4 +168,4 @@ Players.PlayerRemoving:Connect(function(player)
 end)
 for _, player in Players:GetPlayers() do task.spawn(join,player) end
 Remotes:SetAttribute("Ready", true)
-print("[Catch the Scrap] Scrapyard ready. Stage Guardians v1.5 / Robotdex: "..#Catalog.List.." species. Saving: "..(if store then "DataStore" else "session-only"))
+print("[Catch the Scrap] v1.11 ready. Robotdex: "..#Catalog.List.." species. Saving: "..(if store then "DataStore" else "session-only"))

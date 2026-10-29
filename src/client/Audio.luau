@@ -14,7 +14,11 @@ Audio.Samples={
     Ping="rbxasset://sounds/electronicpingshort.wav",
     Button="rbxasset://sounds/button.wav",
     Click="rbxasset://sounds/clickfast.wav",
-    Swoosh="rbxasset://sounds/swoosh.wav",
+    -- swoosh.wav is blocked in Studio/live ("Asset is not approved for the
+    -- requester"); action_jump.mp3 is an airy whoosh that loads (checked in Studio).
+    Swoosh="rbxasset://sounds/action_jump.mp3",
+    Bass="rbxasset://sounds/bass.wav",
+    Snap="rbxasset://sounds/snap.wav",
     Thud="rbxasset://sounds/action_jump_land.mp3",
     Rise="rbxasset://sounds/action_get_up.mp3",
 }
@@ -31,24 +35,35 @@ local function join(...)
     return out
 end
 Audio.Cues={
-    Hover={{"Click",14,.06,0,"Ui"}},
-    Click={{"Button",2,.3,0,"Ui"},{"Click",9,.12,.01,"Ui"}},
-    Deny={{"Button",-10,.28,0,"Ui"},{"Button",-14,.28,.09,"Ui"}},
-    Open={{"Swoosh",9,.14,0,"Ui"},{"Click",7,.1,.03,"Ui"}},
-    Close={{"Swoosh",3,.12,0,"Ui"}},
+    -- v1.11 UI set: one clean sample at its natural pitch per action (the
+    -- v1.10 layered, pitched-up set sounded thin and "chipmunky"). No hover
+    -- sound. Swap any cue for a Creator Store sound in Config.Audio.Overrides.
+    Hover={},
+    Click={{"Click",0,.55,0,"Ui"}},
+    Deny={{"Button",-5,.4,0,"Ui"}},
+    Open={{"Button",0,.45,0,"Ui"}},
+    Close={{"Click",-2,.45,0,"Ui"}},
+    -- Pressing a CLAIM button; the chime below plays when it pays out.
+    ClaimPress={{"Click",0,.6,0,"Ui"},{"Button",0,.22,0,"Ui"}},
     Pickup={{"Swoosh",7,.2,0,"Fx"},{"Click",5,.24,.03,"Fx"}},
     Deposit={{"Thud",-5,.5,0,"Fx"},{"Button",-7,.28,.05,"Fx"}},
     Built=join(arpeggio({0,4,7,12},.07,.34),{{"Thud",-7,.4,0,"Fx"},{"Swoosh",0,.18,.02,"Fx"}}),
     BuiltNew=join(arpeggio({0,4,7,11,14},.065,.34),{{"Thud",-7,.4,0,"Fx"},{"Ping",24,.14,.42,"Big"},{"Ping",28,.12,.5,"Big"}}),
     Gold=join(arpeggio({0,4,7,12,16,19},.05,.32,"Big"),{{"Thud",-9,.45,0,"Fx"},{"Ping",24,.16,.36,"Big"},{"Ping",31,.12,.44,"Big"}}),
     Rainbow=join(arpeggio({0,4,7,11,14,18,21,24},.045,.3,"Big"),arpeggio({24,28,31,36},.06,.14,"Big",.42),{{"Thud",-9,.5,0,"Fx"},{"Swoosh",12,.2,.1,"Big"}}),
+    Diamond=join(arpeggio({7,12,16,19,24,28},.045,.28,"Big"),arpeggio({31,36,31,36},.05,.1,"Big",.32),{{"Thud",-9,.42,0,"Fx"},{"Click",19,.14,.05,"Big"}}),
+    Lava=join({{"Thud",-16,.8,0,"Fx"},{"Thud",-21,.6,.04,"Big"},{"Swoosh",-12,.32,0,"Big"},{"Rise",-9,.35,.05,"Big"}},arpeggio({-5,0,3,7,12,15},.06,.3,"Big",.1),{{"Ping",3,.18,.55,"Big"}}),
+    Galaxy=join({{"Swoosh",-6,.26,0,"Big"},{"Swoosh",0,.26,.1,"Big"},{"Swoosh",6,.26,.2,"Big"},{"Swoosh",12,.26,.3,"Big"},{"Thud",-12,.6,.35,"Fx"}},
+        arpeggio({0,7,12,19,24,31,36},.06,.24,"Big",.35),arpeggio({24,28,31,35},0,.13,"Big",.85),arpeggio({36,40,43},.08,.1,"Big",1.0)),
     Discover=join(arpeggio({0,7,12,16,19},.09,.3,"Big"),{{"Swoosh",5,.16,0,"Big"}}),
-    Coin={{"Ping",19,.08,0,"Ui"}},
-    CoinBig=arpeggio({12,16,19,24},.05,.2,"Ui"),
-    Claim=join(arpeggio({12,16,19,24},.05,.22,"Ui"),{{"Button",4,.22,0,"Ui"},{"Ping",31,.12,.24,"Big"}}),
+    -- Payout chime: three clean pings (root, fifth, octave).
+    Claim={{"Ping",0,.38,0,"Ui"},{"Ping",7,.32,.09,"Ui"},{"Ping",12,.3,.18,"Ui"}},
     Alarm={{"Ping",-12,.34,0,"Alarm"},{"Ping",-7,.34,.18,"Alarm"},{"Ping",-12,.34,.36,"Alarm"},{"Ping",-7,.34,.54,"Alarm"},{"Swoosh",-10,.36,0,"Fx"}},
     Catch={{"Thud",-12,.7,0,"Fx"},{"Button",-16,.4,.05,"Fx"},{"Ping",-19,.3,.1,"Alarm"}},
     Escape={{"Swoosh",5,.28,0,"Fx"},{"Ping",7,.22,.08,"Fx"},{"Ping",12,.22,.16,"Fx"}},
+    GuardAlert={{"Ping",-5,.34,0,"Alarm"},{"Ping",0,.34,.16,"Alarm"},{"Ping",-5,.34,.32,"Alarm"},{"Ping",0,.34,.48,"Alarm"},{"Rise",-3,.3,0,"Fx"}},
+    Stomp={{"Bass",-12,.5,0,"Fx"},{"Thud",-19,.45,.02,"Big"}},
+    Zap={{"Swoosh",14,.34,0,"Fx"},{"Click",-6,.5,0,"Fx"},{"Ping",22,.18,.02,"Alarm"},{"Ping",17,.16,.06,"Alarm"},{"Thud",-12,.6,.04,"Fx"}},
     Guide=arpeggio({0,7,12},.08,.26,"Big"),
     Rebirth=join(
         {{"Swoosh",-18,.3,0,"Big"},{"Swoosh",-12,.3,.12,"Big"},{"Swoosh",-6,.3,.24,"Big"},{"Swoosh",0,.3,.36,"Big"},{"Swoosh",6,.3,.48,"Big"},{"Rise",-5,.4,.2,"Big"}},
@@ -72,7 +87,8 @@ function Audio.start()
         if setup then pcall(setup,g) end
         groups[name]=g
     end
-    make("Ui",.9,function(g) local eq=Instance.new("EqualizerSoundEffect");eq.LowGain=-8;eq.MidGain=0;eq.HighGain=2;eq.Parent=g end)
+    -- No EQ on UI sounds any more: cutting the lows made clicks sound thin.
+    make("Ui",.9)
     make("Fx",1,function(g) local r=Instance.new("ReverbSoundEffect");r.DecayTime=.9;r.Density=.8;r.Diffusion=.9;r.DryLevel=0;r.WetLevel=-14;r.Parent=g end)
     make("Big",1,function(g) local r=Instance.new("ReverbSoundEffect");r.DecayTime=2.4;r.Density=1;r.Diffusion=1;r.DryLevel=-1;r.WetLevel=-6;r.Parent=g
         local c=Instance.new("ChorusSoundEffect");c.Depth=.12;c.Mix=.35;c.Rate=.8;c.Parent=g end)
@@ -96,7 +112,9 @@ function Audio.play(name)
     if Audio.muted or not Audio.ready then return end
     local override=Config.Audio.Overrides[name]
     if override then
-        local s=Instance.new("Sound");s.SoundId=override;s.Volume=.6;s.SoundGroup=groups.Fx;s.Parent=Audio.master;s:Play();Debris:AddItem(s,8)
+        local s=Instance.new("Sound");s.SoundId=override;s.Volume=Config.Audio.OverrideVolume[name] or .6
+        s.SoundGroup=if Audio.Cues[name] and Audio.Cues[name][1] then group(Audio.Cues[name][1][5]) else groups.Fx
+        s.Parent=Audio.master;s:Play();Debris:AddItem(s,8)
         return
     end
     local cue=Audio.Cues[name];if not cue then return end
@@ -119,17 +137,4 @@ function Audio.setMuted(value)
     if Audio.master then Audio.master.Volume=if Audio.muted then 0 else Config.Audio.Master end
 end
 
--- Coins: a soft tick while income flows (rate limited), a cascade for big gains.
-function Audio.watchCash(player)
-    local last=player:GetAttribute("Cash") or 0
-    local lastTick,lastBig=0,0
-    player:GetAttributeChangedSignal("Cash"):Connect(function()
-        local cash=player:GetAttribute("Cash") or 0
-        local delta=cash-last;last=cash
-        if delta<=0 then return end
-        local now=os.clock()
-        if delta>=math.max(1000,cash*.12) and now-lastBig>.4 then lastBig=now;Audio.play("CoinBig")
-        elseif now-lastTick>=Config.Audio.IncomeTickSeconds then lastTick=now;Audio.play("Coin") end
-    end)
-end
 return Audio

@@ -12,8 +12,7 @@ local RobotBuilder = {}
 local finishes = { rust = Enum.Material.CorrodedMetal, bone = Enum.Material.SmoothPlastic, white = Enum.Material.SmoothPlastic, sand = Enum.Material.SmoothPlastic, black = Enum.Material.SmoothPlastic, void = Enum.Material.Glass }
 
 -- Palettes repainted by a mutation (glow/trim keep the rarity color).
-local painted = { steel = true, dark = false, copper = true, rust = true, olive = true, navy = true, bone = true, crimson = true,
-    teal = true, graphite = true, sand = true, white = true, gold = true, ice = true, void = true, violet = true, wall = true, floor = true }
+local painted = Mutations.Painted
 
 function RobotBuilder.build(parent, origin, stage, complete, rarity, scale,variant,route,mutation)
     scale = scale or 1
@@ -26,6 +25,8 @@ function RobotBuilder.build(parent, origin, stage, complete, rarity, scale,varia
     model:SetAttribute("Income",Catalog.income(recipe.Income,variant)*Mutations.multiplier(mutation))
     model:SetAttribute("Mutation",mutation)
     local mutationInfo = if complete then Mutations.get(mutation) else nil
+    -- Clients build the glowing aura (MutationAuras) for tagged robots.
+    if mutationInfo then CollectionService:AddTag(model, "MutatedRobot") end
     local partIndex = 0
     model:SetAttribute("BuildStage", stage)
     model:SetAttribute("Complete", complete)
@@ -53,22 +54,25 @@ function RobotBuilder.build(parent, origin, stage, complete, rarity, scale,varia
         object.Parent = model
         partIndex += 1
         if mutationInfo and painted[definition.palette] then
-            -- Gold: polished gold plating. Rainbow: a moving spectrum (client-animated).
-            object.Color = Color3.fromRGB(unpack(mutationInfo.Color))
-            object.Material = Enum.Material.Metal
-            object.Reflectance = if mutationInfo.Id == "Gold" then .28 else .1
-            if mutationInfo.Id == "Rainbow" then Decor.spectrum(object, partIndex * .037) end
+            -- Shared look (Mutations.paint) so the Robotdex preview matches.
+            local paint = Mutations.paint(mutationInfo.Id, partIndex)
+            object.Color = Color3.fromRGB(unpack(paint.Color))
+            object.Material = Enum.Material[paint.Material] or Enum.Material.Metal
+            object.Reflectance = paint.Reflectance
+            object.Transparency = paint.Transparency
+            if paint.Spectrum then Decor.spectrum(object, partIndex * .037) end
         end
         if complete and rarity=="Celestial" and (definition.palette=="amber" or definition.palette=="energy") then Decor.spectrum(object,(definition.position[1]+definition.position[2])*.13) end
         if complete and definition.name == "Reactor" then
             CollectionService:AddTag(object, "WorkingRobotReactor")
             if mutationInfo then
                 local sparkle = Instance.new("ParticleEmitter"); sparkle.Name = "MutationSparkle"
-                sparkle.Texture = "rbxasset://textures/particles/sparkles_main.dds"; sparkle.Rate = if mutationInfo.Id == "Rainbow" then 10 else 6
+                sparkle.Texture = "rbxasset://textures/particles/sparkles_main.dds"; sparkle.Rate = mutationInfo.Sparkles
                 sparkle.Lifetime = NumberRange.new(.8, 1.6); sparkle.Speed = NumberRange.new(.6, 2); sparkle.SpreadAngle = Vector2.new(180, 180)
                 sparkle.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, .28), NumberSequenceKeypoint.new(1, 0) })
-                sparkle.LightEmission = 1; sparkle.Color = ColorSequence.new(Color3.fromRGB(unpack(mutationInfo.Color))); sparkle.Parent = object
-                if mutationInfo.Id == "Rainbow" then Decor.spectrum(sparkle, .5) end
+                sparkle.LightEmission = 1; sparkle.Parent = object
+                sparkle.Color = if mutationInfo.AccentEvery > 0 then ColorSequence.new(Color3.fromRGB(unpack(mutationInfo.Accent)), Color3.fromRGB(unpack(mutationInfo.Accent2))) else ColorSequence.new(Color3.fromRGB(unpack(mutationInfo.Color)))
+                if mutationInfo.Pattern == "Spectrum" then Decor.spectrum(sparkle, .5) end
             end
         end
     end

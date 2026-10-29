@@ -54,8 +54,9 @@ local function button(parent,value,pos,dims,color,ink,callback)
 end
 
 -- 3D picture of a species. silhouette=true renders a black shape (undiscovered).
+-- mutation paints it like that version in the world (Mutations.paint).
 local spinning={}
-local function robotView(parent,id,silhouette,detail,spin)
+local function robotView(parent,id,silhouette,detail,spin,mutation)
     local species=Catalog.get(id)
     local vp=Instance.new("ViewportFrame");vp.BackgroundTransparency=1;vp.Size=UDim2.fromScale(1,1);vp.Ambient=Color3.fromRGB(165,160,150)
     vp.LightColor=Color3.fromRGB(255,244,226);vp.LightDirection=Vector3.new(-1,-1.4,-1.2);vp.Parent=parent
@@ -63,7 +64,9 @@ local function robotView(parent,id,silhouette,detail,spin)
     local model=Instance.new("Model");model.Name=id
     local top,wide=0,0
     local tint=rarityColor(species.Rarity)
+    local index=0
     for _,d in Variants.build(id) do
+        index+=1
         local big=math.max(d.size[1],d.size[2],d.size[3])
         if not detail and big<.36 then continue end
         local p=Instance.new("Part");p.Anchored=true;p.CanCollide=false;p.Size=Vector3.new(unpack(d.size))
@@ -72,6 +75,11 @@ local function robotView(parent,id,silhouette,detail,spin)
         local glow=d.palette=="energy"
         p.Color=if d.palette=="amber" or glow then tint else rgb(Config.Palette[d.palette] or {150,150,150})
         p.Material=if glow then Enum.Material.Neon else Enum.Material.SmoothPlastic
+        local paint=if mutation and not silhouette and Mutations.Painted[d.palette] then Mutations.paint(mutation,index) else nil
+        if paint then
+            p.Color=rgb(paint.Color);p.Reflectance=paint.Reflectance
+            p.Material=if paint.Neon then Enum.Material.Neon else (Enum.Material[paint.Material] or Enum.Material.SmoothPlastic)
+        end
         p.Parent=model
         top=math.max(top,d.position[2]+big/2);wide=math.max(wide,math.abs(d.position[1])+big/2,math.abs(d.position[3])+big/2)
     end
@@ -84,11 +92,66 @@ local function robotView(parent,id,silhouette,detail,spin)
     if spin then spinning[vp]={model=model,start=os.clock()} end
     return vp
 end
+-- Glowing aura behind a mutated robot preview (rays + pulsing halo).
+local halos={}
+local function aura(parent,mutation)
+    local m=Mutations.get(mutation);if not m then return end
+    local color=rgb(m.Color)
+    local holder=Instance.new("Frame");holder.Name="Aura";holder.BackgroundTransparency=1;holder.Size=UDim2.fromScale(1,1);holder.ClipsDescendants=true;holder.ZIndex=1;holder.Parent=parent;corner(holder,8)
+    local rays=Instance.new("Frame");rays.Name="AuraRays";rays.BackgroundTransparency=1;rays.AnchorPoint=Vector2.new(.5,.5);rays.Position=UDim2.fromScale(.5,.55);rays.Size=UDim2.fromOffset(0,0);rays.ZIndex=1;rays.Parent=holder
+    local rayList={}
+    for i=1,12 do
+        local ray=Instance.new("Frame");ray.AnchorPoint=Vector2.new(.5,1);ray.Position=UDim2.fromScale(.5,.5);ray.Size=UDim2.fromOffset(if i%2==0 then 18 else 8,420)
+        ray.BackgroundColor3=color;ray.BorderSizePixel=0;ray.Rotation=i*30;ray.ZIndex=1;ray.Parent=rays
+        local fade=Instance.new("UIGradient");fade.Rotation=90;fade.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.8,.6),NumberSequenceKeypoint.new(1,.45)});fade.Parent=ray
+        table.insert(rayList,ray)
+    end
+    local halo=Instance.new("Frame");halo.Name="AuraHalo";halo.AnchorPoint=Vector2.new(.5,.5);halo.Position=UDim2.fromScale(.5,.55);halo.Size=UDim2.fromScale(.7,.7)
+    halo.BackgroundColor3=color;halo.BackgroundTransparency=.45;halo.BorderSizePixel=0;halo.ZIndex=1;halo.Parent=holder
+    local ratio=Instance.new("UIAspectRatioConstraint");ratio.AspectRatio=1;ratio.Parent=halo
+    local round=Instance.new("UICorner");round.CornerRadius=UDim.new(.5,0);round.Parent=halo
+    local ring=Instance.new("UIStroke");ring.Color=rgb(m.Accent2);ring.Thickness=3;ring.Transparency=.25;ring.Parent=halo
+    local shine=Instance.new("UIGradient");shine.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,.1),NumberSequenceKeypoint.new(.5,.75),NumberSequenceKeypoint.new(1,.1)});shine.Parent=halo
+    local pulse=Instance.new("UIScale");pulse.Parent=halo
+    -- Rising sparkles (twinkling diamonds) and a soft floor glow.
+    local floorGlow=Instance.new("Frame");floorGlow.Name="AuraFloor";floorGlow.AnchorPoint=Vector2.new(.5,.5);floorGlow.Position=UDim2.fromScale(.5,.9);floorGlow.Size=UDim2.fromScale(.75,.16)
+    floorGlow.BackgroundColor3=color;floorGlow.BackgroundTransparency=.35;floorGlow.BorderSizePixel=0;floorGlow.ZIndex=1;floorGlow.Parent=holder
+    local floorRound=Instance.new("UICorner");floorRound.CornerRadius=UDim.new(.5,0);floorRound.Parent=floorGlow
+    local floorFade=Instance.new("UIGradient");floorFade.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.5,0),NumberSequenceKeypoint.new(1,1)});floorFade.Parent=floorGlow
+    local sparks={}
+    for i=1,14 do
+        local spark=Instance.new("Frame");spark.Name="AuraSpark";spark.AnchorPoint=Vector2.new(.5,.5);spark.Size=UDim2.fromOffset(if i%3==0 then 9 else 6,if i%3==0 then 9 else 6)
+        spark.BackgroundColor3=if i%2==0 then rgb(m.Accent2) else Color3.new(1,1,1);spark.BorderSizePixel=0;spark.Rotation=45;spark.ZIndex=3;spark.Parent=holder
+        table.insert(sparks,{frame=spark,x=((i*37)%100)/100,offset=((i*53)%100)/100,speed=.18+((i*29)%10)/50})
+    end
+    halos[holder]={rays=rays,rayList=rayList,halo=halo,ring=ring,shine=shine,pulse=pulse,sparks=sparks,floor=floorGlow,rainbow=m.Pattern=="Spectrum",start=os.clock()}
+    return holder
+end
 RunService.RenderStepped:Connect(function()
     local now=os.clock()
     for vp,entry in spinning do
         if not vp.Parent then spinning[vp]=nil
         else entry.model:PivotTo(CFrame.Angles(0,math.sin((now-entry.start)*.6)*.65,0)) end
+    end
+    for holder,h in halos do
+        if not holder.Parent then halos[holder]=nil;continue end
+        local t=now-h.start
+        h.rays.Rotation=t*18;h.shine.Rotation=t*90
+        h.pulse.Scale=1+math.sin(t*2.6)*.06
+        h.halo.BackgroundTransparency=.45+math.sin(t*2.6)*.12
+        h.floor.BackgroundTransparency=.3+math.sin(t*2.6)*.15
+        for i,sp in h.sparks do
+            local k=(sp.offset+t*sp.speed)%1
+            sp.frame.Position=UDim2.fromScale(.12+sp.x*.76+math.sin(t*2+i)*.02,.92-k*.85)
+            sp.frame.BackgroundTransparency=math.clamp(.1+k*.9+math.sin(t*9+i)*.15,0,1)
+            sp.frame.Rotation=45+t*90*(if i%2==0 then 1 else -1)
+            if h.rainbow then sp.frame.BackgroundColor3=Color3.fromHSV((t*.2+i/14)%1,.5,1) end
+        end
+        if h.rainbow then
+            local c=Color3.fromHSV((t*.2)%1,.6,1)
+            h.halo.BackgroundColor3=c;h.ring.Color=Color3.fromHSV((t*.2+.5)%1,.6,1)
+            for i,r in h.rayList do r.BackgroundColor3=Color3.fromHSV((t*.2+i/12)%1,.6,1) end
+        end
     end
 end)
 
@@ -96,6 +159,7 @@ function Dex.start(player,remote,hud)
     local playerGui=player:WaitForChild("PlayerGui")
     local data={dex={},mdex={},rebirths=0,multiplier=1,claimed={},projects={},perks={income=0,speed=0},titles={},title="",skins={"Default"},skin="Default",stats={built=0,unboxed=0},found=0,total=Catalog.Total}
     local tab,selected,compactDetail="Common",nil,false
+    local version=nil -- selected version of the selected robot (nil = Normal)
     local claimedSet,titleSet,skinSet={}, {}, {}
 
     -- Launcher on the left edge of the HUD.
@@ -112,7 +176,7 @@ function Dex.start(player,remote,hud)
     badge.BackgroundColor3=Color3.fromRGB(226,58,52);badge.TextColor3=Color3.new(1,1,1);badge.Font=Enum.Font.GothamBlack;badge.TextSize=13;badge.AutoLocalize=false;badge.Visible=false;badge.Parent=launcher;corner(badge,12)
 
     -- The book.
-    local gui=Instance.new("ScreenGui");gui.Name="Robotdex";gui.ResetOnSpawn=false;gui.DisplayOrder=20;gui.Enabled=false;gui.IgnoreGuiInset=true;gui.Parent=playerGui
+    local gui=Instance.new("ScreenGui");gui.Name="Robotdex";gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling;gui.ResetOnSpawn=false;gui.DisplayOrder=20;gui.Enabled=false;gui.IgnoreGuiInset=true;gui.Parent=playerGui
     local dim=frame(gui,Color3.fromRGB(6,9,13));dim.BackgroundTransparency=.25
     local book=frame(dim,COVER,UDim2.fromScale(.5,.5),UDim2.new(1,-20,1,-20),"Book");book.AnchorPoint=Vector2.new(.5,.5);corner(book,16);stroke(book,Color3.fromRGB(30,16,10),3)
     local limit=Instance.new("UISizeConstraint");limit.MaxSize=Vector2.new(1060,660);limit.Parent=book
@@ -145,6 +209,20 @@ function Dex.start(player,remote,hud)
     end
     local function owned(id) return (data.dex[id] or 0)>0 end
     local function mutationCount(mutation,id) return (data.mdex or {})[Mutations.key(mutation,id)] or 0 end
+    local function versionCount(mutation,id) return if mutation then mutationCount(mutation,id) else Mutations.normalOwned(data.dex,data.mdex or {},id) end
+    local function versions(id) return Mutations.versionsOwned(data.dex,data.mdex or {},id) end
+    -- Unclaimed entry rewards for owned versions.
+    local function entryReady(id,mutation) return versionCount(mutation,id)>0 and not claimedSet[Rewards.entryId(id,mutation)] end
+    local function anyEntryReady(id)
+        if entryReady(id,nil) then return true end
+        for _,m in Mutations.List do if entryReady(id,m.Id) then return true end end
+        return false
+    end
+    local function dot(parent)
+        local d=Instance.new("TextLabel");d.Name="ClaimDot";d.AnchorPoint=Vector2.new(.5,.5);d.Position=UDim2.new(1,-11,0,28);d.Size=UDim2.fromOffset(18,18)
+        d.BackgroundColor3=Color3.fromRGB(226,58,52);d.Text="!";d.TextColor3=Color3.new(1,1,1);d.Font=Enum.Font.GothamBlack;d.TextSize=12;d.AutoLocalize=false;d.ZIndex=5;d.Parent=parent;corner(d,9)
+        return d
+    end
     local function countFound(rarity)
         local n,total=0,0
         for _,s in Catalog.forRarity(rarity) do total+=1;if owned(s.Id) then n+=1 end end
@@ -166,7 +244,8 @@ function Dex.start(player,remote,hud)
         layout.CellSize=UDim2.fromOffset(cell,math.floor(cell*1.22))
         for _,s in Catalog.forRarity(rarity) do
             local have=owned(s.Id)
-            local card=Instance.new("TextButton");card.Text="";card.AutoButtonColor=true;card.LayoutOrder=s.Number;card.BackgroundColor3=if have then Color3.fromRGB(250,245,230) else Color3.fromRGB(214,203,178);card.Parent=grid;corner(card,8)
+            local fullSet=have and versions(s.Id)>=Mutations.Versions
+            local card=Instance.new("TextButton");card.Text="";card.AutoButtonColor=true;card.LayoutOrder=s.Number;card.BackgroundColor3=if fullSet then Color3.fromRGB(255,236,176) elseif have then Color3.fromRGB(250,245,230) else Color3.fromRGB(214,203,178);card.Parent=grid;corner(card,8)
             local edge=stroke(card,if s.Id==selected then rarityColor(rarity) else Color3.fromRGB(180,164,134),if s.Id==selected then 3 else 1)
             if have and rarity=="Celestial" and s.Id==selected then Visuals.apply(card,rarity) end
             local picture=frame(card,Color3.new(),UDim2.fromOffset(4,18),UDim2.new(1,-8,1,-52));picture.BackgroundTransparency=1
@@ -174,49 +253,113 @@ function Dex.start(player,remote,hud)
             text(card,string.format("#%03d",s.Number),11,MUTED,UDim2.fromOffset(7,4),UDim2.new(.5,0,0,13),FONT)
             text(card,s.Source=="Box" and "BOX" or "BUILD",10,if s.Source=="Box" then Color3.fromRGB(150,80,30) else MUTED,UDim2.new(.5,0,0,4),UDim2.new(.5,-7,0,13),FONT,Enum.TextXAlignment.Right)
             text(card,if have then s.Name else "???",12,INK,UDim2.new(0,6,1,-32),UDim2.new(1,-12,0,15),FONT,Enum.TextXAlignment.Center)
-            text(card,if have then "×"..data.dex[s.Id].." owned" else "undiscovered",10,MUTED,UDim2.new(0,6,1,-16),UDim2.new(1,-12,0,13),Enum.Font.Gotham,Enum.TextXAlignment.Center)
-            -- Mutation stars: gold and rainbow versions owned.
-            for i,m in Mutations.List do
+            text(card,if fullSet then "FULL SET ★" elseif have then string.format("%d/%d versions",versions(s.Id),Mutations.Versions) else "undiscovered",10,if fullSet then Color3.fromRGB(150,100,10) else MUTED,UDim2.new(0,6,1,-16),UDim2.new(1,-12,0,13),FONT,Enum.TextXAlignment.Center)
+            -- One star per mutated version owned, in that mutation's color.
+            local slot=0
+            for _,m in Mutations.List do
                 if mutationCount(m.Id,s.Id)>0 then
-                    local star=text(card,"★",15,rgb(m.Color),UDim2.new(0,4+(i-1)*14,0,16),UDim2.fromOffset(14,16),Enum.Font.GothamBlack,Enum.TextXAlignment.Center)
-                    if m.Id=="Rainbow" then star.TextColor3=Color3.fromRGB(255,110,220) end
+                    text(card,"★",14,rgb(m.Color),UDim2.new(0,4+slot*12,0,16),UDim2.fromOffset(13,15),Enum.Font.GothamBlack,Enum.TextXAlignment.Center)
+                    slot+=1
                 end
             end
-            card.Activated:Connect(function() selected=s.Id;compactDetail=true;render() end)
+            if have and anyEntryReady(s.Id) then dot(card) end
+            card.Activated:Connect(function()
+                if selected~=s.Id then version=nil end
+                selected=s.Id;compactDetail=true;render()
+            end)
         end
     end
 
-    -- RIGHT PAGE: one species.
+    -- RIGHT PAGE: one species, with every version (Normal + mutations) as
+    -- clickable chips. The 3D preview shows the chosen version.
     local function detailPage(page,id)
         local s=Catalog.get(id)
         local have=owned(id)
+        local m=Mutations.get(version)
+        local haveVersion=versionCount(version,id)>0
         local top=10
-        if isCompact() then button(page,"< BACK",UDim2.fromOffset(12,8),UDim2.fromOffset(80,28),COVER,PAPER,function() compactDetail=false;render() end);top=42 end
-        local view=frame(page,Color3.fromRGB(226,216,192),UDim2.fromOffset(14,top),UDim2.new(1,-28,.5,-top));corner(view,8)
-        robotView(view,id,not have,true,have)
-        text(view,string.format("#%03d",s.Number),16,MUTED,UDim2.fromOffset(10,8),UDim2.fromOffset(90,20),Enum.Font.GothamBlack)
+        -- Short pages (phones) scroll instead of squeezing the preview.
+        local H=math.max(page.AbsoluteSize.Y,470)
+        local host=page
+        if page.AbsoluteSize.Y<470 then
+            host=Instance.new("ScrollingFrame");host.Name="DetailScroll";host.BackgroundTransparency=1;host.BorderSizePixel=0;host.ScrollBarThickness=5;host.ScrollBarImageColor3=MUTED
+            host.Size=UDim2.fromScale(1,1);host.CanvasSize=UDim2.fromOffset(0,H);host.Parent=page
+        end
+        local viewH=math.floor(H*.44)
+        if isCompact() then button(host,"< BACK",UDim2.fromOffset(12,8),UDim2.fromOffset(80,28),COVER,PAPER,function() compactDetail=false;render() end);top=42 end
+        local view=frame(host,if m and haveVersion then Color3.fromRGB(34,30,44) else Color3.fromRGB(226,216,192),UDim2.fromOffset(14,top),UDim2.new(1,-28,0,viewH-top),"Preview");corner(view,8)
+        if m then stroke(view,rgb(m.Color),2) end
+        if m and haveVersion then aura(view,version) end
+        local preview=robotView(view,id,not haveVersion,true,haveVersion,version);preview.ZIndex=2
+        text(view,string.format("#%03d",s.Number),16,if m and haveVersion then PAPER else MUTED,UDim2.fromOffset(10,8),UDim2.fromOffset(90,20),Enum.Font.GothamBlack)
         local pill=text(view,s.Rarity:upper(),12,Color3.new(1,1,1),UDim2.new(1,-110,0,8),UDim2.fromOffset(100,20),FONT,Enum.TextXAlignment.Center)
         pill.BackgroundTransparency=0;pill.BackgroundColor3=rarityColor(s.Rarity);pill.TextYAlignment=Enum.TextYAlignment.Center;corner(pill,10)
         if s.Rarity=="Celestial" then Visuals.apply(pill,"Celestial") end
+        if m then
+            local tag=text(view,m.Label:upper().." VERSION",12,Color3.new(1,1,1),UDim2.new(1,-150,1,-28),UDim2.fromOffset(140,20),Enum.Font.GothamBlack,Enum.TextXAlignment.Center)
+            tag.BackgroundTransparency=0;tag.BackgroundColor3=rgb(m.Color);tag.TextYAlignment=Enum.TextYAlignment.Center;tag.TextStrokeTransparency=.5;corner(tag,10)
+        end
+
+        -- Version chips.
+        local found=versions(id)
+        local strip=frame(host,PAPER,UDim2.fromOffset(14,viewH+6),UDim2.new(1,-28,0,96),"Versions");strip.BackgroundTransparency=1
+        text(strip,string.format("VERSIONS  %d / %d",found,Mutations.Versions),13,INK,UDim2.fromOffset(0,0),UDim2.new(.6,0,0,16),Enum.Font.GothamBlack)
+        if found>=Mutations.Versions then text(strip,"FULL SET ★",12,Color3.fromRGB(170,110,10),UDim2.new(.6,0,0,1),UDim2.new(.4,0,0,16),Enum.Font.GothamBlack,Enum.TextXAlignment.Right) end
+        local row=frame(strip,PAPER,UDim2.fromOffset(0,20),UDim2.new(1,0,0,76),"Chips");row.BackgroundTransparency=1
+        local chipLayout=Instance.new("UIListLayout");chipLayout.FillDirection=Enum.FillDirection.Horizontal;chipLayout.Padding=UDim.new(0,5);chipLayout.SortOrder=Enum.SortOrder.LayoutOrder;chipLayout.Parent=row
+        local options={false}
+        for _,mm in Mutations.List do table.insert(options,mm.Id) end
+        for order,option in options do
+            local mutation=if option then option else nil
+            local info=Mutations.get(mutation)
+            local count=versionCount(mutation,id)
+            local got=count>0
+            local tint=if info then rgb(info.Color) else rarityColor(s.Rarity)
+            local chip=Instance.new("TextButton");chip.Name="Version"..(mutation or "Normal");chip.Text="";chip.AutoButtonColor=true;chip.LayoutOrder=order
+            chip.Size=UDim2.new(1/#options,-5,1,0);chip.BackgroundColor3=if got then Color3.fromRGB(250,245,230) else Color3.fromRGB(205,194,170);chip.Parent=row;corner(chip,7)
+            stroke(chip,if mutation==version then tint else Color3.fromRGB(180,164,134),if mutation==version then 3 else 1)
+            local picture=frame(chip,Color3.new(),UDim2.fromOffset(2,2),UDim2.new(1,-4,1,-32));picture.BackgroundTransparency=1
+            if have then robotView(picture,id,not got,false,false,mutation) end
+            local name=text(chip,if info then info.Label:upper() else "NORMAL",10,if got then tint else MUTED,UDim2.new(0,2,1,-30),UDim2.new(1,-4,0,13),Enum.Font.GothamBlack,Enum.TextXAlignment.Center)
+            if got and not info and s.Rarity=="Common" then name.TextColor3=INK end
+            text(chip,if got then "×"..count elseif info then string.format("%g%%",info.Chance*100) else "—",10,MUTED,UDim2.new(0,2,1,-15),UDim2.new(1,-4,0,13),FONT,Enum.TextXAlignment.Center)
+            if got and entryReady(id,mutation) then dot(chip) end
+            chip.Activated:Connect(function() version=mutation;render() end)
+        end
+
         local y=0
-        local info=scroll(page,0);info.Position=UDim2.new(0,14,.5,6);info.Size=UDim2.new(1,-24,.5,-14)
+        local info=scroll(host,0);info.Position=UDim2.fromOffset(14,viewH+108);info.Size=UDim2.new(1,-24,0,H-viewH-116)
         local function line(value,size,color,font,height)
             local l=text(info,value,size,color,UDim2.fromOffset(0,y),UDim2.new(1,-8,0,height or size+6),font);y+=(height or size+6)+4;return l
         end
-        line(if have then s.Name else "??? UNDISCOVERED",20,INK,Enum.Font.GothamBlack,24)
+        line(if have then Mutations.prefix(version)..s.Name else "??? UNDISCOVERED",20,if m and have then rgb(m.Color) else INK,Enum.Font.GothamBlack,24)
         local recipe=Config.Robot.Recipes[s.Rarity]
         local route=if s.Source=="Box" then "Found in "..s.Rarity.." Robot Boxes (events and rewards)" else "Built from "..recipe.Parts.." "..s.Rarity.." scrap parts"
         line(route,13,MUTED,FONT,18)
-        line(string.format("%s chance: %.1f%%   ·   Income: $%d/sec (×%s)",s.Source=="Box" and "Box" or "Build",Catalog.chance(id)*100,Catalog.income(recipe.Income,id),tostring(s.Multiplier)),13,INK,Enum.Font.Gotham,18)
+        local income=Catalog.income(recipe.Income,id)*Mutations.multiplier(version)
+        if m then
+            line(string.format("%s chance: %g%% per robot   ·   Income: $%d/sec (x%g)",m.Label,m.Chance*100,income,m.Multiplier),13,INK,Enum.Font.Gotham,18)
+        else
+            line(string.format("%s chance: %.1f%%   ·   Income: $%d/sec (×%s)",s.Source=="Box" and "Box" or "Build",Catalog.chance(id)*100,income,tostring(s.Multiplier)),13,INK,Enum.Font.Gotham,18)
+        end
         if have then
-            line('"'..s.Blurb..'"',14,INK,Enum.Font.GothamMedium,38)
-            line(string.format("Obtained %d time%s.",data.dex[id],data.dex[id]==1 and "" or "s"),13,Color3.fromRGB(46,120,70),FONT,18)
-            local parts={}
-            for _,m in Mutations.List do
-                local n=mutationCount(m.Id,id)
-                table.insert(parts,if n>0 then string.format("%s ★ ×%d (x%d income)",m.Label,n,m.Multiplier) else string.format("%s: not found yet (%.0f%% per robot)",m.Label,m.Chance*100))
+            local count=versionCount(version,id)
+            if count>0 then
+                line(string.format("%s collected ×%d.",if m then m.Label.." version" else "Normal version",count),13,Color3.fromRGB(46,120,70),FONT,18)
+                local entryId=Rewards.entryId(id,version)
+                if claimedSet[entryId] then
+                    line("Entry reward claimed ✓",12,MUTED,FONT,16)
+                else
+                    local claim=button(info,string.format("CLAIM ENTRY REWARD  $%s",tostring(Rewards.entryCash(id,version))),UDim2.fromOffset(0,y),UDim2.new(1,-8,0,30),Color3.fromRGB(58,140,80),PAPER,function()
+                        remote:FireServer("ClaimReward",entryId)
+                    end)
+                    claim.Name="ClaimEntry";y+=36
+                end
+            else
+                line(string.format("%s version not collected yet.",if m then m.Label else "Normal"),13,Color3.fromRGB(170,90,40),FONT,18)
             end
-            line(table.concat(parts,"   ·   "),12,Color3.fromRGB(150,110,20),FONT,32)
+            line('"'..s.Blurb..'"',14,INK,Enum.Font.GothamMedium,38)
+            line("Every finished build or box can roll a version. Collect all "..Mutations.Versions.." for a FULL SET (Robotdex rewards).",12,MUTED,Enum.Font.Gotham,32)
         else
             line(if s.Source=="Box" then "Watch for "..s.Rarity.." box events, or earn reward boxes from Robotdex milestones." else "Keep finishing "..s.Rarity.." builds: every completed build rolls one of this page's build robots.",13,MUTED,Enum.Font.Gotham,36)
         end
@@ -238,9 +381,18 @@ function Dex.start(player,remote,hud)
             y+=22
         end
         y+=6
-        local gold,rainbow=0,0
-        for key,n in data.mdex or {} do if n>0 then if string.sub(key,1,5)=="Gold:" then gold+=1 elseif string.sub(key,1,8)=="Rainbow:" then rainbow+=1 end end end
-        line(string.format("GOLD ★ %d / %d    RAINBOW ★ %d / %d",gold,Catalog.Total,rainbow,Catalog.Total),13,Color3.fromRGB(150,110,20),FONT,18)
+        text(body,"VERSIONS",13,INK,UDim2.fromOffset(0,y),UDim2.new(1,0,0,16),Enum.Font.GothamBlack);y+=20
+        for _,m in Mutations.List do
+            local n=0
+            for _,sp in Catalog.List do if mutationCount(m.Id,sp.Id)>0 then n+=1 end end
+            text(body,string.format("%s ★  %d / %d",m.Label:upper(),n,Catalog.Total),12,rgb(m.Color),UDim2.fromOffset(0,y),UDim2.new(.5,0,0,16),Enum.Font.GothamBlack)
+            local bar=frame(body,Color3.fromRGB(205,192,164),UDim2.new(.5,0,0,y+3),UDim2.new(.5,-12,0,9));corner(bar,4)
+            local fill=frame(bar,rgb(m.Color),UDim2.new(),UDim2.fromScale(n/Catalog.Total,1));corner(fill,4)
+            y+=22
+        end
+        local sets=0
+        for _,sp in Catalog.List do if versions(sp.Id)>=Mutations.Versions then sets+=1 end end
+        line(string.format("FULL SETS (all %d versions): %d / %d",Mutations.Versions,sets,Catalog.Total),13,Color3.fromRGB(150,110,20),FONT,18)
         line(string.format("Built %d  ·  Unboxed %d  ·  Robotdex bonus +%d%%  ·  Speed bonus +%d",data.stats.built,data.stats.unboxed,data.perks.income,data.perks.speed),13,INK,FONT,34)
         line(string.format("Rebirth %d  ·  total income x%.2f  ·  %d platforms",data.rebirths or 0,data.multiplier or 1,data.slots or Config.Robot.Slots),13,INK,FONT,18)
         if player:GetAttribute("SaveStatus")=="offline" then line("Saving is off in this session.",12,Color3.fromRGB(170,60,40),FONT,18) else line("Your Robotdex is saved automatically.",12,Color3.fromRGB(46,120,70),FONT,18) end
@@ -248,7 +400,16 @@ function Dex.start(player,remote,hud)
 
     local function rewardsPage(page)
         text(page,"REWARDS",20,INK,UDim2.fromOffset(14,10),UDim2.new(1,-28,0,24),Enum.Font.GothamBlack)
-        text(page,"Claim milestone rewards as your Robotdex grows.",12,MUTED,UDim2.fromOffset(14,36),UDim2.new(1,-28,0,16))
+        text(page,"Milestones, plus a small cash reward for every new robot and version.",12,MUTED,UDim2.fromOffset(14,36),UDim2.new(1,-28,0,16))
+        local ready=Rewards.readyEntries({dex=data.dex,claimed=claimedSet,mdex=data.mdex or {}})
+        if #ready>0 then
+            local total=0
+            for _,m in ready do total+=m.Rewards[1].Amount end
+            local all=button(page,string.format("CLAIM %d ENTRIES  $%s",#ready,money(total):sub(2)),UDim2.new(1,-214,0,8),UDim2.fromOffset(200,28),Color3.fromRGB(58,140,80),PAPER,function()
+                remote:FireServer("ClaimEntries")
+            end)
+            all.Name="ClaimEntries"
+        end
         local list=scroll(page,58)
         local layout=Instance.new("UIListLayout");layout.Padding=UDim.new(0,6);layout.SortOrder=Enum.SortOrder.LayoutOrder;layout.Parent=list
         for order,m in Rewards.List do
@@ -343,6 +504,7 @@ function Dex.start(player,remote,hud)
         footerFill.Size=UDim2.fromScale(data.found/math.max(1,data.total),1)
         if Config.Robot.Recipes[tab] then
             if not selected then
+                version=nil
                 for _,s in Catalog.forRarity(tab) do if owned(s.Id) then selected=s.Id;break end end
                 selected=selected or Catalog.forRarity(tab)[1].Id
             end
@@ -395,7 +557,7 @@ function Dex.start(player,remote,hud)
         local m=Mutations.get(mutation)
         toastVersion+=1;local current=toastVersion
         for _,c in toastPicture:GetChildren() do if c:IsA("ViewportFrame") then c:Destroy() end end
-        robotView(toastPicture,id,false,false,true)
+        robotView(toastPicture,id,false,false,true,mutation)
         toastHeading.Text=if m and not newSpecies then "NEW "..m.Label:upper().." ROBOT!" elseif m then "NEW ROBOT — AND "..m.Label:upper().."!" else "NEW ROBOTDEX ENTRY!"
         toastName.Text=Mutations.prefix(mutation)..Catalog.label(id);toastName.TextColor3=if m then rgb(m.Color) else rarityColor(s.Rarity)
         toastInfo.Text=string.format("%s %s  ·  press I to open the Robotdex",s.Rarity,s.Source=="Box" and "box robot" or "build")
@@ -410,14 +572,20 @@ function Dex.start(player,remote,hud)
         if type(packet)~="table" then return end
         if channel=="Robotdex" then
             data=packet;data.dex=packet.dex or {};data.mdex=packet.mdex or {}
-            if packet.message then status.Text=packet.message end
+            if packet.message then
+                status.Text=packet.message
+                if string.sub(packet.message,1,7)=="Claimed" then Audio.play("Claim") end
+            end
             updateLauncher();render()
         elseif channel=="DexDiscovery" and type(packet.id)=="string" then
             discovered(packet.id,packet.mutation,packet.newSpecies~=false)
         end
     end)
     player:GetAttributeChangedSignal("DexClaimable"):Connect(updateLauncher)
-    UserInputService.InputBegan:Connect(function(input,processed) if not processed and input.KeyCode==Enum.KeyCode.I then open() end end)
+    UserInputService.InputBegan:Connect(function(input,processed)
+        -- While the book is open, I always closes it (a clicked panel can mark keys as processed).
+        if input.KeyCode==Enum.KeyCode.I and (not processed or gui.Enabled) and not UserInputService:GetFocusedTextBox() then open() end
+    end)
     player.CharacterRemoving:Connect(close)
     book:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() if gui.Enabled then render() end end)
     hud:GetPropertyChangedSignal("Enabled"):Connect(function() if not gui.Enabled then launcherGui.Enabled=hud.Enabled end end)

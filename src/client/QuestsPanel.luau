@@ -3,6 +3,7 @@
 -- a bonus robot box for finishing all three. Buttons send intent only.
 local Prompts=game:GetService("ProximityPromptService")
 local Kit=require(script.Parent.UiKit)
+local Audio=require(script.Parent.Audio)
 local Panel={}
 
 local function clock(seconds)
@@ -50,13 +51,13 @@ function Panel.start(player,remote,hud)
     local hudEnabled,promptEnabled=true,true
     local function hide()
         if not gui.Enabled then return end
-        gui.Enabled=false;hud.Enabled=hudEnabled;Prompts.Enabled=promptEnabled
+        Audio.play("Close");gui.Enabled=false;hud.Enabled=hudEnabled;Prompts.Enabled=promptEnabled
     end
     local function open()
         if gui.Enabled then hide();return end
         if not hud.Enabled then return end
         hudEnabled,promptEnabled=hud.Enabled,Prompts.Enabled;hud.Enabled=false;Prompts.Enabled=false
-        gui.Enabled=true;status.Text="";render();remote:FireServer("RequestQuests")
+        Audio.play("Open");gui.Enabled=true;status.Text="";render();remote:FireServer("RequestQuests")
     end
     launcher.Activated:Connect(open);close.Activated:Connect(hide)
     local function updateLauncher()

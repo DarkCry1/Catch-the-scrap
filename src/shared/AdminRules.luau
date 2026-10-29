@@ -15,6 +15,7 @@ function Rules.validate(command:any,value:any): boolean
     if command=="SetStrength" then return integer(value,1,10000) end
     if command=="ResetStats" or command=="Home" or command=="ResetProgress" then return value==0 end
     if command=="DexFill" then return integer(value,0,1000) end
+    if command=="MutateRobots" then return integer(value,0,16) end
     if command=="Event" and type(value)=="table" then
         local tier=value.rarity
         return (tier=="Rare" or tier=="Epic" or tier=="Legendary" or tier=="Mythic" or tier=="Celestial") and integer(value.stage,1,7)

@@ -108,6 +108,25 @@ function Service:claim(player,id)
     self:send(player,"Claimed "..milestone.Title..": "..table.concat(notes,", ").."!")
 end
 
+-- Claims every ready entry reward (cash only) in one go.
+function Service:claimEntries(player)
+    if not self:allow(player) then return end
+    local entry=self.finance.players[player];if not entry then return end
+    local account=entry.account
+    local ready=Rewards.readyEntries(account)
+    if #ready==0 then self:send(player,"No entry rewards to claim. Collect new robots and versions!");return end
+    self.finance:settle(player,entry,os.clock())
+    local total=0
+    for _,m in ready do
+        account.claimed[m.Id]=true
+        for _,r in m.Rewards do if r.Type=="Cash" then total+=r.Amount end end
+    end
+    account.cash=math.min(Service.MaxCash,account.cash+total)
+    self.finance:publish(player,entry)
+    if self.onClaim then self.onClaim(player,"Entries") end
+    self:send(player,string.format("Claimed %d entry reward%s: $%d!",#ready,#ready==1 and "" or "s",total))
+end
+
 function Service:equip(player,kind,id)
     if (kind~="Title" and kind~="Skin") or type(id)~="string" or not self:allow(player) then return end
     local entry=self.finance.players[player];if not entry then return end

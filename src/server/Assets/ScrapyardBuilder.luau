@@ -16,7 +16,6 @@ function ScrapyardBuilder.build(world)
     yard.ModelStreamingMode = Enum.ModelStreamingMode.Nonatomic
     yard.Parent = world.root
     local layout = Blueprint.build(Config.TrackWidth, Config.ZoneLength, Config.TrackStart)
-    world.guardianGeometry=layout.parts
     world.spawnObstacles=SpawnRules.obstacles(layout.parts)
     for _, definition in layout.parts do
         local part = Instance.new("Part")
@@ -38,7 +37,7 @@ function ScrapyardBuilder.build(world)
     end
     EnvironmentBuilder.create(yard,layout.effects)
     for _, sign in layout.signs do
-        FloatingText.create(yard,"YardLabel",CFrame.new(unpack(sign.position)),sign.text,Color3.fromRGB(unpack(sign.color)),36,3,90)
+        FloatingText.create(yard,"YardLabel",CFrame.new(unpack(sign.position)),sign.text,Color3.fromRGB(unpack(sign.color)),36*(sign.size or 1),3*(sign.size or 1),90)
     end
     for z = Config.TrackStart+45, Config.TrackStart+Config.ZoneLength*#Config.Stages-15, 60 do
         NavigationRenderer.draw(yard,7,z,1,Color3.fromRGB(235,178,65))

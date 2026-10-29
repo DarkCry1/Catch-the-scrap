@@ -4,6 +4,7 @@ local Shared=game:GetService("ReplicatedStorage").CatchTheScrapShared
 local Rules=require(Shared.AdminRules)
 local Economy=require(Shared.Economy)
 local Catalog=require(Shared.RobotCatalog)
+local Mutations=require(Shared.Mutations)
 local Access=require(script.Parent.Parent.AdminConfig)
 local Service={}
 Service.__index=Service
@@ -53,6 +54,25 @@ function Service:run(player,command,value)
         for _,species in Catalog.List do if species.Number<=value then entry.account.dex[species.Id]=math.max(1,entry.account.dex[species.Id] or 0) end end
         self.economy:publish(player,entry)
         if self.dex then self.dex:send(player,"Robotdex filled to #"..value..".") end
+    elseif command=="MutateRobots" then
+        -- Turns this admin's finished robots into one version (0 = Normal) and
+        -- records that version in the Robotdex, to test mutation looks.
+        local mutation=if value==0 then nil else Mutations.List[value]
+        if value>0 and not mutation then self:reply(player,false,"No such mutation.");return end
+        local changed=0
+        for _,project in entry.account.projects do
+            if project.complete and not project.opening and project.variant then
+                project.mutation=mutation and mutation.Id
+                if mutation then
+                    local key=Mutations.key(mutation.Id,project.variant)
+                    entry.account.mdex[key]=math.max(1,entry.account.mdex[key] or 0)
+                end
+                changed+=1
+            end
+        end
+        self.economy:publish(player,entry)
+        if entry.base then self.economy.world:updateEconomy(entry.base,player,entry.account) end
+        if self.dex then self.dex:send(player,string.format("%d robot%s set to %s.",changed,changed==1 and "" or "s",if mutation then mutation.Label else "Normal")) end
     elseif command=="Home" then
         local character=player.Character
         local humanoid=character and character:FindFirstChildOfClass("Humanoid")

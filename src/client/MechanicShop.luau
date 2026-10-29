@@ -2,6 +2,7 @@
 local RunService=game:GetService("RunService")
 local UserInputService=game:GetService("UserInputService")
 local Config=require(game:GetService("ReplicatedStorage"):WaitForChild("CatchTheScrapShared"):WaitForChild("Config"))
+local Audio=require(script.Parent.Audio)
 local MechanicShop={}
 
 function MechanicShop.start(player,remote,hud)
@@ -52,7 +53,7 @@ function MechanicShop.start(player,remote,hud)
     local pending=false
     local hudWasEnabled=true
     local function close()
-        if gui.Enabled then hud.Enabled=hudWasEnabled end
+        if gui.Enabled then hud.Enabled=hudWasEnabled;Audio.play("Close") end
         gui.Enabled=false;pending=false
     end
     closeButton.Activated:Connect(close)
@@ -106,7 +107,7 @@ function MechanicShop.start(player,remote,hud)
         if not data.open then close();return end
         if data.mode~="open" and not gui.Enabled then return end
         if typeof(data.offers)~="table" then return end
-        if not gui.Enabled then hudWasEnabled=hud.Enabled end
+        if not gui.Enabled then hudWasEnabled=hud.Enabled;Audio.play("Open") end
         offers={}
         for _,offer in data.offers do offers[offer.kind]=offer end
         cash=data.cash;pending=false;status.Text=data.message or "Upgrades last for this server session."

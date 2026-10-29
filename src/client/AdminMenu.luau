@@ -14,7 +14,7 @@ function Menu.start(player,remote,hud)
     panel.BackgroundColor3=Color3.fromRGB(16,25,36);panel.Visible=false;panel.Active=true;panel.Parent=gui;round(panel)
     local limit=Instance.new("UISizeConstraint");limit.MaxSize=Vector2.new(600,510);limit.Parent=panel
     label(panel,"ADMIN CONTROL",UDim2.fromOffset(20,14),UDim2.new(1,-90,0,26),21)
-    local body=Instance.new("ScrollingFrame");body.Position=UDim2.fromOffset(16,54);body.Size=UDim2.new(1,-32,1,-106);body.CanvasSize=UDim2.fromOffset(0,520);body.BackgroundTransparency=1;body.BorderSizePixel=0;body.ScrollBarThickness=4;body.Parent=panel
+    local body=Instance.new("ScrollingFrame");body.Position=UDim2.fromOffset(16,54);body.Size=UDim2.new(1,-32,1,-106);body.CanvasSize=UDim2.fromOffset(0,640);body.BackgroundTransparency=1;body.BorderSizePixel=0;body.ScrollBarThickness=4;body.Parent=panel
     local status=label(panel,"Personal changes affect only you. Events are server-wide.",UDim2.new(0,20,1,-42),UDim2.new(1,-40,0,32),12)
     local function button(parent,text,pos,size,callback)
         local b=Instance.new("TextButton");b.Text=text;b.Position=pos;b.Size=size;b.Font=Enum.Font.GothamBold;b.TextSize=12;b.TextColor3=Color3.fromRGB(18,28,37);b.BackgroundColor3=Color3.fromRGB(105,219,204);b.AutoLocalize=false;b.Parent=parent;round(b);b.Activated:Connect(callback);return b
@@ -61,6 +61,14 @@ function Menu.start(player,remote,hud)
     end)
     reset.BackgroundColor3=Color3.fromRGB(232,120,96)
     label(body,"Fill marks species #1–#N discovered without placing robots. Reset affects only you.",UDim2.fromOffset(2,480),UDim2.new(1,-10,0,32),11)
+    label(body,"MUTATION TESTING",UDim2.fromOffset(2,520),UDim2.new(1,-8,0,22),14)
+    local Mutations=require(game:GetService("ReplicatedStorage").CatchTheScrapShared.Mutations)
+    local versions={"Normal"};for _,m in Mutations.List do table.insert(versions,m.Label) end
+    local version=2
+    local versionButton
+    versionButton=button(body,versions[version],UDim2.fromOffset(2,550),UDim2.new(.43,0,0,36),function() version=version%#versions+1;versionButton.Text=versions[version] end)
+    button(body,"MUTATE MY ROBOTS",UDim2.new(.47,0,0,550),UDim2.new(.51,0,0,36),function() send("MutateRobots",version-1) end)
+    label(body,"Turns your finished robots into that version and adds it to your Robotdex.",UDim2.fromOffset(2,594),UDim2.new(1,-10,0,32),11)
     local function access()
         open.Visible=player:GetAttribute("CanAdmin")==true
         if not open.Visible then panel.Visible=false end

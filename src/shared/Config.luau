@@ -57,29 +57,58 @@ return table.freeze({
     -- (up to Robot.MaxSlots). Cost = BaseCost * Growth ^ rebirths.
     Rebirth = { BaseCost = 250000, Growth = 4, IncomeBonus = 0.5, Max = 12 },
     -- Mutations are rolled independently of the species (builds and boxes).
+    -- Order = how they are listed (most common first). Every species can be
+    -- collected in every version. Body = plate color, Accent = every Nth part
+    -- becomes glowing neon (0 = none), Pattern "Spectrum" = animated rainbow.
     Mutations = {
-        { Id = "Gold", Label = "Gold", Chance = 0.05, Multiplier = 2, Color = { 255, 198, 64 } },
-        { Id = "Rainbow", Label = "Rainbow", Chance = 0.01, Multiplier = 4, Color = { 126, 234, 255 } },
+        { Id = "Gold", Label = "Gold", Chance = 0.05, Multiplier = 2, Color = { 255, 198, 64 },
+            Body = { 255, 198, 64 }, Material = "Metal", Reflectance = 0.28, Transparency = 0, Accent = { 255, 236, 150 }, Accent2 = { 255, 236, 150 }, AccentEvery = 0, Pattern = "Solid", Sparkles = 6 },
+        { Id = "Diamond", Label = "Diamond", Chance = 0.025, Multiplier = 3, Color = { 140, 226, 255 },
+            Body = { 190, 240, 255 }, Material = "Glass", Reflectance = 0.35, Transparency = 0.1, Accent = { 255, 255, 255 }, Accent2 = { 160, 230, 255 }, AccentEvery = 4, Pattern = "Solid", Sparkles = 9 },
+        { Id = "Rainbow", Label = "Rainbow", Chance = 0.01, Multiplier = 4, Color = { 255, 110, 220 },
+            Body = { 255, 110, 220 }, Material = "SmoothPlastic", Reflectance = 0.1, Transparency = 0, Accent = { 255, 255, 255 }, Accent2 = { 255, 255, 255 }, AccentEvery = 0, Pattern = "Spectrum", Sparkles = 10 },
+        { Id = "Lava", Label = "Lava", Chance = 0.006, Multiplier = 5, Color = { 255, 104, 36 },
+            Body = { 66, 36, 28 }, Material = "Basalt", Reflectance = 0, Transparency = 0, Accent = { 255, 104, 28 }, Accent2 = { 255, 196, 60 }, AccentEvery = 2, Pattern = "Solid", Sparkles = 12 },
+        { Id = "Galaxy", Label = "Galaxy", Chance = 0.0025, Multiplier = 8, Color = { 168, 112, 255 },
+            Body = { 72, 40, 150 }, Material = "SmoothPlastic", Reflectance = 0.25, Transparency = 0, Accent = { 110, 220, 255 }, Accent2 = { 255, 110, 220 }, AccentEvery = 3, Pattern = "Solid", Sparkles = 16 },
     },
     -- Daily quests: three per player per UTC day.
     Quests = { PerDay = 3, CashReward = { 1500, 4000, 10000 }, BonusBox = "Rare" },
     -- Sound design (client). Every cue is built from Roblox's built-in sounds;
     -- put an uploaded or Creator Store sound here ("rbxassetid://123") to
     -- replace any cue, e.g. Overrides = { Click = "rbxassetid://123" }.
-    Audio = { Master = 0.8, IncomeTickSeconds = 2.5, Overrides = {} :: {[string]: string} },
-    -- One original walking guardian per district. Provisional playtest values,
-    -- not measured values from any other Roblox experience.
-    Guardians = {
-        Step = 0.05, RepathSeconds = 0.7, CooldownSeconds = 8, Grid = 8,
-        Profiles = {
-            { Name = "Rustyard Watcher", Scale = 0.95, PatrolSpeed = 6, ChaseSpeed = 15, DetectRange = 48, WarningSeconds = 1.4, ChaseSeconds = 7 },
-            { Name = "Scrap Bruiser", Scale = 1.10, PatrolSpeed = 7, ChaseSpeed = 17, DetectRange = 54, WarningSeconds = 1.3, ChaseSeconds = 7.5 },
-            { Name = "Core Warden", Scale = 1.25, PatrolSpeed = 8, ChaseSpeed = 19, DetectRange = 60, WarningSeconds = 1.2, ChaseSeconds = 8 },
-            { Name = "Turbine Enforcer", Scale = 1.40, PatrolSpeed = 9, ChaseSpeed = 22, DetectRange = 68, WarningSeconds = 1.1, ChaseSeconds = 8.5 },
-            { Name = "Gilded Colossus", Scale = 1.60, PatrolSpeed = 10, ChaseSpeed = 25, DetectRange = 76, WarningSeconds = 1.0, ChaseSeconds = 9 },
-            { Name = "Void Reaper", Scale = 1.80, PatrolSpeed = 11, ChaseSpeed = 28, DetectRange = 84, WarningSeconds = 0.9, ChaseSeconds = 9.5 },
-            { Name = "Astral Sentinel", Scale = 2.00, PatrolSpeed = 12, ChaseSpeed = 31, DetectRange = 92, WarningSeconds = 0.8, ChaseSeconds = 10 },
-        },
+    -- v1.7 guard robots: hover security bots in every stage. Stealing scrap or
+    -- a robot box there alerts every idle guard within AlertRange; after
+    -- Reaction seconds they chase at that stage's Speed. Speeds are tuned so
+    -- each stage needs Speed + Strength upgrades (about level 0, 2, 4, 5, 7, 8
+    -- and 10) to outrun them while carrying that stage's scrap.
+    Guards = {
+        Count = { 3, 3, 4, 4, 5, 5, 6 },
+        Speed = { 17, 20.5, 22, 22.5, 24.5, 24.5, 25.5 },
+        AlertRange = 190, Reaction = 0.8, CatchRange = 4.2, MaxChase = 22, Leash = 14,
+        Cooldown = 3.5, StunSeconds = 1.3, StunSpeed = 5, IdleWander = 14, HipHeight = 2.6,
+        -- v1.8: guards are giants and grow stage by stage (model scale; a
+        -- player is about 5 studs tall, a stage 1 guard about 14, stage 7 about 21).
+        Scale = { 2, 2.15, 2.3, 2.45, 2.6, 2.8, 3 },
+        -- v1.9: stage 1 guards only warn players who have not finished the guide.
+        GraceStage = 1,
+    },
+    -- Glowing mutation auras around robots (client-side, cosmetic).
+    -- MaxHighlights: nearest robots that get the full-body glow (Roblox limit 31).
+    Auras = { Enabled = true, Distance = 170, MaxHighlights = 24 },
+    -- Overrides: replace a cue with an uploaded / Creator Store sound, e.g.
+    -- Overrides = { Click = "rbxassetid://123", Claim = "rbxassetid://456" },
+    -- OverrideVolume = { Click = 0.5 }. Cue names: Click, Open, Close, Deny,
+    -- ClaimPress, Claim, Pickup, Deposit, Built, BuiltNew, Gold, Diamond,
+    -- Rainbow, Lava, Galaxy, Discover, Alarm, Catch, Escape, Guide, Rebirth,
+    -- GuardAlert, Zap, Stomp.
+    Audio = { Master = 0.8, Overrides = {} :: {[string]: string}, OverrideVolume = {} :: {[string]: number} },
+    -- Security drones patrol Epic and higher zones and chase players carrying loot.
+    Drones = {
+        Stages = { [4] = 2, [5] = 2, [6] = 3, [7] = 3 },
+        ChaseSpeed = { [4] = 12.5, [5] = 13.5, [6] = 14.5, [7] = 15.5 },
+        PatrolSpeed = 9, Height = 16, DetectRange = 38, CatchRange = 4.5,
+        ChaseSeconds = 7, CooldownSeconds = 9, BaseSafeRadius = 0,
     },
     Robot = {
         Slots = 6,
